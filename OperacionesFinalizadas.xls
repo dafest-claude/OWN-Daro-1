@@ -1,0 +1,312 @@
+
+
+<link href="/Content/IOLV6Screens?v=VgH8Z1a-jutD0wcHe6-38EMAFAKiL20eebwZHsC6V4E1" rel="stylesheet"/>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>Operaciones Finalizadas</title>
+</head>
+<body>
+
+    <table border="1" cellpadding="0" cellspacing="0">
+        <tr>
+            <td colspan="16">Operaciones finalizadas en el periodo 1/5/2026 hasta 22/5/2026 </td>
+        </tr>
+        <tr>
+            <td>Fecha Transacci&oacute;n</td>
+            <td>Fecha Liquidaci&oacute;n</td>
+            <td>Boleto</td>
+            <td>Mercado</td>
+            <td>Tipo Transacci&oacute;n</td>
+            <td>Numero de Cuenta</td>
+            <td>Descripci&oacute;n</td>
+            <td>Especie</td>
+            <td>Simbolo</td>
+            <td>Cantidad</td>
+            <td>Moneda</td>
+            <td>Precio Ponderado</td>
+            <td>Monto</td>
+            <td>Comisi&oacute;n y Derecho de Mercado</td>
+            <td>Iva Impuesto</td>
+            <td>Total</td>
+        </tr>
+
+
+                <tr>
+                    <td>7/5/2026 10:33:07</td>
+                    <td>7/5/2026</td>
+                    <td>10421828</td>
+                    <td>BCBA</td>
+                    <td>Compra</td>
+                    <td>99733</td>
+                    <td>Bonos Rep. Arg. U$S Step Up V.09/07/41</td>
+                    <td>81092</td>
+                    <td>GD41</td>
+                    <td>18,0000</td>
+                    <td style="text-align: center">AR$</td>
+                    <td>107180,00</td>
+                    <td>19292,40</td>
+                    <td>98,39</td>
+                    <td>0,00</td>
+                    <td>19390,79</td>
+                </tr>
+                <tr>
+                    <td>7/5/2026 10:33:19</td>
+                    <td>7/5/2026</td>
+                    <td>10422632</td>
+                    <td>BCBA</td>
+                    <td>Compra</td>
+                    <td>99733</td>
+                    <td>BONO TESORO NACIONAL 6% 29/10/27 USD</td>
+                    <td>9385</td>
+                    <td>AO27</td>
+                    <td>13,0000</td>
+                    <td style="text-align: center">AR$</td>
+                    <td>145300,00</td>
+                    <td>18889,00</td>
+                    <td>96,34</td>
+                    <td>0,00</td>
+                    <td>18985,34</td>
+                </tr>
+                <tr>
+                    <td>7/5/2026 10:34:15</td>
+                    <td>8/5/2026</td>
+                    <td>10426581</td>
+                    <td>BCBA</td>
+                    <td>Compra</td>
+                    <td>99733</td>
+                    <td>Banco Macro</td>
+                    <td>111</td>
+                    <td>BMA</td>
+                    <td>5,0000</td>
+                    <td style="text-align: center">AR$</td>
+                    <td>11550,00</td>
+                    <td>57750,00</td>
+                    <td>329,18</td>
+                    <td>69,13</td>
+                    <td>58148,31</td>
+                </tr>
+                <tr>
+                    <td>7/5/2026 10:34:36</td>
+                    <td>8/5/2026</td>
+                    <td>10427488</td>
+                    <td>BCBA</td>
+                    <td>Compra</td>
+                    <td>99733</td>
+                    <td>Cedear Alphabet Inc. Cl. A</td>
+                    <td>8442</td>
+                    <td>GOOGL</td>
+                    <td>1,0000</td>
+                    <td style="text-align: center">AR$</td>
+                    <td>10120,00</td>
+                    <td>10120,00</td>
+                    <td>57,68</td>
+                    <td>12,12</td>
+                    <td>10189,80</td>
+                </tr>
+                <tr>
+                    <td>7/5/2026 10:35:00</td>
+                    <td>8/5/2026</td>
+                    <td>10428909</td>
+                    <td>BCBA</td>
+                    <td>Compra</td>
+                    <td>99733</td>
+                    <td>Cedear Vista Oil &amp; Gas Sab De</td>
+                    <td>8527</td>
+                    <td>VIST</td>
+                    <td>1,0000</td>
+                    <td style="text-align: center">AR$</td>
+                    <td>32200,00</td>
+                    <td>32200,00</td>
+                    <td>183,54</td>
+                    <td>38,54</td>
+                    <td>32422,08</td>
+                </tr>
+                <tr>
+                    <td>7/5/2026 10:40:28</td>
+                    <td>7/5/2026</td>
+                    <td>10432693</td>
+                    <td>BCBA</td>
+                    <td>Compra</td>
+                    <td>99733</td>
+                    <td>BONO REP ARG AJ CER V30/06/26 $ CG</td>
+                    <td>9240</td>
+                    <td>TZX26</td>
+                    <td>5163,0000</td>
+                    <td style="text-align: center">AR$</td>
+                    <td>385,12</td>
+                    <td>19883,77</td>
+                    <td>101,41</td>
+                    <td>0,00</td>
+                    <td>19985,17</td>
+                </tr>
+                <tr>
+                    <td>7/5/2026 13:21:35</td>
+                    <td>7/5/2026</td>
+                    <td>10469705</td>
+                    <td>BCBA</td>
+                    <td>Compra</td>
+                    <td>99733</td>
+                    <td>BONO TESORO NACIONAL 6% 29/10/27 USD</td>
+                    <td>9385</td>
+                    <td>AO27</td>
+                    <td>15,0000</td>
+                    <td style="text-align: center">AR$</td>
+                    <td>145590,00</td>
+                    <td>21838,50</td>
+                    <td>111,37</td>
+                    <td>0,00</td>
+                    <td>21949,87</td>
+                </tr>
+                <tr>
+                    <td>7/5/2026 19:30:00</td>
+                    <td>7/5/2026</td>
+                    <td>10514634</td>
+                    <td>-</td>
+                    <td>Suscripci&#243;n FCI</td>
+                    <td>99733</td>
+                    <td>IOL Portafolio Potenciado</td>
+                    <td>27936</td>
+                    <td>IOLPORA</td>
+                    <td>13861,0512</td>
+                    <td style="text-align: center">AR$</td>
+                    <td>1,44</td>
+                    <td>20000,00</td>
+                    <td>0,00</td>
+                    <td>0,00</td>
+                    <td>20000,00</td>
+                </tr>
+                <tr>
+                    <td>11/5/2026 16:48:42</td>
+                    <td>12/5/2026</td>
+                    <td>10749423</td>
+                    <td>BCBA</td>
+                    <td>Compra</td>
+                    <td>99733</td>
+                    <td>Pampa Energ&#237;a</td>
+                    <td>457</td>
+                    <td>PAMP</td>
+                    <td>3,0000</td>
+                    <td style="text-align: center">AR$</td>
+                    <td>4825,00</td>
+                    <td>14475,00</td>
+                    <td>82,51</td>
+                    <td>17,33</td>
+                    <td>14574,84</td>
+                </tr>
+                <tr>
+                    <td>11/5/2026 16:49:27</td>
+                    <td>12/5/2026</td>
+                    <td>10749616</td>
+                    <td>BCBA</td>
+                    <td>Compra</td>
+                    <td>99733</td>
+                    <td>Transportadora Gas del Sur</td>
+                    <td>617</td>
+                    <td>TGSU2</td>
+                    <td>1,0000</td>
+                    <td style="text-align: center">AR$</td>
+                    <td>9000,00</td>
+                    <td>9000,00</td>
+                    <td>51,30</td>
+                    <td>10,77</td>
+                    <td>9062,07</td>
+                </tr>
+                <tr>
+                    <td>11/5/2026 16:53:43</td>
+                    <td>12/5/2026</td>
+                    <td>10750584</td>
+                    <td>BCBA</td>
+                    <td>Compra</td>
+                    <td>99733</td>
+                    <td>CEDEAR GLOBAL X COPPER MINERS ETF</td>
+                    <td>8719</td>
+                    <td>COPX</td>
+                    <td>2,0000</td>
+                    <td style="text-align: center">AR$</td>
+                    <td>9250,00</td>
+                    <td>18500,00</td>
+                    <td>105,45</td>
+                    <td>22,15</td>
+                    <td>18627,60</td>
+                </tr>
+                <tr>
+                    <td>11/5/2026 16:54:22</td>
+                    <td>12/5/2026</td>
+                    <td>10750731</td>
+                    <td>BCBA</td>
+                    <td>Compra</td>
+                    <td>99733</td>
+                    <td>Edenor</td>
+                    <td>508</td>
+                    <td>EDN</td>
+                    <td>4,0000</td>
+                    <td style="text-align: center">AR$</td>
+                    <td>1820,00</td>
+                    <td>7280,00</td>
+                    <td>41,50</td>
+                    <td>8,71</td>
+                    <td>7330,21</td>
+                </tr>
+                <tr>
+                    <td>11/5/2026 16:54:52</td>
+                    <td>12/5/2026</td>
+                    <td>10750849</td>
+                    <td>BCBA</td>
+                    <td>Compra</td>
+                    <td>99733</td>
+                    <td>Ternium Argentina Sa</td>
+                    <td>839</td>
+                    <td>TXAR</td>
+                    <td>10,0000</td>
+                    <td style="text-align: center">AR$</td>
+                    <td>654,00</td>
+                    <td>6540,00</td>
+                    <td>37,28</td>
+                    <td>7,83</td>
+                    <td>6585,11</td>
+                </tr>
+                <tr>
+                    <td>11/5/2026 17:00:18</td>
+                    <td>12/5/2026</td>
+                    <td>10752249</td>
+                    <td>BCBA</td>
+                    <td>Compra</td>
+                    <td>99733</td>
+                    <td>BOPREAL Serie 1C Vto 31/10/27</td>
+                    <td>9236</td>
+                    <td>BPOC7</td>
+                    <td>20,0000</td>
+                    <td style="text-align: center">AR$</td>
+                    <td>143540,00</td>
+                    <td>28708,00</td>
+                    <td>146,41</td>
+                    <td>0,00</td>
+                    <td>28854,41</td>
+                </tr>
+                <tr>
+                    <td>12/5/2026 10:33:47</td>
+                    <td>13/5/2026</td>
+                    <td>10781678</td>
+                    <td>BCBA</td>
+                    <td>Compra</td>
+                    <td>99733</td>
+                    <td>Transportadora Gas del Sur</td>
+                    <td>617</td>
+                    <td>TGSU2</td>
+                    <td>1,0000</td>
+                    <td style="text-align: center">AR$</td>
+                    <td>9095,00</td>
+                    <td>9095,00</td>
+                    <td>50,03</td>
+                    <td>10,50</td>
+                    <td>9155,53</td>
+                </tr>
+    </table>
+
+
+
+
+</body>
+</html>
