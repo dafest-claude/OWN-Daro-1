@@ -11,8 +11,7 @@ from analizar_cronogramas import (
     parse_xer, extraer_proyecto, extraer_wbs, extraer_tareas, PLANNING_DIR
 )
 
-BASE_DIR     = os.path.dirname(os.path.abspath(__file__))
-PLANNING_DIR = os.path.join(BASE_DIR, "02_Planning")
+PLANNING_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # ── Estilos ───────────────────────────────────────────────────────────────────
 def thin_border():

@@ -9,8 +9,7 @@ from openpyxl import Workbook
 from openpyxl.styles import PatternFill, Font, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
 
-BASE_DIR     = os.path.dirname(os.path.abspath(__file__))
-PLANNING_DIR = os.path.join(BASE_DIR, "02_Planning")
+PLANNING_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # ── Paleta ────────────────────────────────────────────────────────────────────
 C = {
