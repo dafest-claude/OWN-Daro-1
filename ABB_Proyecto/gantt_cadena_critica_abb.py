@@ -9,7 +9,8 @@ from openpyxl import Workbook
 from openpyxl.styles import PatternFill, Font, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR     = os.path.dirname(os.path.abspath(__file__))
+PLANNING_DIR = os.path.join(BASE_DIR, "02_Planning")
 
 # ── Paleta ────────────────────────────────────────────────────────────────────
 C = {
@@ -465,7 +466,7 @@ def generar():
         ws2.column_dimensions[get_column_letter(ord(col)-64)].width = w
     ws2.freeze_panes = ws2["A3"]
 
-    out = os.path.join(BASE_DIR, "Gantt_Cadena_Critica_ABB.xlsx")
+    out = os.path.join(PLANNING_DIR, "Gantt_Cadena_Critica_ABB.xlsx")
     wb.save(out)
     return out
 

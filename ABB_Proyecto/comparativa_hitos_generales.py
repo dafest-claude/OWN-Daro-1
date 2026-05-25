@@ -8,7 +8,8 @@ from datetime import datetime, date
 from openpyxl import Workbook
 from openpyxl.styles import PatternFill, Font, Alignment, Border, Side
 
-BASE_DIR    = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR     = os.path.dirname(os.path.abspath(__file__))
+PLANNING_DIR = os.path.join(BASE_DIR, "02_Planning")
 
 def S(style="thin", color="CCCCCC"):
     return Side(style=style, color=color)
@@ -415,7 +416,7 @@ def generar():
     ws3.column_dimensions["C"].width = 28
     ws3.column_dimensions["D"].width = 28
 
-    out = os.path.join(BASE_DIR, "Hitos_Generales_ABB_vs_P6.xlsx")
+    out = os.path.join(PLANNING_DIR, "Hitos_Generales_ABB_vs_P6.xlsx")
     wb.save(out)
     return out
 

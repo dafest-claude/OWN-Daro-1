@@ -11,7 +11,8 @@ from analizar_cronogramas import (
     parse_xer, extraer_proyecto, extraer_wbs, extraer_tareas, PLANNING_DIR
 )
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR     = os.path.dirname(os.path.abspath(__file__))
+PLANNING_DIR = os.path.join(BASE_DIR, "02_Planning")
 
 # ── Estilos ───────────────────────────────────────────────────────────────────
 def thin_border():
@@ -409,7 +410,7 @@ def generar():
     ws3.column_dimensions["F"].width = 45
     ws3.freeze_panes = ws3["A3"]
 
-    out = os.path.join(BASE_DIR, "Analisis_Comparativo_ABB_vs_P6.xlsx")
+    out = os.path.join(PLANNING_DIR, "Analisis_Comparativo_ABB_vs_P6.xlsx")
     wb.save(out)
     return out
 

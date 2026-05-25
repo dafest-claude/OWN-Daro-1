@@ -526,7 +526,7 @@ def generar_reporte(proyecto_p6, tareas_p6, wbs_map):
     ws5.freeze_panes = ws5["A3"]
 
     # Guardar
-    out = os.path.join(BASE_DIR, "Analisis_Cronogramas_CPF2.xlsx")
+    out = os.path.join(PLANNING_DIR, "Analisis_Cronogramas_CPF2.xlsx")
     wb.save(out)
     return out, tareas_abb, tareas_crit, resumen_semaforo
 
