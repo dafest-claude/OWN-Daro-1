@@ -1,1 +1,5 @@
 .claude/
+
+# Archivos generados por los scripts (regenerables)
+resultados/*.xlsx
+resultados/*.pdf
