@@ -1095,7 +1095,8 @@ def generar_pdf(ops_raw, proy_actual, proy_nuevos, output_path):
 # ─────────────────────────────────────────────────────────────
 def main():
     base    = os.path.dirname(os.path.abspath(__file__))
-    xls_in  = os.path.join(base, "OperacionesFinalizadas.xls")
+    root    = os.path.dirname(base)
+    xls_in  = os.path.join(root, "datos_entradas", "OperacionesFinalizadas.xls")
     xls_out = os.path.join(base, "ReinversionIOL_1Anio.xlsx")
     pdf_out = os.path.join(base, "ReinversionIOL_1Anio.pdf")
 

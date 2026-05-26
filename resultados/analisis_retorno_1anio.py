@@ -748,7 +748,8 @@ def hoja_graficos(ws, wb, proyecciones):
 # ─────────────────────────────────────────────────────────────
 def main():
     base_dir  = os.path.dirname(os.path.abspath(__file__))
-    input_xls = os.path.join(base_dir, "OperacionesFinalizadas.xls")
+    root_dir  = os.path.dirname(base_dir)
+    input_xls = os.path.join(root_dir, "datos_entradas", "OperacionesFinalizadas.xls")
     output    = os.path.join(base_dir, "RetornoInversiones_1Anio.xlsx")
 
     print(f"Leyendo operaciones desde: {input_xls}")

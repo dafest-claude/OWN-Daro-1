@@ -314,7 +314,7 @@ def _make_tx(tarjeta, subcuenta, fecha, desc, cuotas_col, importe, moneda):
 
 def parse_amex_4100():
     """Lee Último resumen - American Express 4100.xlsx"""
-    files = glob.glob('/home/user/OWN-Daro-1/*.xlsx')
+    files = glob.glob('/home/user/OWN-Daro-1/datos_entradas/*.xlsx')
     path = next((f for f in files if '4100' in f), None)
     if not path:
         raise FileNotFoundError("No se encontró el archivo de Amex 4100")
@@ -403,7 +403,7 @@ def parse_amex_4100():
 
 def parse_visa_2473():
     """Lee Último resumen - Visa 2473.xlsx"""
-    files = glob.glob('/home/user/OWN-Daro-1/*.xlsx')
+    files = glob.glob('/home/user/OWN-Daro-1/datos_entradas/*.xlsx')
     path = next((f for f in files if 'Visa 2473' in f), None)
     if not path:
         raise FileNotFoundError("No se encontró el archivo de Visa 2473")
@@ -512,7 +512,7 @@ def parse_amex_santander():
     except FileNotFoundError:
         import subprocess
         subprocess.run(["pdftotext", "-layout",
-                        "/home/user/OWN-Daro-1/2026-04-28.pdf",
+                        "/home/user/OWN-Daro-1/datos_entradas/2026-04-28.pdf",
                         txt_path], check=True)
         with open(txt_path, "r", encoding="utf-8") as f:
             text = f.read()
@@ -1566,8 +1566,8 @@ def main():
     print(f"Total ARS: $ {total_ars:,.2f}")
     print(f"Total USD: U$S {total_usd:.2f}")
 
-    excel_path = "/home/user/OWN-Daro-1/GastosTarjetas_Real_Abril2026.xlsx"
-    pdf_path   = "/home/user/OWN-Daro-1/GastosTarjetas_Real_Abril2026.pdf"
+    excel_path = "/home/user/OWN-Daro-1/resultados/GastosTarjetas_Real_Abril2026.xlsx"
+    pdf_path   = "/home/user/OWN-Daro-1/resultados/GastosTarjetas_Real_Abril2026.pdf"
 
     print("\nGenerando Excel...")
     generar_excel(todas, excel_path)

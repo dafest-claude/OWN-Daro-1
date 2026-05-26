@@ -813,7 +813,8 @@ def generar_pdf(ops_raw, proyecciones, output_path):
 # ─────────────────────────────────────────────────────────────
 def main():
     base   = os.path.dirname(os.path.abspath(__file__))
-    xls_in = os.path.join(base, "OperacionesFinalizadas.xls")
+    root   = os.path.dirname(base)
+    xls_in = os.path.join(root, "datos_entradas", "OperacionesFinalizadas.xls")
     pdf_out = os.path.join(base, "RetornoInversiones_1Anio.pdf")
 
     ops_raw      = leer_operaciones(xls_in)
