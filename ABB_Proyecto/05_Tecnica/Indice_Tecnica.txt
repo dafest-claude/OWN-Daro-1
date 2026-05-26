@@ -1,0 +1,11 @@
+CARPETA: 05_Tecnica
+PROYECTO: CPF-2 — Vaca Muerta — ABB
+==================================================
+
+Contenido de esta carpeta:
+- Acuerdos técnicos pactados con el cliente
+- Memorias de cálculo
+- Especificaciones técnicas acordadas
+- Reportes técnicos
+- Documentación de ingeniería
+

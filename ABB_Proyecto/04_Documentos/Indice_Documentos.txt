@@ -1,0 +1,11 @@
+CARPETA: 04_Documentos
+PROYECTO: CPF-2 — Vaca Muerta — ABB
+==================================================
+
+Contenido de esta carpeta:
+- PDFs de especificaciones técnicas
+- Planos y diagramas
+- Documentos contractuales
+- Normas y estándares aplicables
+- Cualquier documento de referencia del proyecto
+
