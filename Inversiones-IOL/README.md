@@ -76,8 +76,12 @@ Inversiones-IOL/
 └── 05-escenarios/            ← simulaciones de retorno y drawdown
 ```
 
-## 6. Próximo paso
+## 6. Estado actual del plan
 
-Respondé los 7 puntos de la sección 4 y, con eso, armo el plan concreto
-en `01-estrategia/` con cartera modelo, tamaños de posición y reglas de
-entrada/salida.
+| Versión | Archivo                                       | Estado     |
+|---------|-----------------------------------------------|------------|
+| V0      | `01-estrategia/cartera-starter-V0.md`         | **ACTIVA** |
+| V1      | `01-estrategia/plan-agresivo-3M.md`           | en reserva |
+
+**Arrancamos con V0**: 4 instrumentos (GGAL, GD30, NVDA, FCI MM) sobre
+IOL. Después de 3–4 semanas, si los KPI se cumplen, escalamos a V1.
