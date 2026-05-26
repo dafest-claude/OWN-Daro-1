@@ -85,3 +85,11 @@ Inversiones-IOL/
 
 **Arrancamos con V0**: 4 instrumentos (GGAL, GD30, NVDA, FCI MM) sobre
 IOL. Después de 3–4 semanas, si los KPI se cumplen, escalamos a V1.
+
+## 7. ARRANQUE — abrir mañana
+
+👉 **`ARRANQUE.md`** (raíz de la carpeta) — único documento a seguir el
+Día 1. Contiene checklist nocturno, calculadora de órdenes, cronograma,
+árbol de decisiones y cierre del día.
+
+Registro del día pre-armado: **`04-seguimiento/registro-2026-05-27.md`**.
