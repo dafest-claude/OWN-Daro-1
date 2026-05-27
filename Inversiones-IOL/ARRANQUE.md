@@ -60,9 +60,20 @@ Si querés profundizar en algo, los archivos de referencia están al final.
 
 > Si premarket está peor a −3%, **saltear NVDA al mediodía**. Cargarlo después de 15:45 (apertura USA confirmada).
 
-### FCI Ahorro Plus — Tramo único: ARS 37.500
+### FCI Money Market — Tramo único: ARS 37.500
 
-No hay precio que anotar. Suscripción directa en *Fondos → IOL Ahorro Plus → Suscribir → 37.500 → Confirmar*.
+No hay precio que anotar. **Elegir el fondo en pantalla aplicando estos 4 filtros**:
+
+1. Categoría: **Money Market** o "Liquidez".
+2. Moneda: **pesos**.
+3. Rescate: **T+0** (mismo día).
+4. Comisión de suscripción/rescate: **0%**.
+
+Ruta: *Inversiones → Fondos → filtrar Money Market → ordenar por TIR 30d desc → elegir el primero que cumpla los 4 criterios y tenga mayor patrimonio*.
+
+Candidatos típicos en IOL (verificar disponibilidad): Allaria Ahorro Pesos, Cocos Ahorro Pesos, Compass Renta Fija, Consultatio Ahorro Plus, Delta Pesos, Galileo Ahorro, Pellegrini Renta Pesos, Premier Renta Corto Plazo, Schroder Renta Plus, ST Ahorro Pesos.
+
+Una vez elegido: *Suscribir → ARS 37.500 → Confirmar con clave*. Anotar en el registro qué fondo terminaste eligiendo.
 
 ### Suma de control
 
@@ -78,7 +89,7 @@ No hay precio que anotar. Suscripción directa en *Fondos → IOL Ahorro Plus �
 |------------|---------------------------------------------------------|
 | 09:30–10:45| Completar la **Calculadora** de arriba                  |
 | 11:00–11:15| Observar apertura — no operar                           |
-| 11:15      | **Orden 1**: FCI Ahorro Plus, ARS 37.500                |
+| 11:15      | **Orden 1**: FCI Money Market elegido, ARS 37.500       |
 | 11:30      | **Orden 2**: GGAL — limitada                            |
 | 12:15      | **Orden 3**: GD30 — limitada (verificar GD30, no GD30D) |
 | 12:45      | **Orden 4**: NVDA — limitada (si premarket OK)          |
@@ -125,7 +136,7 @@ No hay precio que anotar. Suscripción directa en *Fondos → IOL Ahorro Plus �
 ## 5. CIERRE DEL DÍA — checklist 17:00
 
 - [ ] Las 3 órdenes (GGAL, GD30, NVDA) figuran como **ejecutadas** en *Operaciones del día*.
-- [ ] FCI Ahorro Plus aparece en *Mis tenencias* con la suscripción del día.
+- [ ] FCI Money Market aparece en *Mis tenencias* con la suscripción del día (anotar nombre exacto del fondo elegido).
 - [ ] PMC de cada posición anotado.
 - [ ] Cantidad nominal de cada uno anotada.
 - [ ] **Alertas configuradas** (6 en total):

@@ -24,7 +24,8 @@ escalamos a V1 (10 instrumentos del plan original).
 | 4 | FCI MM | Cash con tasa           | 15% |  37.500   | Liquidez para promediar y reserva |
 
 **Total invertido**: 100%
-**FCI sugerido**: IOL Ahorro Plus (rescate T+0).
+
+**FCI a elegir**: cualquier Money Market en pesos con rescate T+0 y sin comisiones. En IOL se filtra por *Fondos → Categoría Money Market → orden por TIR 30d*. Candidatos típicos: Allaria Ahorro Pesos, Cocos Ahorro Pesos, Compass Renta Fija, Consultatio Ahorro Plus, Delta Pesos, Galileo Ahorro, Pellegrini Renta Pesos, Premier Renta Corto Plazo, Schroder Renta Plus, ST Ahorro Pesos. Detalle de criterios en `ARRANQUE.md`.
 
 ## Por qué estos 4 y no otros
 
@@ -46,7 +47,9 @@ mejor relación riesgo/recompensa. QQQ es más ancla que motor.
 ### FCI Money Market (no LECAP)
 El FCI rescata T+0; la LECAP te ata al vencimiento o te obliga a vender
 en mercado secundario con riesgo de tasa. Para una reserva de 15% que
-puede necesitar moverse rápido, el FCI gana.
+puede necesitar moverse rápido, el FCI gana. IOL distribuye varios FCI
+MM; cualquiera de la lista de candidatos sirve si cumple los 4
+criterios (categoría MM, pesos, T+0, sin comisión).
 
 ## Reglas de entrada
 
