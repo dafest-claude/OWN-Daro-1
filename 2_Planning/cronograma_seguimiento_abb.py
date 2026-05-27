@@ -122,7 +122,7 @@ ACTIVIDADES = [
      "◆ FREEZING POINT — Ing. Básica PMS",
      date(2026,  6, 19), date(2026,  6, 19), "fp", False,
      "PMS", None,
-     "CONGELAR DISEÑO IB. Cambios posteriores → Nota de Cambio + impacto costo/plazo"),
+     "CONGELAR: arquitectura 800XA + lista señales (30% reserva mín.) + protocolo Modbus TCP/IP (acordado Oct-2025, reunión AESA-INAUCO-ABB). Cambios → NC + impacto costo/plazo"),
 
     ("PMS", "P-03",
      "Emisión Ingeniería de Detalle PMS",
@@ -146,13 +146,13 @@ ACTIVIDADES = [
      "Procura / Fabricación Tablero PMS (local BsAs)",
      date(2026,  8,  3), date(2027,  1, 29), "actividad", False,
      "PMS", None,
-     "Fabricación en ABB Buenos Aires. FAT Maqueta Sep-Oct 2026 / FAT Tableros Ene 2027"),
+     "Fabricación en ABB Buenos Aires. Gabinetes: 102-PMS-001 (SE#3) y 102-PMS-101 (SE#4). Controlador AC800M redundante. FAT Maqueta Sep-Oct 2026 / FAT Tableros Ene 2027"),
 
     ("PMS", "P-06",
-     "FAT Maqueta PMS — pruebas funcionales previas",
+     "FAT Maqueta PMS — Pruebas Tempranas (ET sec.20)",
      date(2026,  9,  1), date(2026,  9, 30), "fat", False,
      "PMS", None,
-     "Sep-Oct 2026. Fábrica ABB Buenos Aires. Asiste AESA según acuerdo KOM"),
+     "Sep-Oct 2026. Fábrica ABB Buenos Aires. Pruebas sobre mock-up PMS+CCM+AC800M red.+PROFINET. AESA + Contratista SCADA participan OBLIGATORIAMENTE (ET ACAL-00102-ET-E-0005 sec.20). ⚠ Planificar viaje BsAs"),
 
     ("PMS", "P-07",
      "Ensayos y FAT PMS (tablero control integrado)",
@@ -171,6 +171,12 @@ ACTIVIDADES = [
      date(2027,  4, 20), date(2027,  5,  9), "fat", False,
      "PMS", None,
      "AESA solicita prueba integrada (PMS + gabinetes) en Shelter antes del despacho. ABB analizando factibilidad"),
+
+    ("PMS", "P-10",
+     "▶ DESPACHO Tablero PMS — 14-MAY-2027",
+     date(2027,  5, 14), date(2027,  5, 14), "despacho", False,
+     "PMS", 222,
+     "OC deadline: 14-MAY-2027 (alineado S#3). Gabinetes 102-PMS-001 y 102-PMS-101 despa chados desde BsAs hacia Vaca Muerta"),
 
     # ══════════════════════════════════════════════════════════════════════════
     # SALA #4 (MT) — OC 4508944973 | 11 meses | Entrega: 08-ABR-2027
@@ -326,7 +332,7 @@ ACTIVIDADES = [
      "⚠ OPEN ISSUE: Confirmar cambio CCM7 (3x22kW → 2x45kW+VFD)",
      date(2026,  5, 26), date(2026,  6,  5), "actividad", True,
      "S3", None,
-     "AESA debe confirmar antes del 05-JUN-2026. Impacta ingeniería de detalle S3. Responsable: AESA"),
+     "AESA debe confirmar antes del 05-JUN-2026. Impacta IB/ID S3. VFDs 102-DP-VFD-24210 A/B/C (SE#3) y 102-DP-VFD-23310 A/B/C (SE#4) en scope PMS vía PROFINET → decisión afecta señales del sistema. Responsable: AESA"),
 
     ("Sala #3 (BT) ★ CRÍTICA", "S3-06",
      "Aprobación ID Sala #3 (AESA — 10 días hábiles)",
@@ -471,6 +477,24 @@ ACTIVIDADES = [
      date(2028,  1, 31), date(2028,  1, 31), "hito_contrato", True,
      "PROYECTO", None,
      "A10290. FECHA IDÉNTICA P6 y ABB ✅ Objetivo firme. Fin garantía extendida: 31-ENE-2029"),
+
+    ("INTEGRACIÓN EPC", "INT-06",
+     "SAT PMS — Pruebas en Sitio (100% puntos E/S)",
+     date(2027, 10,  1), date(2027, 12, 15), "actividad", False,
+     "PMS", None,
+     "100% puntos E/S ensayados en campo (ET ACAL-00102-ET-E-0005 sec.20). Asistencia ABB para IEDs de distintos fabricantes. Protocolo SAT aprobado por PP antes del inicio. Lista puntos pendientes debe resolverse antes del RFSU"),
+
+    ("INTEGRACIÓN EPC", "INT-07",
+     "Capacitación PMS — 1ra Instancia (Ingeniería y Mantenimiento)",
+     date(2028,  2,  5), date(2028,  2,  9), "actividad", False,
+     "PMS", None,
+     "Capacitación en sitio per ET sec.23. Cursos en castellano para Ingeniería y Mantenimiento. ABB debe presentar propuesta con lista de cursos, duración y cantidad de personas"),
+
+    ("INTEGRACIÓN EPC", "INT-08",
+     "Capacitación PMS — 2da Instancia (Operación)",
+     date(2028,  3,  3), date(2028,  3,  7), "actividad", False,
+     "PMS", None,
+     "2da fecha en sitio per ET sec.23. Grupo: Operación. Personal debe quedar apto para operar, mantener y hacer ingeniería del PMS sin asistencia del proveedor"),
 ]
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -805,7 +829,7 @@ def sheet_freezing(wb):
         "FP-S3-3": "Pendiente",
     }
     impacto = {
-        "FP-P1":   "Demora en procura y fabricación tablero PMS. PMS tiene holgura amplia (222d vs P6)",
+        "FP-P1":   "Arquitectura 800XA + lista señales (30% reserva) + protocolo Modbus TCP/IP no se pueden cerrar → FAT Maqueta Sep-Oct en riesgo. PMS tiene holgura amplia (222d vs P6) pero FP-P1 tardío comprime FAT Tableros",
         "FP-P2":   "Retrasa inicio fabricación tablero de control PMS. Holgura absorbida",
         "FP-S4-1": "Demora OC celdas MT Turquía (lead time 6m) → FAT S#4 tarde → Despacho S#4 tarde",
         "FP-S4-2": "Retrasa fabricación tableros auxiliares. Impacto en montaje Shelter S#4",
@@ -892,7 +916,7 @@ def sheet_critico(wb):
         "S3-03": "Lead time 6 meses. Si se retrasa la OC en julio, los ductos llegan en Feb-2027 → montaje late",
         "S3-04": "VFDs BT lead time 4-5 meses. Retraso en OC → llegan tarde → integración en Shelter tarde",
         "S3-05": "Demora ID → FP-S3-2 tarde → fabricación 37 CCMs en Brasil tarde → montaje Shelter late",
-        "S3-WARN": "AESA no confirma CCM7 → ABB no puede cerrar diseño ID → toda la cadena se retrasa",
+        "S3-WARN": "AESA no confirma CCM7 → ABB no puede cerrar ID S3. VFDs DP-VFD-24210 A/B/C (SE#3) y DP-VFD-23310 A/B/C (SE#4) en scope PMS vía PROFINET — la decisión afecta señales del sistema",
         "S3-06": "Aprobación AESA: 10 días hábiles. Comentarios múltiples pueden demorar FP-S3-2",
         "FP-S3-2": "1 día late → OC fabricación 37 CCMs en Brasil tarde → ensayos tarde → FAT S#3 tarde",
         "S3-07": "Planos constructivos definen montaje Shelter. Errores → retrabajo en Mendoza",
@@ -1159,6 +1183,22 @@ def sheet_alertas(wb):
          "Si se acepta prueba en Shelter: puede impactar timing despacho PMS. Si no: FAT PMS queda en BsAs",
          "ABB evalúa si la prueba integrada se realiza antes del despacho. Aclarar en cronograma final",
          "En análisis"),
+
+        ("🟡 IMPORTANTE",
+         "AESA obligatorio en FAT Maqueta PMS — Sep/Oct 2026 — planificar viaje a Buenos Aires",
+         "AESA (Equipo Técnico / TDJ-PLC)",
+         "AGO-2026 (con 4 semanas de anticipación)",
+         "La ET ACAL-00102-ET-E-0005 sec.20 establece participación obligatoria de AESA en Pruebas Tempranas (mock-up PMS+CCM+AC800M). Sin AESA presente no se certifica el resultado de la prueba",
+         "Planificar viaje a BsAs para SEP-OCT 2026. Confirmar disponibilidad con ABB (Pablo Kalis) al menos 4 semanas antes del inicio",
+         "Pendiente — planificar"),
+
+        ("🟢 INFO",
+         "Protocolo PMS cambiado: Ethernet TCP/IP → Modbus TCP/IP (acuerdo Oct 2025)",
+         "AESA + ABB + INAUCO",
+         "Vigente desde Oct-2025",
+         "Acordado en reunión AESA-INAUCO-ABB del 02-OCT-2025. Incorporado en ET Rev.0 (25-NOV-2025) sec.23. Afecta diseño de red FP-P1 y comunicación PLC-PMS con SCADA de Procesos",
+         "Verificar que ABB refleja el cambio en la IB PMS (P-01). Confirmar protocolo definitivo en revisión FP-P1",
+         "Acordado ✅ — verificar en IB"),
     ]
 
     sev_bg = {

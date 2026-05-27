@@ -1,11 +1,65 @@
-CARPETA: 04_Documentos
-PROYECTO: CPF-2 — Vaca Muerta — ABB
+CARPETA: 4_Documentos
+PROYECTO: CPF-2 — La Calera II — Vaca Muerta — ABB
+Actualizado: 27-MAY-2026
 ==================================================
 
-Contenido de esta carpeta:
-- PDFs de especificaciones técnicas
-- Planos y diagramas
-- Documentos contractuales
-- Normas y estándares aplicables
-- Cualquier documento de referencia del proyecto
+DOCUMENTOS DISPONIBLES EN ESTA CARPETA
+---------------------------------------
 
+1. ACAL-00102-ET-E-0005_0 VCO.pdf
+   Título  : ESPECIFICACIÓN TÉCNICA SCADA Y PMS
+   Emisor  : AESA — Álvaro Polania (firmado 01-DIC-2025)
+   Revisión: 0 (para construcción, emitida 25-NOV-2025)
+   Número  : ACAL-00102-ET-E-0005
+   Ref AESA: 5155-00-0000-IG-EL-ET-001
+   Páginas : 17
+   Objeto  : Requerimientos mínimos para provisión de sistema PMS + SCADA eléctrico
+             con función de deslastre de cargas para CPF-2 Fase 2 (La Calera, Neuquén)
+   Plataforma: ABB 800XA (integrable con PMS existente de CPF1)
+   Alcance clave:
+     - Gabinetes: 102-PMS-001 (SE#3) y 102-PMS-101 (SE#4)
+     - Controlador: AC800M redundante (PROFINET con CCM, Modbus con generadores)
+     - Protocolo: Modbus TCP/IP (cambio Ethernet→Modbus acordado Oct-2025 AESA-INAUCO-ABB)
+     - Tableros supervisados: CCM-105/106/007, TGMT-001, TGMT-003, DP-VFD-24210/23310, REC-010/011
+     - Pruebas: FAT Maqueta (Pruebas Tempranas, sec.20) + FAT Fábrica + SAT en sitio (100% E/S)
+     - Capacitación: 2 instancias en sitio (Ingeniería, Mantenimiento, Operación)
+     - Reservas: 30% señales, 20% módulos instalados, 30% espacio físico gabinetes
+
+DOCUMENTOS APLICABLES REFERENCIADOS EN LA ET (Tabla 1)
+-------------------------------------------------------
+   ACAL-00102-EE-E-0001  Diagrama Unifilar - Tablero 13,2 kV 102-TGMT-001 - SE#4
+   ACAL-00102-EE-E-0002  Diagrama Unifilar - Tablero 6,6 kV 102-TGMT-003 - SE#4
+   ACAL-00100-EE-E-0001  Diagrama Unifilar Eléctrico General
+   ACAL-00102-EE-E-0003  Diagrama Unifilar - 102-CCM-007 - SE#3
+   ACAL-00102-EE-E-0004  Diagrama Unifilar - 102-CCM-005 - SE#3
+   ACAL-00102-EE-E-0005  Diagrama Unifilar - 102-CCM-006 - SE#3
+   ACAL-00102-LO-E-0002  Layout Shelter Eléctrico SE#3
+   ACAL-00102-LO-E-0001  Layout Shelter Eléctrico SE#4
+   021-ACAL-100-ET-E-308  ET Sistema de Control Eléctrico SCADA PMS - CPF/Generación (*) - La Calera
+   EPC-SISTEMA-COMUNICACIONES V0.7
+   PRFC0006/STD0002       Structured Cable System Standard
+   021-ACAL-100-ET-K-307  Fibra Óptica - Especificación Técnica
+   021-ACAL-100-ET-K-309  Sistema de Cableado Estructurado - ET
+   ACAL-00102-EE-E-0016  Esquema Funcional - Tablero 13,2 kV 102-TGMT-001 - SE#4
+   ACAL-00102-EE-E-0017  Esquema Funcional - Tablero 6,6 kV 102-TGMT-003 - SE#4
+   ACAL-00102-EE-E-0018  Esquemas Funcionales Típicos - Tableros de BT - CPF2
+   ACAL-00102-LG-E-0001  Listado de Cargas a Deslastrar por PMS
+
+   (*) Aplican los códigos y estándares de la especificación de Sistema de Control CPF/Generación
+
+NOTAS TÉCNICAS RELEVANTES
+--------------------------
+   - El servidor de datos y la estación de operación e ingeniería son los EXISTENTES de CPF1.
+   - El SCADA Eléctrico se basa en la infraestructura HCI (hiperconvergente) de 800XA.
+   - Los IED, Multimedidores y RTUs NO forman parte de esta ET — se proveen con cada tablero.
+   - La lógica de deslastre rápido se ejecuta vía cableado duro + IEC 61850 entre controladores.
+   - La señal de potencia de los 3 nuevos generadores: analógica 4-20 mA por cableado duro.
+   - La señal de deslastre de cargas: por cableado duro.
+   - Se requiere Demo de integración SCADA Procesos ↔ PMS para verificar comunicación (Ethernet IP).
+
+PENDIENTES DE INCORPORAR A ESTA CARPETA
+-----------------------------------------
+   - Planos unifilares (ACAL-00102-EE-E-000x)
+   - Layouts shelters (ACAL-00102-LO-E-000x)
+   - Listado de cargas a deslastrar (ACAL-00102-LG-E-0001)
+   - ET Sistema de Control Eléctrico CPF/Generación (021-ACAL-100-ET-E-308)
