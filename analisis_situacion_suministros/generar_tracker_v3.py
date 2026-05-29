@@ -19,10 +19,10 @@ from datetime import date, datetime
 SCRIPT_DIR  = os.path.dirname(os.path.abspath(__file__))
 PLAN_FILE   = os.path.join(SCRIPT_DIR, '..', 'info_suministros',
                             '2026.04.06 - Plan de Suministros - La Calera II (210526).xlsx')
-OUT_XLSX    = os.path.join(SCRIPT_DIR, 'Tracker_Suministros_IN_EL_LaCalera_II_v3R2_290526.xlsx')
+OUT_XLSX    = os.path.join(SCRIPT_DIR, 'Tracker_Suministros_IN_EL_LaCalera_II_v3R3_290526.xlsx')
 TODAY       = date(2026, 5, 29)
 RFSU        = date(2027, 2, 3)
-VERSION     = 'v3R2_290526'
+VERSION     = 'v3R3_290526'
 
 # ── Paleta ──────────────────────────────────────────────────────────────────
 C = {
@@ -43,15 +43,16 @@ C = {
 }
 
 STATUS_MAP = {
-    'COMPLETADO':  (C['completado'],  'FFFFFF', True),
-    'COMPLETADA':  (C['completado'],  'FFFFFF', True),
-    'EN PROCESO':  (C['en_proceso'],  '000000', True),
-    'EMITIDA':     (C['emitida'],     '000000', True),
-    'ADJUDICADO':  (C['adjudicado'],  'FFFFFF', True),
-    'EN TRÁNSITO': (C['en_transito'], 'FFFFFF', True),
-    'ATRASADO':    (C['atrasado'],    'FFFFFF', True),
-    'PENDIENTE':   (C['pendiente'],   '000000', False),
-    'NO APLICA':   (C['no_aplica'],   'FFFFFF', True),
+    'COMPLETADO':     (C['completado'],  'FFFFFF', True),
+    'COMPLETADA':     (C['completado'],  'FFFFFF', True),
+    'EN PROCESO':     (C['en_proceso'],  '000000', True),
+    'EMITIDA':        (C['emitida'],     '000000', True),
+    'EN LIBERACIÓN':  ('FF8C00',         'FFFFFF', True),   # ámbar oscuro = SOLPED en trámite
+    'ADJUDICADO':     (C['adjudicado'],  'FFFFFF', True),
+    'EN TRÁNSITO':    (C['en_transito'], 'FFFFFF', True),
+    'ATRASADO':       (C['atrasado'],    'FFFFFF', True),
+    'PENDIENTE':      (C['pendiente'],   '000000', False),
+    'NO APLICA':      (C['no_aplica'],   'FFFFFF', True),
     'SIN RI':      (C['sin_ri'],      'FFFFFF', True),
 }
 
@@ -457,6 +458,14 @@ def parse_status_dates(status):
         if d:
             out['kom_real'] = d
 
+    # Estado de liberación SOLPED (para diferenciar "liberada" de "en liberación")
+    # "Solpeds ... liberadas" → ya emitida (hecho consumado)
+    if re.search(r'solpeds?\s+[\d,/\s]+liberadas?', s):
+        out['solped_estado'] = 'EMITIDA'
+    # "Solpeds ... en liberación" → en trámite, NO emitida todavía
+    elif re.search(r'solpeds?\s+[\d,/\s]+en liberaci', s):
+        out['solped_estado'] = 'EN LIBERACIÓN'
+
     return out
 
 
@@ -734,10 +743,17 @@ def write_data_row(ws, row_n, seq, item, sc_item, ri_num, hdr_color, is_alt, cro
     date_cell(11, solp_prog)  # Prog. Actual (crono)
     date_cell(12, solp_real)  # Real (SC)
 
-    if solp_real:   est_sp = 'COMPLETADA'
-    elif solp_n:    est_sp = 'EMITIDA'
-    elif solp_prog: est_sp = 'PENDIENTE'
-    else:           est_sp = 'SIN RI'
+    if solp_real:
+        est_sp = 'COMPLETADA'
+    elif parsed.get('solped_estado'):
+        # Texto explícito del estado: "liberada" → EMITIDA, "en liberación" → EN LIBERACIÓN
+        est_sp = parsed['solped_estado']
+    elif solp_n:
+        est_sp = 'EMITIDA'
+    elif solp_prog:
+        est_sp = 'PENDIENTE'
+    else:
+        est_sp = 'SIN RI'
     apply_status_cell(ws, row_n, 13, est_sp)
 
     # ── REC. OFERTAS (col 14-16) ──────────────────────────────────────────────
@@ -814,14 +830,24 @@ def write_data_row(ws, row_n, seq, item, sc_item, ri_num, hdr_color, is_alt, cro
     acc_v = ''
     if sc_item:
         s = sc_item['status'].lower()
-        if 'se espera' in s:
-            acc_v = 'Seguimiento oferentes – esperar respuesta'
+        if sc_item['oc_n']:
+            acc_v = 'Seguimiento fabricación / entrega OC'
+        elif 'kom' in s:
+            acc_v = 'Monitorear fabricación – verificar hitos KOM'
+        elif 'se espera' in s and 'oferta' in s:
+            acc_v = 'Seguimiento oferentes – aguardar oferta final'
         elif 'apertura de ofertas' in s:
             acc_v = 'Evaluar ofertas recibidas – iniciar AT'
-        elif ('solped liberada' in s or 'solpeds' in s) and not sc_item['recof']:
+        elif 'en at' in s or 'se envió a at' in s:
+            acc_v = 'Completar Análisis Técnico – aguardar cierre CT'
+        elif parsed.get('solped_estado') == 'EN LIBERACIÓN':
+            acc_v = 'Completar liberación SOLPED – confirmar en SAP'
+        elif 'liberadas' in s and not sc_item['recof']:
+            acc_v = 'SOLPED liberada – coordinar apertura de ofertas'
+        elif sc_item['solped']:
             acc_v = 'Coordinar apertura de ofertas'
-        elif sc_item['oc_n']:
-            acc_v = 'Seguimiento fabricación / KOM'
+        elif sc_item['ri_real']:
+            acc_v = 'Liberar SOLPED'
     elif not ri_p0:
         acc_v = 'Emitir RI'
     elif not solp_real:
@@ -1146,8 +1172,15 @@ def build_cambios(wb):
          'fechas reales para los 8 ítems de "Suministros Críticos"; el resto de ítems '
          '(instrumentos por tipo, paquetes EL) no tienen ejecución real registrada todavía '
          'y muestran únicamente fechas de programa (Prog. Actual / Crono 4.11).'),
-        ('13', 'Revisión nombre',
-         f'Archivo renombrado a: Tracker_Suministros_IN_EL_LaCalera_II_{VERSION}.xlsx'),
+        ('13', 'SOLPED EN LIBERACIÓN – R3',
+         'v3R3: Corrección del estado SOLPED para "Cables IN" (23392215/16/13): '
+         'el texto indica "en liberación" (trámite en curso, NO emitida aún). '
+         'Se diferencia explícitamente de "liberada" (hecho consumado). '
+         'Nuevo estado EN LIBERACIÓN (ámbar oscuro) en columna Estado SOLPED. '
+         'Se mejoran las Acciones para todos los ítems SC con lógica más precisa '
+         '(seguimiento KOM, completar AT, apertura ofertas, confirmar SOLPED en SAP).'),
+        ('14', 'Revisión nombre',
+         f'Archivo: Tracker_Suministros_IN_EL_LaCalera_II_{VERSION}.xlsx'),
     ]
 
     for n, tipo, desc in cambios:
