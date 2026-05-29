@@ -19,10 +19,10 @@ from datetime import date, datetime
 SCRIPT_DIR  = os.path.dirname(os.path.abspath(__file__))
 PLAN_FILE   = os.path.join(SCRIPT_DIR, '..', 'info_suministros',
                             '2026.04.06 - Plan de Suministros - La Calera II (210526).xlsx')
-OUT_XLSX    = os.path.join(SCRIPT_DIR, 'Tracker_Suministros_IN_EL_LaCalera_II_v3R1_290526.xlsx')
+OUT_XLSX    = os.path.join(SCRIPT_DIR, 'Tracker_Suministros_IN_EL_LaCalera_II_v3R2_290526.xlsx')
 TODAY       = date(2026, 5, 29)
 RFSU        = date(2027, 2, 3)
-VERSION     = 'v3R1_290526'
+VERSION     = 'v3R2_290526'
 
 # ── Paleta ──────────────────────────────────────────────────────────────────
 C = {
@@ -415,6 +415,51 @@ def get_solped_num(item, sc_item=None):
     return ''
 
 
+def _dm_to_date(d, m, year=2026):
+    """Convierte día/mes de un texto a date() del año indicado (default 2026)."""
+    try:
+        return date(year, int(m), int(d))
+    except (ValueError, TypeError):
+        return None
+
+
+def parse_status_dates(status):
+    """
+    Extrae fechas de hitos REALES embebidas en el texto de 'Comentarios AT/Adjudicaciones'
+    de Suministros Críticos. Sólo devuelve fechas con evidencia textual explícita.
+    Devuelve dict con claves: recof_real, at_ct1_real, kom_real.
+    """
+    out = {}
+    if not status:
+        return out
+    s = status.lower()
+
+    # Recepción de ofertas: "Apertura de ofertas 21/5" → fecha de apertura/recepción
+    m = re.search(r'apertura de ofertas\s+(?:el\s+)?(\d{1,2})[/-](\d{1,2})', s)
+    if m:
+        d = _dm_to_date(m.group(1), m.group(2))
+        if d:
+            out['recof_real'] = d
+
+    # Inicio de Análisis Técnico (CT1): "El 13/3 se envió a AT" / "se envió a AT el 13/3"
+    m = re.search(r'(?:el\s+)?(\d{1,2})[/-](\d{1,2})\s+se envió a at', s)
+    if not m:
+        m = re.search(r'se envió a at\s+(?:el\s+)?(\d{1,2})[/-](\d{1,2})', s)
+    if m:
+        d = _dm_to_date(m.group(1), m.group(2))
+        if d:
+            out['at_ct1_real'] = d
+
+    # KOM (Kick-Off Meeting): "KOM 18/5" → inicio de fabricación post-adjudicación
+    m = re.search(r'kom\s+(?:el\s+)?(\d{1,2})[/-](\d{1,2})', s)
+    if m:
+        d = _dm_to_date(m.group(1), m.group(2))
+        if d:
+            out['kom_real'] = d
+
+    return out
+
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # GENERACIÓN EXCEL
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -608,6 +653,16 @@ def write_data_row(ws, row_n, seq, item, sc_item, ri_num, hdr_color, is_alt, cro
     nec_obra_v= sc_item['nec_ent']   if sc_item else item.get('nec_obra')
     status_v  = sc_item['status']    if sc_item else ''
     kom_v     = sc_item.get('kom')   if sc_item else None
+
+    # ── Completar fechas REALES desde el texto de estado (SC) ─────────────────
+    # Sólo cuando hay evidencia textual explícita y el campo está vacío.
+    parsed = parse_status_dates(status_v)
+    if not recof_real and parsed.get('recof_real'):
+        recof_real = parsed['recof_real']           # ej. "Apertura de ofertas 21/5"
+    if not at_ct1_r and parsed.get('at_ct1_real'):
+        at_ct1_r = parsed['at_ct1_real']            # ej. "El 13/3 se envió a AT"
+    if not kom_v and parsed.get('kom_real'):
+        kom_v = parsed['kom_real']                  # ej. "KOM 18/5"
 
     at_state  = infer_at_state(item, sc_item)
     est_gen   = infer_est_general(item, sc_item)
@@ -915,6 +970,12 @@ def build_dashboard(wb, sc_in, sc_el, in_items, el_items):
         c2.fill = F(cc); c2.font = ft(True, 'FFFFFF' if s['crit'] in ('LLI','C. CRÍTICO','HITO 2') else '000000', 8)
         c2.alignment = al('center'); c2.border = bd()
 
+        # Enriquecer con fechas reales extraídas del texto de estado
+        parsed = parse_status_dates(s['status'])
+        recof_d   = s['recof']     or parsed.get('recof_real')
+        atcierre_d= s['at_cierre'] or parsed.get('at_ct1_real')
+        kom_d     = s.get('kom')   or parsed.get('kom_real')
+
         desc_sh = s['desc_sc']
         for pre in ['RI - ', 'RI-REQUISICIÓN DE INGENIERÍA - ']:
             if desc_sh.upper().startswith(pre.upper()): desc_sh = desc_sh[len(pre):]; break
@@ -922,10 +983,10 @@ def build_dashboard(wb, sc_in, sc_el, in_items, el_items):
         dc(4,  ri_num,              h='left', wrap=True)
         dc(5,  fmt_date(s['ri_real']))
         dc(6,  fmt_date(s['solped']))
-        dc(7,  fmt_date(s['recof']))
-        dc(8,  fmt_date(s['at_cierre']))
+        dc(7,  fmt_date(recof_d))
+        dc(8,  fmt_date(atcierre_d))
         dc(9,  fmt_date(s['nec_oc']))
-        dc(10, fmt_date(s['oc_real_d'] or s.get('kom')))
+        dc(10, fmt_date(s['oc_real_d'] or kom_d))
         dc(11, s['lt'])
 
         oc_c = ws.cell(row=row0, column=12, value=s['oc_n'])
@@ -1013,6 +1074,15 @@ def build_portada(wb):
     leg.fill = F(C['hdr_col']); leg.font = ft(True, '1F3864', 9)
     leg.alignment = al('center', 'center')
     row_h(r, 18)
+    r += 1
+    ws.merge_cells(start_row=r, start_column=2, end_row=r, end_column=3)
+    nota = ws.cell(row=r, column=2,
+                   value='NOTA: Un campo "Real" vacío = hito aún no alcanzado (proceso en curso), '
+                         'no es una omisión. Sólo los 8 ítems de Suministros Críticos tienen '
+                         'fechas reales registradas en el Plan.')
+    nota.fill = F('FFF2CC'); nota.font = ft(False, '7F6000', 8)
+    nota.alignment = al('left', 'center', wrap=True)
+    row_h(r, 40)
 
 
 def build_cambios(wb):
@@ -1062,7 +1132,21 @@ def build_cambios(wb):
          'La columna "P0 Base (2024)" conserva las fechas originales P0. '
          'Fuentes: P0 Base=Preliminar | Prog.Actual=Crono 4.11 | Real=Suministros Críticos. '
          'Se filtran fechas inválidas 1900-era provenientes de celdas vacías en Excel.'),
-        ('11', 'Revisión nombre',
+        ('11', 'REVISIÓN FECHAS REAL – R2',
+         'v3R2: Revisión integral de los campos "Real" (RI/SOLPED/Rec.Of./AT/OC). '
+         'Se completan fechas reales extraídas del TEXTO del campo Estatus de Suministros '
+         'Críticos cuando hay evidencia explícita: '
+         '• Válvulas Control → Rec.Ofertas Real 21/05/26 ("Apertura de ofertas 21/5"). '
+         '• Sistema SIS → AT CT1 Real 13/03/26 ("El 13/3 se envió a AT"). '
+         '• SE#3/SE#4 → KOM 18/05/26 | PMS → KOM 22/05/26 (inicio de fabricación). '
+         'Los SE#3/SE#4/PMS muestran N° OC (adjudicados ABB) + KOM en columna OC Real/KOM.'),
+        ('12', 'Criterio campos vacíos',
+         'IMPORTANTE: Un campo "Real" VACÍO significa que ese hito AÚN NO se alcanzó '
+         '(proceso en curso), NO es una omisión. El Plan de Suministros sólo registra '
+         'fechas reales para los 8 ítems de "Suministros Críticos"; el resto de ítems '
+         '(instrumentos por tipo, paquetes EL) no tienen ejecución real registrada todavía '
+         'y muestran únicamente fechas de programa (Prog. Actual / Crono 4.11).'),
+        ('13', 'Revisión nombre',
          f'Archivo renombrado a: Tracker_Suministros_IN_EL_LaCalera_II_{VERSION}.xlsx'),
     ]
 
