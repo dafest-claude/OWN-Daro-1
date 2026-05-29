@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
 """
-Tracker Suministros v3 – La Calera II CPF2
+Tracker Suministros v3R1 – La Calera II CPF2
 Especialidades IN (Instrumentación & Control) | EL (Electricidad)
 Lee directamente del Plan de Suministros.
-Revisión 290526 – incluye análisis de demoras RI→OC, AT por CT1/CT0, SOLPED numbers.
+v3: Versión inicial con todas las requisiciones individuales, análisis demoras RI→OC,
+    AT CT1/CT0, números SOLPED, items SC adicionales.
+v3R1: Corrección de fechas – se reemplaza fechas P0 Preliminar (2024) en columnas
+      "Prog. Actual" por fechas del Crono 4.11 (2025-2026).
 """
 
-import os, sys
+import os, sys, re
 import openpyxl
 from openpyxl.styles import PatternFill, Font, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
@@ -16,10 +19,10 @@ from datetime import date, datetime
 SCRIPT_DIR  = os.path.dirname(os.path.abspath(__file__))
 PLAN_FILE   = os.path.join(SCRIPT_DIR, '..', 'info_suministros',
                             '2026.04.06 - Plan de Suministros - La Calera II (210526).xlsx')
-OUT_XLSX    = os.path.join(SCRIPT_DIR, 'Tracker_Suministros_IN_EL_LaCalera_II_v3_290526.xlsx')
+OUT_XLSX    = os.path.join(SCRIPT_DIR, 'Tracker_Suministros_IN_EL_LaCalera_II_v3R1_290526.xlsx')
 TODAY       = date(2026, 5, 29)
 RFSU        = date(2027, 2, 3)
-VERSION     = 'v3_290526'
+VERSION     = 'v3R1_290526'
 
 # ── Paleta ──────────────────────────────────────────────────────────────────
 C = {
@@ -76,8 +79,12 @@ def to_date(v):
     if isinstance(v, date): return v
     return None
 
+def safe_date(v):
+    """Convert to date, filtering bogus 1900-era Excel dates."""
+    d = to_date(v)
+    return d if (d and d.year > 1900) else None
+
 def days_between(d1, d2):
-    """Return (d2-d1).days if both valid, else None."""
     a, b = to_date(d1), to_date(d2)
     if a and b: return (b - a).days
     return None
@@ -109,7 +116,6 @@ def style_delay_cell(ws, row, col, days, threshold_warn=15, threshold_crit=30):
 
 
 # ── Mapeo N° RI: descripción Preliminar → RI number (Datos P0) ─────────────
-# Cada entrada: clave (texto en desc) → número RI principal
 IN_RI_NUMBER = {
     'Transmisor de Presión Diferencial':     '5155-00-0000-IG-IN-RI-006 / 2000-IN-RI-006',
     'Transmisor de Presión':                 '5155-00-0000-IG-IN-RI-005',
@@ -181,6 +187,69 @@ def get_ri_number(desc, ri_map):
     return ''
 
 
+# ── Mapeo Preliminar → Crono 4.11 ───────────────────────────────────────────
+# Lista de (keyword en desc Prelim, keyword en desc Crono) ordenada por especificidad
+IN_PRELIM_TO_CRONO = [
+    ('válvulas de control',    'válvulas de control, shutdown'),
+    ('válvulas autor',         'válvulas de control, shutdown'),
+    ('válvulas blowdown',      'válvulas de control, shutdown'),
+    ('válvulas shutdown',      'válvulas de control, shutdown'),
+    ('válvulas diluvio',       'válvulas de control, shutdown'),
+    ('válvulas de seguridad',  'válvulas de seguridad'),
+    ('transmisor de caudal',   'medidores de caudal'),
+    ('plcas orificio',         'medidores de caudal'),
+    ('transmisor de nivel',    'transmisores'),
+    ('transmisor de presión',  'transmisores'),
+    ('transmisor de temperatura', 'transmisores'),
+    ('analizador',             'analizadores'),
+    ('tomamuestras',           'tomamuestras'),
+    ('detector de llama',      'sistema fire & gas'),
+    ('detector de fugas',      'sistema fire & gas'),
+    ('detector de mecla',      'sistema fire & gas'),
+    ('pulsador de emergencia', 'sistema fire & gas'),
+    ('cables de instrument',   'cables de instrumentación rev. 0'),
+    ('cajas de conexionado',   'cajas'),
+    ('requerimiento para sistema', 'sistema contra incendio'),
+    ('cctv',                   'sistema contra incendio'),
+    ('indicador de paso',      'instrumentos comunes'),
+    ('interruptor de',         'instrumentos comunes'),
+    ('manómetro',              'instrumentos comunes'),
+    ('indicador de nivel',     'instrumentos comunes'),
+    ('rotámetro',              'instrumentos comunes'),
+    ('termómetro',             'instrumentos comunes'),
+    ('cupón de corros',        'instrumentos comunes'),
+    ('materiales mecán',       'materiales para montaje'),
+    ('materiales eléct',       'materiales para montaje'),
+    ('sistema de control pcs', 'sistema de control, hardware'),
+    ('sistema de seguridad sis', 'sistema contra incendio'),
+]
+
+EL_PRELIM_TO_CRONO = [
+    ('cables - baja y media',  'cables rev. 0'),
+    ('canalizaciones',         'canalizaciones eléctricas'),
+    ('tracing eléctrico',      'tracing'),
+    ('puesta a tierra',        'materiales para pat'),
+    ('protección catódica',    'materiales para pat'),
+    ('sistema ups',            'sistema ups y rectificadores'),
+    ('ducto de barras',        'ducto de barras'),
+    ('shelter',                'shelter y banco de carga'),
+    # Iluminación, prensacables, cajas conexionado EL, materiales misceláneos
+    # no tienen paquete equivalente en crono 4.11
+]
+
+
+def find_crono_item(prelim_desc, esp, crono_items):
+    """Encuentra el paquete de crono 4.11 correspondiente a una descripción de Preliminar."""
+    d = prelim_desc.lower()
+    mapping = IN_PRELIM_TO_CRONO if esp == 'IN' else EL_PRELIM_TO_CRONO
+    for prelim_kw, crono_kw in mapping:
+        if prelim_kw in d:
+            for key, item in crono_items.items():
+                if item['esp'] == esp and crono_kw in key:
+                    return item
+    return None
+
+
 # ── Leer datos del Plan ──────────────────────────────────────────────────────
 def load_plan():
     wb = openpyxl.load_workbook(PLAN_FILE, data_only=True)
@@ -213,7 +282,26 @@ def load_plan():
         if esp == 'IN': sc_in.append(item)
         else:           sc_el.append(item)
 
-    # ─── Preliminar ───────────────────────────────────────────────────────
+    # ─── Crono 4.11 (fechas programa actual 2025-2026) ────────────────────
+    ws_c = wb['La Calera II - crono 4.11']
+    crono_items = {}  # keyed by description lowercase
+    for row in ws_c.iter_rows(min_row=4, values_only=True):
+        esp_c = str(row[0]) if row[0] else ''
+        if not (esp_c.startswith('IN') or esp_c.startswith('EL')): continue
+        desc = str(row[2]) if row[2] else ''
+        if not desc: continue
+        esp_short = 'IN' if esp_c.startswith('IN') else 'EL'
+        crono_items[desc.lower()] = {
+            'desc':     desc,
+            'esp':      esp_short,
+            'ri_prog':  safe_date(row[4]),
+            'sp_prog':  safe_date(row[10]),
+            'rec_prog': safe_date(row[18]),
+            'at0_prog': safe_date(row[29]),
+            'oc_prog':  safe_date(row[36]),
+        }
+
+    # ─── Preliminar (P0 baseline 2024 – solo se usa para P0 y datos reales) ─
     ws_p = wb['Preliminar']
     in_items, el_items = [], []
     for row in ws_p.iter_rows(min_row=4, values_only=True):
@@ -221,24 +309,19 @@ def load_plan():
         if not esp: continue
         item = {
             'desc':          str(row[2]) if row[2] else '',
-            'ri_p0':         to_date(row[4]),
-            'ri_fc':         to_date(row[5]),
+            'ri_p0':         to_date(row[4]),      # P0 baseline (2024)
             'ri_real_p':     to_date(row[6]),
             'ri_desv':       row[7],
-            'solp_p0':       to_date(row[10]),
-            'solp_fc':       to_date(row[12]),
+            'solp_p0':       to_date(row[10]),     # P0 baseline (2024)
             'solp_real_p':   to_date(row[13]),
             'solp_n':        str(row[15]) if row[15] else '',
-            'recof_p0':      to_date(row[18]),
-            'recof_fc':      to_date(row[20]),
+            'recof_p0':      to_date(row[18]),     # P0 baseline (2024)
             'recof_real_p':  to_date(row[21]),
-            'at_reva_p0':    to_date(row[24]),
+            'at_reva_p0':    to_date(row[24]),     # P0 baseline (2024)
             'at_reva_real':  to_date(row[25]),
-            'at_rev0_p0':    to_date(row[29]),
-            'at_rev0_fc':    to_date(row[31]),
+            'at_rev0_p0':    to_date(row[29]),     # P0 baseline (2024)
             'at_rev0_real':  to_date(row[32]),
-            'oc_p0':         to_date(row[36]),
-            'oc_fc':         to_date(row[38]),
+            'oc_p0':         to_date(row[36]),     # P0 baseline (2024)
             'oc_real_p':     to_date(row[39]),
             'oc_n':          str(row[41]) if row[41] else '',
             'prov':          str(row[43]) if row[43] else '',
@@ -248,7 +331,7 @@ def load_plan():
         if esp.startswith('IN'):   in_items.append(item)
         elif esp.startswith('EL'): el_items.append(item)
 
-    return sc_in, sc_el, in_items, el_items
+    return sc_in, sc_el, in_items, el_items, crono_items
 
 
 # ── Cruzar Preliminar con Suministros críticos ───────────────────────────────
@@ -257,7 +340,6 @@ def match_sc(prelim_desc, sc_list):
     d = prelim_desc.lower()
     for s in sc_list:
         sc_d = s['desc_sc'].lower()
-        # Válvulas de control y autorreguladoras (mismo paquete de compra)
         if ('válvulas de control' in d or 'válvulas autor' in d or
                 'válvulas blowdown' in d or 'válvulas shutdown' in d):
             if 'válvulas de control' in sc_d: return s
@@ -286,7 +368,6 @@ def infer_at_state(item, sc_item=None):
             return 'REC.OF. COMPLETA – EN AT'
         if 'solped liberada' in status or 'solpeds' in status or sc_item['solped']:
             return 'SOLPED LIBERADA'
-    # Desde Preliminar
     if item.get('at_rev0_real'): return 'AT COMPLETADO'
     if item.get('at_reva_real'): return 'CT0 EN CURSO'
     if item.get('recof_real_p'): return 'CT1 EN PROCESO'
@@ -327,11 +408,9 @@ def infer_est_general(item, sc_item=None):
 def get_solped_num(item, sc_item=None):
     """Extrae N° SOLPED del texto de status o del Preliminar."""
     if sc_item:
-        import re
-        # Busca números de 8 dígitos en el status
         nums = re.findall(r'\b2\d{7}\b', sc_item['status'])
         if nums:
-            return ' / '.join(nums[:3])  # max 3
+            return ' / '.join(nums[:3])
     if item.get('solp_n'): return item['solp_n']
     return ''
 
@@ -342,13 +421,11 @@ def get_solped_num(item, sc_item=None):
 
 def write_header_rows(ws, esp_label, hdr_color, start_row=1):
     """
-    Genera 3 filas de encabezado:
-      Fila 1: Bloques temáticos (RI / SOLPED / ANÁLISIS TÉCNICO / OC / DEMORAS / ESTADO)
-      Fila 2: Sub-bloques (P0 / Real / etc.)
-      Fila 3: Nombres columna individuales
-    Devuelve dict col_name→col_index.
+    Genera 3 filas de encabezado.
+    Col 5 = P0 BASELINE (2024 – Preliminar)
+    Col 6 = PROG. ACTUAL (Crono 4.11 – 2025/2026)
+    Col 7 = REAL (Suministros críticos)
     """
-    # Definición de columnas: (nombre, bloque, sub-bloque, ancho)
     COLS = [
         # Info básica
         ('N°',              'INFO', '', 4),
@@ -356,24 +433,24 @@ def write_header_rows(ws, esp_label, hdr_color, start_row=1):
         ('N° RI',           'INFO', '', 28),
         ('Descripción RI',  'INFO', '', 42),
         # RI
-        ('P0 Prog',         'RI', 'P0', 11),
-        ('Forecast',        'RI', 'FC', 11),
+        ('P0 Base',         'RI', 'P0', 11),
+        ('Prog. Actual',    'RI', 'PA', 11),
         ('Real',            'RI', 'REAL', 11),
         ('Desvío (d)',       'RI', 'DESV', 9),
         ('Estado RI',       'RI', 'EST', 13),
         # SOLPED
         ('N° Solped',       'SOLPED', 'DOC', 20),
-        ('P0 Prog',         'SOLPED', 'P0', 11),
+        ('Prog. Actual',    'SOLPED', 'PA', 11),
         ('Real',            'SOLPED', 'REAL', 11),
         ('Estado',          'SOLPED', 'EST', 13),
         # Rec. Ofertas
-        ('P0 Prog',         'REC.OFERTAS', 'P0', 11),
+        ('Prog. Actual',    'REC.OFERTAS', 'PA', 11),
         ('Real',            'REC.OFERTAS', 'REAL', 11),
         ('Estado',          'REC.OFERTAS', 'EST', 13),
         # Análisis Técnico
         ('CT1 P0',          'ANÁLISIS TÉCNICO (AT)', 'CT1', 11),
         ('CT1 Real',        'ANÁLISIS TÉCNICO (AT)', 'CT1', 11),
-        ('CT0 P0',          'ANÁLISIS TÉCNICO (AT)', 'CT0', 11),
+        ('CT0 Prog.',       'ANÁLISIS TÉCNICO (AT)', 'CT0', 11),
         ('CT0 Real',        'ANÁLISIS TÉCNICO (AT)', 'CT0', 11),
         ('Estado AT',       'ANÁLISIS TÉCNICO (AT)', 'EST', 17),
         # OC
@@ -396,11 +473,8 @@ def write_header_rows(ws, esp_label, hdr_color, start_row=1):
         ('Acciones',        'ESTADO', 'ACC', 35),
     ]
 
-    # Asignar anchos
-    col_name_idx = {}
     for ci, (name, bloque, sub, w) in enumerate(COLS, start=1):
         ws.column_dimensions[get_column_letter(ci)].width = w
-        col_name_idx[name + '_' + bloque + '_' + sub] = ci
 
     # Fila 1: Bloques (merge grupos)
     BLOQUES = [
@@ -424,22 +498,21 @@ def write_header_rows(ws, esp_label, hdr_color, start_row=1):
 
     # Fila 2: sub-bloques
     sub_style = [
-        # (col, label, bg)
-        (1,  esp_label, hdr_color),
-        (5,  'P0 BASELINE', '6D2077'),
-        (6,  'FORECAST',    '6D2077'),
-        (7,  'REAL',        '6D2077'),
-        (8,  'DESVÍO',      '6D2077'),
-        (9,  'ESTADO',      '6D2077'),
-        (10, 'N° SOLPED',   '2C5F8A'),
-        (11, 'P0',          '2C5F8A'),
-        (12, 'REAL',        '2C5F8A'),
-        (13, 'ESTADO',      '2C5F8A'),
-        (14, 'P0',          '3D6B2F'),
-        (15, 'REAL',        '3D6B2F'),
-        (16, 'ESTADO',      '3D6B2F'),
-        (17, 'CT1 (Rev.A)', '9B3A00'),
-        (18, '',            '9B3A00'),
+        (1,  esp_label,      hdr_color),
+        (5,  'P0 BASELINE',  '6D2077'),
+        (6,  'PROG. ACTUAL', '6D2077'),
+        (7,  'REAL',         '6D2077'),
+        (8,  'DESVÍO',       '6D2077'),
+        (9,  'ESTADO',       '6D2077'),
+        (10, 'N° SOLPED',    '2C5F8A'),
+        (11, 'PROG. ACTUAL', '2C5F8A'),
+        (12, 'REAL',         '2C5F8A'),
+        (13, 'ESTADO',       '2C5F8A'),
+        (14, 'PROG. ACTUAL', '3D6B2F'),
+        (15, 'REAL',         '3D6B2F'),
+        (16, 'ESTADO',       '3D6B2F'),
+        (17, 'CT1 (Rev.A)',  '9B3A00'),
+        (18, '',             '9B3A00'),
         (19, 'CT0 (Rev.0)', '9B3A00'),
         (20, '',            '9B3A00'),
         (21, 'ESTADO AT',   '9B3A00'),
@@ -468,10 +541,10 @@ def write_header_rows(ws, esp_label, hdr_color, start_row=1):
     # Fila 3: nombres de columna individuales
     col3_labels = [
         'N°', 'Criticidad', 'N° RI (Datos P0)', 'Descripción RI',
-        'P0 Final Prog', 'Forecast', 'Real', 'Desvío (d)', 'Estado RI',
-        'N° Solped', 'P0 Final Prog', 'Real', 'Estado',
-        'P0 Final Prog', 'Real', 'Estado',
-        'CT1 Prog', 'CT1 Real', 'CT0 Prog', 'CT0 Real', 'Estado AT',
+        'P0 Base (2024)', 'Prog. Actual (crono)', 'Real', 'Desvío (d)', 'Estado RI',
+        'N° Solped', 'Prog. Actual (crono)', 'Real', 'Estado',
+        'Prog. Actual (crono)', 'Real', 'Estado',
+        'CT1 Prog (P0)', 'CT1 Real', 'CT0 Prog (crono)', 'CT0 Real/Cierre', 'Estado AT',
         'N° OC', 'Proveedor', 'Nec. OC Prog', 'OC Real/KOM', 'L.T. días',
         'Fecha Entrega OC', 'Nec. Obra',
         'RI→Solped', 'Solped→RecOf', 'RecOf→AT', 'AT→OC', 'RI→OC Total',
@@ -489,7 +562,7 @@ def write_header_rows(ws, esp_label, hdr_color, start_row=1):
     return len(COLS)
 
 
-def write_data_row(ws, row_n, seq, item, sc_item, ri_num, hdr_color, is_alt):
+def write_data_row(ws, row_n, seq, item, sc_item, ri_num, hdr_color, is_alt, crono_item=None):
     bg = C['row_alt'] if is_alt else C['row_norm']
 
     def cell(col, val, fmt=None, bold=False, wrap=False, h='center'):
@@ -499,56 +572,61 @@ def write_data_row(ws, row_n, seq, item, sc_item, ri_num, hdr_color, is_alt):
         if fmt: c.number_format = fmt
         return c
 
-    # Datos reales (SC tiene prioridad sobre Preliminar)
-    ri_real    = sc_item['ri_real']   if sc_item else item.get('ri_real_p')
-    ri_p0      = item.get('ri_p0')
-    ri_fc      = item.get('ri_fc')
-    ri_desv    = item.get('ri_desv')
+    # ── Fechas RI ─────────────────────────────────────────────────────────────
+    ri_p0   = item.get('ri_p0')                         # P0 baseline (2024)
+    ri_prog = crono_item['ri_prog'] if crono_item else None  # Prog. Actual (crono 2025/2026)
+    ri_real = sc_item['ri_real'] if sc_item else item.get('ri_real_p')
+    ri_desv = item.get('ri_desv')
 
-    solp_n     = get_solped_num(item, sc_item)
-    solp_p0    = item.get('solp_p0')
-    solp_real  = sc_item['solped'] if sc_item else item.get('solp_real_p')
+    # ── SOLPED ────────────────────────────────────────────────────────────────
+    solp_n    = get_solped_num(item, sc_item)
+    solp_prog = crono_item['sp_prog'] if crono_item else None   # crono 2025/2026
+    solp_real = sc_item['solped'] if sc_item else item.get('solp_real_p')
 
-    recof_p0   = item.get('recof_p0')
+    # ── Rec. Ofertas ──────────────────────────────────────────────────────────
+    recof_prog = crono_item['rec_prog'] if crono_item else None  # crono 2025/2026
     recof_real = sc_item['recof'] if sc_item else item.get('recof_real_p')
 
-    at_ct1_p0  = item.get('at_reva_p0')
-    at_ct1_r   = item.get('at_reva_real')
-    at_ct0_p0  = item.get('at_rev0_p0')
-    at_ct0_r   = item.get('at_rev0_real')
-    at_cierre  = sc_item['at_cierre'] if sc_item else None
+    # ── AT ────────────────────────────────────────────────────────────────────
+    # CT1 (Rev.A): no está en Crono, se usa P0 Preliminar
+    at_ct1_p0 = item.get('at_reva_p0')
+    at_ct1_r  = item.get('at_reva_real')
+    # CT0 (Rev.0): programa actual desde Crono
+    at_ct0_prog = crono_item['at0_prog'] if crono_item else item.get('at_rev0_p0')
+    at_ct0_r    = sc_item['at_cierre'] if sc_item else item.get('at_rev0_real')
 
-    oc_n_v     = sc_item['oc_n']      if sc_item else item.get('oc_n', '')
-    prov_v     = sc_item['prov']      if sc_item else item.get('prov', '')
-    nec_oc_v   = sc_item['nec_oc']    if sc_item else item.get('oc_p0')
-    oc_real_v  = sc_item['oc_real_d'] if sc_item else item.get('oc_real_p')
-    lt_v       = sc_item['lt']        if sc_item else None
-    ent_oc_v   = sc_item['ent_oc']    if sc_item else item.get('ent_oc')
-    nec_obra_v = sc_item['nec_ent']   if sc_item else item.get('nec_obra')
-    status_v   = sc_item['status']    if sc_item else ''
-    kom_v      = sc_item.get('kom')   if sc_item else None
+    # ── OC ────────────────────────────────────────────────────────────────────
+    oc_n_v    = sc_item['oc_n']      if sc_item else item.get('oc_n', '')
+    prov_v    = sc_item['prov']      if sc_item else item.get('prov', '')
+    # Nec. OC: SC > crono > P0 Preliminar
+    nec_oc_v  = (sc_item['nec_oc']  if sc_item else None) or \
+                (crono_item['oc_prog'] if crono_item else None) or \
+                item.get('oc_p0')
+    oc_real_v = sc_item['oc_real_d'] if sc_item else item.get('oc_real_p')
+    lt_v      = sc_item['lt']        if sc_item else None
+    ent_oc_v  = sc_item['ent_oc']    if sc_item else item.get('ent_oc')
+    nec_obra_v= sc_item['nec_ent']   if sc_item else item.get('nec_obra')
+    status_v  = sc_item['status']    if sc_item else ''
+    kom_v     = sc_item.get('kom')   if sc_item else None
 
-    at_state   = infer_at_state(item, sc_item)
-    est_gen    = infer_est_general(item, sc_item)
+    at_state  = infer_at_state(item, sc_item)
+    est_gen   = infer_est_general(item, sc_item)
+    crit      = sc_item['crit'] if sc_item else ''
 
-    # Criticidad
-    crit       = sc_item['crit']  if sc_item else ''
+    # ── Análisis demoras ──────────────────────────────────────────────────────
+    ri_date_for_delay    = ri_real or ri_prog or ri_p0
+    solp_date_for_delay  = solp_real or solp_prog
+    recof_date_for_delay = recof_real or recof_prog
+    at_date_for_delay    = at_ct0_r or at_ct1_r
+    oc_date_for_delay    = oc_real_v or kom_v or nec_oc_v
 
-    # ── Delays ──────────────────────────────────────────────────────────────
-    # Usamos fechas reales cuando disponibles, sino P0 o FC
-    ri_date_for_delay   = ri_real or ri_p0
-    solp_date_for_delay = solp_real or solp_p0
-    recof_date_for_delay= recof_real or recof_p0
-    at_date_for_delay   = at_cierre or at_ct0_r or at_ct1_r
-    oc_date_for_delay   = oc_real_v or (kom_v if kom_v else None) or nec_oc_v
-
-    d_ri_solp  = days_between(ri_date_for_delay,   solp_date_for_delay)
-    d_solp_rec = days_between(solp_date_for_delay, recof_date_for_delay)
+    d_ri_solp  = days_between(ri_date_for_delay,    solp_date_for_delay)
+    d_solp_rec = days_between(solp_date_for_delay,  recof_date_for_delay)
     d_rec_at   = days_between(recof_date_for_delay, at_date_for_delay)
     d_at_oc    = days_between(at_date_for_delay,    oc_date_for_delay)
     d_ri_oc    = days_between(ri_date_for_delay,    oc_date_for_delay)
 
-    # ── Escribir celdas ──────────────────────────────────────────────────────
+    # ── Escribir celdas ───────────────────────────────────────────────────────
     # Col 1: N°
     c1 = ws.cell(row=row_n, column=1, value=seq)
     c1.fill = F(hdr_color); c1.font = ft(True, 'FFFFFF', 9)
@@ -560,12 +638,9 @@ def write_data_row(ws, row_n, seq, item, sc_item, ri_num, hdr_color, is_alt):
     c2.fill = F(cc); c2.font = ft(True, 'FFFFFF' if crit in ('LLI','C. CRÍTICO','HITO 2') else '000000', 8)
     c2.alignment = al('center', 'center'); c2.border = bd()
 
-    # Col 3: N° RI
     cell(3, ri_num, h='left')
 
-    # Col 4: Descripción
     desc_v = item.get('desc') or (sc_item['desc_sc'] if sc_item else '')
-    # Acortar prefijo repetitivo
     for pre in ['Requisición de Ingeniería ', 'RI - ', 'RI-REQUISICIÓN DE INGENIERÍA - ',
                 'REQUISICIÓN DE INGENIERÍA ']:
         if desc_v.upper().startswith(pre.upper()):
@@ -576,56 +651,56 @@ def write_data_row(ws, row_n, seq, item, sc_item, ri_num, hdr_color, is_alt):
     ws.cell(row=row_n, column=4).alignment = al('left', 'center', wrap=True)
     ws.cell(row=row_n, column=4).border = bd()
 
-    # ── RI ──────────────────────────────────────────────────────────────────
     def date_cell(col, val):
         c = ws.cell(row=row_n, column=col, value=fmt_date(val))
         c.fill = F(bg); c.font = ft(sz=9); c.alignment = al('center'); c.border = bd()
         return c
 
-    date_cell(5, ri_p0)
-    date_cell(6, ri_fc)
-    date_cell(7, ri_real)
+    # ── RI (col 5-9) ─────────────────────────────────────────────────────────
+    date_cell(5, ri_p0)    # P0 baseline 2024
+    date_cell(6, ri_prog)  # Prog. Actual (crono 2025/2026)
+    date_cell(7, ri_real)  # Real (SC)
 
     c_desv = ws.cell(row=row_n, column=8, value=ri_desv if ri_desv is not None else '')
     c_desv.fill = F(bg); c_desv.font = ft(sz=9); c_desv.alignment = al('center'); c_desv.border = bd()
     if ri_desv and isinstance(ri_desv, (int, float)) and ri_desv > 15:
         c_desv.fill = F(C['demora_crit'])
 
-    # Estado RI
-    if ri_real:   est_ri = 'COMPLETADA'
-    elif ri_p0:   est_ri = 'EMITIDA' if (ri_fc or TODAY >= ri_p0) else 'PENDIENTE'
-    else:         est_ri = 'SIN RI'
+    if ri_real:  est_ri = 'COMPLETADA'
+    elif ri_p0:  est_ri = 'EMITIDA' if (ri_prog or TODAY >= ri_p0) else 'PENDIENTE'
+    else:        est_ri = 'SIN RI'
     apply_status_cell(ws, row_n, 9, est_ri)
 
-    # ── SOLPED ──────────────────────────────────────────────────────────────
+    # ── SOLPED (col 10-13) ────────────────────────────────────────────────────
     s_num = ws.cell(row=row_n, column=10, value=solp_n)
-    s_num.fill = F(bg); s_num.font = ft(sz=8); s_num.alignment = al('left', 'center', wrap=True); s_num.border = bd()
+    s_num.fill = F(bg); s_num.font = ft(sz=8)
+    s_num.alignment = al('left', 'center', wrap=True); s_num.border = bd()
 
-    date_cell(11, solp_p0)
-    date_cell(12, solp_real)
+    date_cell(11, solp_prog)  # Prog. Actual (crono)
+    date_cell(12, solp_real)  # Real (SC)
 
-    if solp_real:     est_sp = 'COMPLETADA'
-    elif solp_n:      est_sp = 'EMITIDA'
-    elif solp_p0:     est_sp = 'PENDIENTE'
-    else:             est_sp = 'SIN RI'
+    if solp_real:   est_sp = 'COMPLETADA'
+    elif solp_n:    est_sp = 'EMITIDA'
+    elif solp_prog: est_sp = 'PENDIENTE'
+    else:           est_sp = 'SIN RI'
     apply_status_cell(ws, row_n, 13, est_sp)
 
-    # ── REC. OFERTAS ────────────────────────────────────────────────────────
-    date_cell(14, recof_p0)
-    date_cell(15, recof_real)
+    # ── REC. OFERTAS (col 14-16) ──────────────────────────────────────────────
+    date_cell(14, recof_prog)  # Prog. Actual (crono)
+    date_cell(15, recof_real)  # Real (SC)
 
-    if recof_real:     est_ro = 'COMPLETADA'
-    elif recof_p0 and TODAY > recof_p0: est_ro = 'ATRASADO'
-    elif solp_real:    est_ro = 'EN PROCESO'
-    elif recof_p0:     est_ro = 'PENDIENTE'
-    else:              est_ro = 'SIN RI'
+    if recof_real:  est_ro = 'COMPLETADA'
+    elif recof_prog and TODAY > recof_prog: est_ro = 'ATRASADO'
+    elif solp_real: est_ro = 'EN PROCESO'
+    elif recof_prog: est_ro = 'PENDIENTE'
+    else:           est_ro = 'SIN RI'
     apply_status_cell(ws, row_n, 16, est_ro)
 
-    # ── AT ──────────────────────────────────────────────────────────────────
-    date_cell(17, at_ct1_p0)
-    date_cell(18, at_ct1_r)
-    date_cell(19, at_ct0_p0)
-    date_cell(20, at_ct0_r or at_cierre)
+    # ── AT (col 17-21) ────────────────────────────────────────────────────────
+    date_cell(17, at_ct1_p0)    # CT1 P0 baseline (Preliminar)
+    date_cell(18, at_ct1_r)     # CT1 Real (Preliminar)
+    date_cell(19, at_ct0_prog)  # CT0 Prog. Actual (crono)
+    date_cell(20, at_ct0_r)     # CT0 Real/Cierre (SC o Preliminar)
 
     at_cell = ws.cell(row=row_n, column=21, value=at_state)
     if at_state in ('ADJUDICADO', 'AT COMPLETADO', 'AT CERRADO', 'REC.OF. DONE'):
@@ -636,7 +711,7 @@ def write_data_row(ws, row_n, seq, item, sc_item, ri_num, hdr_color, is_alt):
         at_cell.fill = F(C['pendiente']); at_cell.font = ft(sz=8)
     at_cell.alignment = al('center', 'center', wrap=True); at_cell.border = bd()
 
-    # ── OC ──────────────────────────────────────────────────────────────────
+    # ── OC (col 22-28) ────────────────────────────────────────────────────────
     oc_nc = ws.cell(row=row_n, column=22, value=oc_n_v)
     if oc_n_v:
         oc_nc.fill = F(C['completado']); oc_nc.font = ft(True, 'FFFFFF', 9)
@@ -648,7 +723,6 @@ def write_data_row(ws, row_n, seq, item, sc_item, ri_num, hdr_color, is_alt):
     prov_c.fill = F(bg); prov_c.font = ft(sz=9); prov_c.alignment = al('left'); prov_c.border = bd()
 
     date_cell(24, nec_oc_v)
-    # OC Real o KOM date (lo que tengamos)
     oc_or_kom = oc_real_v or kom_v
     date_cell(25, oc_or_kom)
 
@@ -658,17 +732,15 @@ def write_data_row(ws, row_n, seq, item, sc_item, ri_num, hdr_color, is_alt):
     date_cell(27, ent_oc_v)
     date_cell(28, nec_obra_v)
 
-    # ── DEMORAS ─────────────────────────────────────────────────────────────
+    # ── DEMORAS (col 29-33) ───────────────────────────────────────────────────
     style_delay_cell(ws, row_n, 29, d_ri_solp,  threshold_warn=7,  threshold_crit=21)
     style_delay_cell(ws, row_n, 30, d_solp_rec, threshold_warn=30, threshold_crit=60)
     style_delay_cell(ws, row_n, 31, d_rec_at,   threshold_warn=30, threshold_crit=60)
     style_delay_cell(ws, row_n, 32, d_at_oc,    threshold_warn=30, threshold_crit=60)
-    # RI→OC total: verde<90, amarillo<150, rojo>=150
     style_delay_cell(ws, row_n, 33, d_ri_oc,    threshold_warn=90, threshold_crit=150)
 
-    # ── ESTADO ──────────────────────────────────────────────────────────────
+    # ── ESTADO (col 34-36) ────────────────────────────────────────────────────
     est_c = ws.cell(row=row_n, column=34, value=est_gen)
-    cfg = STATUS_MAP.get(est_gen.upper().replace(' / ', '_'), None)
     if 'OC' in est_gen or 'ADJUDICADO' in est_gen:
         est_c.fill = F(C['completado']); est_c.font = ft(True, 'FFFFFF', 9)
     elif 'AT' in est_gen or 'GESTIÓN' in est_gen:
@@ -679,12 +751,11 @@ def write_data_row(ws, row_n, seq, item, sc_item, ri_num, hdr_color, is_alt):
         est_c.fill = F(C['emitida']); est_c.font = ft(True, '000000', 9)
     est_c.alignment = al('center', 'center', wrap=True); est_c.border = bd()
 
-    # Observaciones (del status SC o comentario)
     obs_txt = status_v[:300] if status_v else ''
     obs_c = ws.cell(row=row_n, column=35, value=obs_txt)
-    obs_c.fill = F(bg); obs_c.font = ft(sz=8); obs_c.alignment = al('left', 'center', wrap=True); obs_c.border = bd()
+    obs_c.fill = F(bg); obs_c.font = ft(sz=8)
+    obs_c.alignment = al('left', 'center', wrap=True); obs_c.border = bd()
 
-    # Acciones
     acc_v = ''
     if sc_item:
         s = sc_item['status'].lower()
@@ -692,7 +763,7 @@ def write_data_row(ws, row_n, seq, item, sc_item, ri_num, hdr_color, is_alt):
             acc_v = 'Seguimiento oferentes – esperar respuesta'
         elif 'apertura de ofertas' in s:
             acc_v = 'Evaluar ofertas recibidas – iniciar AT'
-        elif 'solped liberada' in s and not sc_item['recof']:
+        elif ('solped liberada' in s or 'solpeds' in s) and not sc_item['recof']:
             acc_v = 'Coordinar apertura de ofertas'
         elif sc_item['oc_n']:
             acc_v = 'Seguimiento fabricación / KOM'
@@ -702,22 +773,22 @@ def write_data_row(ws, row_n, seq, item, sc_item, ri_num, hdr_color, is_alt):
         acc_v = 'Liberar SOLPED'
     elif not recof_real:
         acc_v = 'Coordinar apertura de ofertas'
-    elif not at_ct0_r and not at_cierre:
+    elif not at_ct0_r:
         acc_v = 'Completar Análisis Técnico'
     elif not oc_n_v:
         acc_v = 'Colocar OC'
 
     acc_c = ws.cell(row=row_n, column=36, value=acc_v)
-    acc_c.fill = F(bg); acc_c.font = ft(sz=8); acc_c.alignment = al('left', 'center', wrap=True); acc_c.border = bd()
+    acc_c.fill = F(bg); acc_c.font = ft(sz=8)
+    acc_c.alignment = al('left', 'center', wrap=True); acc_c.border = bd()
 
     ws.row_dimensions[row_n].height = 32
 
 
-def build_detail_sheet(wb, sheet_name, esp, prelim_items, sc_list, hdr_color, ri_map):
+def build_detail_sheet(wb, sheet_name, esp, prelim_items, sc_list, hdr_color, ri_map, crono_items):
     ws = wb.create_sheet(sheet_name)
     ws.sheet_view.showGridLines = False
 
-    # Encabezado proyecto
     ws.merge_cells('A1:AJ1')
     t = ws['A1']; t.value = f'TRACKER SUMINISTROS – LA CALERA II CPF2 | {sheet_name} | {VERSION}'
     t.fill = F(C['titulo']); t.font = ft(True, 'FFFFFF', 12)
@@ -725,19 +796,20 @@ def build_detail_sheet(wb, sheet_name, esp, prelim_items, sc_list, hdr_color, ri
     ws.row_dimensions[1].height = 26
 
     write_header_rows(ws, esp, hdr_color, start_row=2)
-
-    # Freeze pane en fila 5
     ws.freeze_panes = 'A5'
 
     current_row = 5
     seq = 1
+    # sheet_name is 'IN' or 'EL' — used for crono matching (esp label is the long form)
+    esp_code = sheet_name
 
     # ── Items Preliminar ────────────────────────────────────────────────────
     for item in prelim_items:
-        sc_match = match_sc(item['desc'], sc_list)
-        ri_num   = get_ri_number(item['desc'], ri_map)
-        is_alt   = (seq % 2 == 0)
-        write_data_row(ws, current_row, seq, item, sc_match, ri_num, hdr_color, is_alt)
+        sc_match    = match_sc(item['desc'], sc_list)
+        crono_match = find_crono_item(item['desc'], esp_code, crono_items)
+        ri_num      = get_ri_number(item['desc'], ri_map)
+        is_alt      = (seq % 2 == 0)
+        write_data_row(ws, current_row, seq, item, sc_match, ri_num, hdr_color, is_alt, crono_match)
         current_row += 1
         seq += 1
 
@@ -750,21 +822,19 @@ def build_detail_sheet(wb, sheet_name, esp, prelim_items, sc_list, hdr_color, ri
     for sc_item in sc_list:
         if id(sc_item) in already_matched:
             continue
-        # Item SC no tiene correspondencia en Preliminar → agregarlo
-        empty_item = {k: None for k in ['desc','ri_p0','ri_fc','ri_real_p','ri_desv',
-                                         'solp_p0','solp_fc','solp_real_p','solp_n',
-                                         'recof_p0','recof_fc','recof_real_p',
-                                         'at_reva_p0','at_reva_real','at_rev0_p0',
-                                         'at_rev0_fc','at_rev0_real',
-                                         'oc_p0','oc_fc','oc_real_p','oc_n','prov',
-                                         'ent_oc','nec_obra']}
+        empty_item = {k: None for k in ['desc','ri_p0','ri_real_p','ri_desv',
+                                         'solp_real_p','solp_n',
+                                         'recof_real_p',
+                                         'at_reva_p0','at_reva_real','at_rev0_p0','at_rev0_real',
+                                         'oc_real_p','oc_n','prov','ent_oc','nec_obra']}
         ri_num = get_ri_number(sc_item['desc_sc'], ri_map)
+        # SC-only items may still match crono (e.g., shelter → shelter y banco de carga)
+        crono_match = find_crono_item(sc_item['desc_sc'], esp_code, crono_items)
         is_alt = (seq % 2 == 0)
-        write_data_row(ws, current_row, seq, empty_item, sc_item, ri_num, hdr_color, is_alt)
+        write_data_row(ws, current_row, seq, empty_item, sc_item, ri_num, hdr_color, is_alt, crono_match)
         current_row += 1
         seq += 1
 
-    # Totales / borde final
     ws.row_dimensions[current_row].height = 6
 
 
@@ -772,15 +842,12 @@ def build_dashboard(wb, sc_in, sc_el, in_items, el_items):
     ws = wb.create_sheet('DASHBOARD')
     ws.sheet_view.showGridLines = False
 
-    # Título
     ws.merge_cells('A1:R1')
     t = ws['A1']; t.value = f'DASHBOARD – PLAN DE SUMINISTROS LA CALERA II CPF2 | {VERSION} | RFSU: {RFSU.strftime("%d/%m/%Y")}'
     t.fill = F(C['titulo']); t.font = ft(True, 'FFFFFF', 13)
     t.alignment = al('center', 'center'); ws.row_dimensions[1].height = 28
-
     ws.row_dimensions[2].height = 8
 
-    # ── Resumen ejecutivo ───────────────────────────────────────────────────
     def kpi_block(ws, row, col, label, val, color):
         ws.merge_cells(start_row=row, start_column=col, end_row=row+1, end_column=col+1)
         c = ws.cell(row=row, column=col, value=label)
@@ -792,26 +859,21 @@ def build_dashboard(wb, sc_in, sc_el, in_items, el_items):
         cv.alignment = al('center', 'center'); cv.border = bd_med()
 
     row0 = 3
-    # KPIs EL
-    total_el = len(el_items) + sum(1 for s in sc_el if id(s) not in {id(match_sc(i['desc'], sc_el)) for i in el_items if match_sc(i['desc'], sc_el)})
-    el_oc    = sum(1 for s in sc_el if s['oc_n'])
-    el_at    = sum(1 for s in sc_el if not s['oc_n'] and (s['recof'] or s['solped']))
+    el_oc = sum(1 for s in sc_el if s['oc_n'])
+    el_at = sum(1 for s in sc_el if not s['oc_n'] and (s['recof'] or s['solped']))
     kpi_block(ws, row0, 1,  f'EL – TOTAL RIs\n(Plan+Críticos)', len(el_items) + len(sc_el), C['hdr_el'])
     kpi_block(ws, row0, 4,  f'EL – Con OC',                 el_oc,             '375623')
     kpi_block(ws, row0, 7,  f'EL – En AT/Gestión',          el_at,             '833C00')
-    # KPIs IN
-    in_oc    = sum(1 for s in sc_in if s['oc_n'])
-    in_at    = sum(1 for s in sc_in if not s['oc_n'] and (s['recof'] or s['solped']))
+    in_oc = sum(1 for s in sc_in if s['oc_n'])
+    in_at = sum(1 for s in sc_in if not s['oc_n'] and (s['recof'] or s['solped']))
     kpi_block(ws, row0, 10, f'IN – TOTAL RIs\n(Plan+Críticos)', len(in_items) + len(sc_in), C['hdr_in'])
     kpi_block(ws, row0, 13, f'IN – Con OC',                 in_oc,             '843C0C')
     kpi_block(ws, row0, 16, f'IN – En AT/Gestión',          in_at,             '9B3A00')
 
     row0 += 6
-
     ws.row_dimensions[row0].height = 8
     row0 += 1
 
-    # ── Tabla Suministros Críticos completa ─────────────────────────────────
     ws.merge_cells(start_row=row0, start_column=1, end_row=row0, end_column=18)
     th = ws.cell(row=row0, column=1, value='SUMINISTROS CRÍTICOS – ESTADO ACTUAL')
     th.fill = F(C['subtitulo']); th.font = ft(True, 'FFFFFF', 11)
@@ -845,7 +907,8 @@ def build_dashboard(wb, sc_in, sc_el, in_items, el_items):
 
         ws.cell(row=row0, column=1, value=esp).fill = F(esp_color)
         ws.cell(row=row0, column=1).font = ft(True, 'FFFFFF', 9)
-        ws.cell(row=row0, column=1).alignment = al('center'); ws.cell(row=row0, column=1).border = bd()
+        ws.cell(row=row0, column=1).alignment = al('center')
+        ws.cell(row=row0, column=1).border = bd()
 
         c2 = ws.cell(row=row0, column=2, value=s['crit'])
         cc = CRIT_COLOR.get(s['crit'], bg)
@@ -901,7 +964,6 @@ def build_dashboard(wb, sc_in, sc_el, in_items, el_items):
         ws.row_dimensions[row0].height = 36
         row0 += 1
 
-    # Freeze
     ws.freeze_panes = 'A10'
 
 
@@ -930,6 +992,9 @@ def build_portada(wb):
         ('RFSU objetivo',      RFSU.strftime('%d/%m/%Y')),
         ('Días hasta RFSU',    str((RFSU - TODAY).days) + ' días'),
         ('Objetivo análisis',  'Identificar demoras en circuito RI → OC y acciones correctivas'),
+        ('Fuente fechas prog.','Crono 4.11 (2025-2026) — columnas "Prog. Actual"'),
+        ('Fuente fechas P0',   'Preliminar (2024) — columnas "P0 Base"'),
+        ('Fuente fechas Real', 'Suministros Críticos — columnas "Real" y OC/KOM'),
     ]
     r = 4
     for lbl, val in data:
@@ -963,37 +1028,56 @@ def build_cambios(wb):
     t.alignment = al('center', 'center'); ws.row_dimensions[1].height = 24
 
     cambios = [
-        ('1', 'Scope ampliado',   'Se incorporan TODOS los ítems del Plan de Suministros (Preliminar: 36 IN + 9 EL). '
-                                   'v2 tenía datos hardcodeados parciales (22 IN + 16 EL).'),
-        ('2', 'Items SC nuevos EL','Se agregan ítems de Suministros Críticos no en Preliminar: '
-                                   'SHELTER SE#3 (OC 4508944973/ABB), SE#4 (OC 4508944971/ABB), '
-                                   'SE#5, SISTEMA PMS (OC 4508945953/ABB), TRANSFORMADORES, GENERADOR, DUCTO DE BARRAS.'),
-        ('3', 'Items SC nuevos IN','Se agregan: SISTEMA DE CONTROL PCS (Inauco nominado, SOLPED 23256882), '
-                                   'SISTEMA DE SEGURIDAD SIS (HIMA nominado, SOLPED 23256883).'),
-        ('4', 'N° RI precisos',   'Se muestra el número RI en formato 5155-00-XXXX-IG-XX-RI-XXX '
-                                   'según Datos P0 Suministros cruzado con descripción.'),
-        ('5', 'AT por CT1/CT0',   'Se separa el Análisis Técnico en CT1 (Rev.A – primera vuelta) '
-                                   'y CT0 (Rev.0 – segunda vuelta / cierre), mostrando fechas P0 y reales.'),
-        ('6', 'N° SOLPED',        'Se extraen los números de SOLPED del campo "Estatus" de Suministros Críticos '
-                                   '(ej.: 23359919/23359920/23359922 para Válvulas; 23392215/16/13 para Cables IN).'),
-        ('7', 'Análisis demoras', 'Nueva sección ANÁLISIS DEMORAS: días entre RI→Solped, Solped→RecOf, '
-                                   'RecOf→AT, AT→OC, y total RI→OC. Código de color: verde/amarillo/rojo.'),
-        ('8', 'OC/KOM EL',        'Para SE#3/SE#4/PMS ya adjudicados a ABB, se muestra fecha KOM '
-                                   '(18/5 y 22/5/2026) como fecha de inicio de fabricación.'),
-        ('9', 'Fuente de datos',  'El tracker lee directamente del Plan de Suministros (210526). '
-                                   'No hay datos hardcodeados – actualización automática al cambiar el plan.'),
-        ('10','Revisión nombre',  f'Archivo renombrado a: Tracker_Suministros_IN_EL_LaCalera_II_{VERSION}.xlsx'),
+        ('1', 'Scope ampliado',
+         'Se incorporan TODOS los ítems del Plan de Suministros (Preliminar: 36 IN + 9 EL). '
+         'v2 tenía datos hardcodeados parciales (22 IN + 16 EL).'),
+        ('2', 'Items SC nuevos EL',
+         'Se agregan ítems de Suministros Críticos no en Preliminar: '
+         'SHELTER SE#3 (OC 4508944973/ABB), SE#4 (OC 4508944971/ABB), '
+         'SE#5, SISTEMA PMS (OC 4508945953/ABB), TRANSFORMADORES, GENERADOR, DUCTO DE BARRAS.'),
+        ('3', 'Items SC nuevos IN',
+         'Se agregan: SISTEMA DE CONTROL PCS (Inauco nominado, SOLPED 23256882), '
+         'SISTEMA DE SEGURIDAD SIS (HIMA nominado, SOLPED 23256883).'),
+        ('4', 'N° RI precisos',
+         'Se muestra el número RI en formato 5155-00-XXXX-IG-XX-RI-XXX '
+         'según Datos P0 Suministros cruzado con descripción.'),
+        ('5', 'AT por CT1/CT0',
+         'Se separa el Análisis Técnico en CT1 (Rev.A – primera vuelta) '
+         'y CT0 (Rev.0 – segunda vuelta / cierre), mostrando fechas P0 y reales.'),
+        ('6', 'N° SOLPED',
+         'Se extraen los números de SOLPED del campo "Estatus" de Suministros Críticos '
+         '(ej.: 23359919/23359920/23359922 para Válvulas; 23392215/16/13 para Cables IN).'),
+        ('7', 'Análisis demoras',
+         'Nueva sección ANÁLISIS DEMORAS: días entre RI→Solped, Solped→RecOf, '
+         'RecOf→AT, AT→OC, y total RI→OC. Código de color: verde/amarillo/rojo.'),
+        ('8', 'OC/KOM EL',
+         'Para SE#3/SE#4/PMS ya adjudicados a ABB, se muestra fecha KOM '
+         '(18/5 y 22/5/2026) como fecha de inicio de fabricación.'),
+        ('9', 'Fuente de datos',
+         'El tracker lee directamente del Plan de Suministros (210526). '
+         'No hay datos hardcodeados – actualización automática al cambiar el plan.'),
+        ('10', 'FIX FECHAS – R1',
+         'CORRECCIÓN v3R1: Las columnas "Prog. Actual" en hojas IN y EL ahora usan '
+         'fechas del CRONO 4.11 (2025-2026), no del Preliminar P0 (2024). '
+         'La columna "P0 Base (2024)" conserva las fechas originales P0. '
+         'Fuentes: P0 Base=Preliminar | Prog.Actual=Crono 4.11 | Real=Suministros Críticos. '
+         'Se filtran fechas inválidas 1900-era provenientes de celdas vacías en Excel.'),
+        ('11', 'Revisión nombre',
+         f'Archivo renombrado a: Tracker_Suministros_IN_EL_LaCalera_II_{VERSION}.xlsx'),
     ]
 
     for n, tipo, desc in cambios:
         r = int(n) + 1
-        ws.row_dimensions[r].height = 48
+        ws.row_dimensions[r].height = 50
         c1 = ws.cell(row=r, column=1, value=n)
-        c1.fill = F(C['hdr_col']); c1.font = ft(True, sz=9); c1.alignment = al('center'); c1.border = bd()
+        c1.fill = F(C['hdr_col']); c1.font = ft(True, sz=9)
+        c1.alignment = al('center'); c1.border = bd()
         c2 = ws.cell(row=r, column=2, value=tipo)
-        c2.fill = F(C['hdr_col']); c2.font = ft(True, sz=9); c2.alignment = al('left', 'center', wrap=True); c2.border = bd()
+        c2.fill = F(C['hdr_col']); c2.font = ft(True, sz=9)
+        c2.alignment = al('left', 'center', wrap=True); c2.border = bd()
         c3 = ws.cell(row=r, column=3, value=desc)
-        c3.fill = F('FFFFFF'); c3.font = ft(sz=9); c3.alignment = al('left', 'center', wrap=True); c3.border = bd()
+        c3.fill = F('FFFFFF'); c3.font = ft(sz=9)
+        c3.alignment = al('left', 'center', wrap=True); c3.border = bd()
 
     ws.freeze_panes = 'A2'
 
@@ -1001,13 +1085,19 @@ def build_cambios(wb):
 # ── MAIN ────────────────────────────────────────────────────────────────────
 def main():
     print(f'[1/6] Leyendo Plan de Suministros: {os.path.basename(PLAN_FILE)}')
-    sc_in, sc_el, in_items, el_items = load_plan()
+    sc_in, sc_el, in_items, el_items, crono_items = load_plan()
     print(f'      IN Preliminar: {len(in_items)} items | EL Preliminar: {len(el_items)} items')
     print(f'      IN Suministros Críticos: {len(sc_in)} | EL: {len(sc_el)}')
+    print(f'      Crono 4.11 paquetes: {len(crono_items)} (IN+EL)')
+
+    # Diagnóstico de matching
+    matched_in  = sum(1 for i in in_items  if find_crono_item(i['desc'], 'IN', crono_items))
+    matched_el  = sum(1 for i in el_items  if find_crono_item(i['desc'], 'EL', crono_items))
+    print(f'      Crono match IN: {matched_in}/{len(in_items)} | EL: {matched_el}/{len(el_items)}')
 
     print('[2/6] Creando workbook...')
     wb = openpyxl.Workbook()
-    wb.remove(wb.active)  # quitar hoja por defecto
+    wb.remove(wb.active)
 
     print('[3/6] Generando hoja CAMBIOS...')
     build_cambios(wb)
@@ -1018,13 +1108,13 @@ def main():
     print('[5/6] Generando DASHBOARD...')
     build_dashboard(wb, sc_in, sc_el, in_items, el_items)
 
-    print('[5/6] Generando hoja IN...')
+    print('[5b/6] Generando hoja IN...')
     build_detail_sheet(wb, 'IN', 'IN – INSTRUMENTACIÓN & CONTROL',
-                       in_items, sc_in, C['hdr_in'], IN_RI_NUMBER)
+                       in_items, sc_in, C['hdr_in'], IN_RI_NUMBER, crono_items)
 
-    print('[5/6] Generando hoja EL...')
+    print('[5c/6] Generando hoja EL...')
     build_detail_sheet(wb, 'EL', 'EL – ELECTRICIDAD',
-                       el_items, sc_el, C['hdr_el'], EL_RI_NUMBER)
+                       el_items, sc_el, C['hdr_el'], EL_RI_NUMBER, crono_items)
 
     print(f'[6/6] Guardando: {OUT_XLSX}')
     wb.save(OUT_XLSX)
@@ -1032,8 +1122,8 @@ def main():
     print(f'      OK → {os.path.basename(OUT_XLSX)} ({size} KB)')
     print()
     print('Resumen:')
-    print(f'  - IN total filas: {len(in_items)} (Preliminar) + {len(sc_in)} (SC adicionales)')
-    print(f'  - EL total filas: {len(el_items)} (Preliminar) + {len(sc_el)} (SC adicionales)')
+    print(f'  - IN total filas: {len(in_items)} (Preliminar) + SC adicionales')
+    print(f'  - EL total filas: {len(el_items)} (Preliminar) + SC adicionales')
     print(f'  - Items EL con OC: {sum(1 for s in sc_el if s["oc_n"])}')
     print(f'  - Items IN con OC: {sum(1 for s in sc_in if s["oc_n"])}')
 
