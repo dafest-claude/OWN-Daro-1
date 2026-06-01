@@ -1,0 +1,112 @@
+%%{init: {'theme': 'default', 'themeVariables': {'primaryColor': '#CC0000', 'primaryTextColor': '#fff', 'primaryBorderColor': '#880000', 'lineColor': '#444444', 'fontSize': '13px'}}}%%
+flowchart TB
+    classDef ctr fill:#CC0000,stroke:#880000,color:#fff,font-weight:bold
+    classDef fp fill:#8B0000,stroke:#660000,color:#fff,font-weight:bold
+    classDef fat_n fill:#E36C09,stroke:#B35308,color:#fff
+    classDef desp fill:#7030A0,stroke:#5C2580,color:#fff,font-weight:bold
+    classDef pms_n fill:#FFF8DC,stroke:#B8860B,color:#333
+    classDef s4_n fill:#DEEAF1,stroke:#2E75B6,color:#333
+    classDef s3_n fill:#FFE0E0,stroke:#880000,color:#333,font-weight:bold
+    classDef hub fill:#375623,stroke:#1F4E79,color:#fff,font-weight:bold
+    classDef rfsu fill:#CC0000,stroke:#880000,color:#fff,font-weight:bold
+    classDef warn fill:#FFEB9C,stroke:#FF9900,color:#333
+
+    OC(["OC ACEPTADA<br/>12-MAY-2026<br/>3 OCs: S3 + S4 + PMS"]):::ctr
+
+    subgraph PMS_G ["PMS - OC 4508945953 - PM Pablo Kalis"]
+        P_IB["Ingenieria Basica PMS<br/>RevA y Rev0<br/>JUN-JUL 2026"]:::pms_n
+        FP_P1(["FP-P1<br/>Ing. Basica PMS<br/>21-AGO-2026"]):::fp
+        P_SW["Software 800XA<br/>IEC61850 PROFINET MODBUS<br/>AGO-NOV 2026"]:::pms_n
+        P_MQ(["FAT Maqueta<br/>AESA OBLIGATORIO<br/>22-25 SEP 2026"]):::fat_n
+        FP_P2(["FP-P2<br/>Ing. Detalle y Proc<br/>23-OCT-2026"]):::fp
+        P_FAB["Fabricacion<br/>Tableros PMS-001 y PMS-101<br/>SEP-DIC 2026"]:::pms_n
+        P_FAT(["FAT Tableros Sistema<br/>WITNESS AESA<br/>25-29 ENE 2027"]):::fat_n
+        P_DES(["DESPACHO PMS<br/>BsAs a Mendoza<br/>04-17 FEB 2027"]):::desp
+        P_SH["Montaje PMS en Shelter<br/>18 FEB - 17 MAR 2027"]:::pms_n
+        P_FI(["FAT INTEGRAL PMS<br/>25-31 MAR 2027<br/>Buffer 2 dias con FAT S3"]):::fat_n
+        P_DB(["DataBook PMS<br/>5pct OC<br/>31-MAR-2027"]):::ctr
+    end
+
+    subgraph S4_G ["SALA 4 MT - OC 4508944973 - USD 3.69M - 11 meses"]
+        S4_IB["IB Sala 4<br/>MAY-JUN 2026"]:::s4_n
+        FP_S41(["FP-S4-1<br/>OC Celdas MT Turquia<br/>26-JUN-2026"]):::fp
+        S4_OC["OC a 3ros<br/>Celdas MT Turquia + VFDs China<br/>JUN-SEP 2026"]:::s4_n
+        S4_ID["Ing. Detalle y Constructiva S4<br/>JUN-AGO 2026"]:::s4_n
+        FP_S43(["FP-S4-3<br/>Cierre Ingenieria S4<br/>28-AGO-2026"]):::fp
+        S4_FAB["Fabricacion Tableros S4<br/>Brasil M-B<br/>SEP-NOV 2026"]:::s4_n
+        S4_FAT(["FAT Celdas y Tableros MT<br/>Brasil AESA<br/>03-23 NOV 2026"]):::fat_n
+        S4_ACO["Acopio Argentina S4<br/>DIC 2026 - ENE 2027"]:::s4_n
+        S4_MON["Montaje Shelter S4<br/>18 ENE - 05 MAR 2027"]:::s4_n
+        S4_FATSH(["FAT Sala 4 Shelter<br/>08-16 MAR 2027"]):::fat_n
+        S4_DES(["DESPACHO S4<br/>02-08 ABR 2027<br/>Holgura +81d"]):::desp
+    end
+
+    subgraph S3_G ["SALA 3 BT CADENA CRITICA - OC 4508944971 - USD 8.13M - 12 meses"]
+        S3_W["OPEN ISSUE<br/>CCM7 scope VFDs PROFINET<br/>Confirmar antes 05-JUN"]:::warn
+        S3_IB["IB Sala 3<br/>37 CCMs 4000A 65kA<br/>MAY-JUN 2026"]:::s3_n
+        FP_S31(["FP-S3-1 CRITICO<br/>OC Ductos Barras Turquia<br/>03-JUL-2026"]):::fp
+        S3_OC["OC a 3ros<br/>Ductos Barras Turquia<br/>VFDs BT Finlandia - JUL 2026"]:::s3_n
+        S3_ID["Ing. Detalle y Constructiva S3<br/>JUN-AGO 2026"]:::s3_n
+        FP_S33(["FP-S3-3 ULTIMO FP ABB<br/>31-AGO-2026"]):::fp
+        S3_FAB["Fabricacion<br/>37 CCMs BT Brasil<br/>SEP-NOV 2026"]:::s3_n
+        S3_FAT(["FAT CCMs BT<br/>Brasil AESA<br/>03-23 NOV 2026"]):::fat_n
+        S3_ACO["Acopio Argentina S3<br/>Ductos + VFDs + CCMs<br/>DIC 2026 - ENE 2027"]:::s3_n
+        S3_MON["Montaje Shelter S3<br/>01 FEB - 26 MAR 2027"]:::s3_n
+        S3_FATSH(["FAT Sala 3 Shelter<br/>MAS TARDIO ABB<br/>02-19 ABR 2027"]):::fat_n
+        S3_DES(["DESPACHO S3<br/>DEADLINE CONTRACTUAL<br/>14-MAY-2027"]):::desp
+    end
+
+    IFAT(["iFAT Integracion<br/>ABB + INAUCO + HIMA<br/>25 JUN - 14 JUL 2027"]):::hub
+    SAT["SAT PMS en Sitio<br/>HOLD POINT per PIE<br/>OCT-DIC 2027"]:::pms_n
+    RFSU(["RFSU<br/>31-ENE-2028"]):::rfsu
+    CAP["Capacitacion PMS<br/>2 instancias en sitio<br/>FEB-MAR 2028"]:::pms_n
+
+    OC --> P_IB
+    OC --> S4_IB
+    OC --> S3_W
+
+    P_IB --> FP_P1
+    FP_P1 --> P_SW
+    FP_P1 --> P_FAB
+    P_SW --> P_MQ
+    P_SW --> FP_P2
+    P_MQ --> FP_P2
+    FP_P2 --> P_FAB
+    P_FAB --> P_FAT
+    P_FAT --> P_DES
+    P_DES --> P_SH
+    P_SH --> P_FI
+    P_FI --> P_DB
+
+    S4_IB --> FP_S41
+    FP_S41 --> S4_OC
+    S4_IB --> S4_ID
+    S4_ID --> FP_S43
+    S4_OC --> S4_FAB
+    FP_S43 --> S4_FAB
+    S4_FAB --> S4_FAT
+    S4_FAT --> S4_ACO
+    S4_ACO --> S4_MON
+    S4_MON --> S4_FATSH
+    S4_FATSH --> S4_DES
+
+    S3_W --> S3_IB
+    S3_IB --> FP_S31
+    FP_S31 --> S3_OC
+    S3_IB --> S3_ID
+    S3_OC --> S3_FAB
+    S3_ID --> FP_S33
+    FP_S33 --> S3_FAB
+    S3_FAB --> S3_FAT
+    S3_FAT --> S3_ACO
+    S3_ACO --> S3_MON
+    S3_MON --> S3_FATSH
+    P_FI --> S3_FATSH
+    S3_FATSH --> S3_DES
+
+    S3_DES --> IFAT
+    S4_DES --> IFAT
+    P_DB --> IFAT
+    IFAT --> SAT
+    SAT --> RFSU
+    RFSU --> CAP
