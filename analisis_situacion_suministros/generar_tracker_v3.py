@@ -17,12 +17,14 @@ from datetime import date, datetime
 
 # ── Rutas ───────────────────────────────────────────────────────────────────
 SCRIPT_DIR  = os.path.dirname(os.path.abspath(__file__))
-PLAN_FILE   = os.path.join(SCRIPT_DIR, '..', 'info_suministros',
-                            '2026.04.06 - Plan de Suministros - La Calera II (210526).xlsx')
-OUT_XLSX    = os.path.join(SCRIPT_DIR, 'Tracker_Suministros_IN_EL_LaCalera_II_v3R3_290526.xlsx')
-TODAY       = date(2026, 5, 29)
-RFSU        = date(2027, 2, 3)
-VERSION     = 'v3R3_290526'
+PLAN_FILE     = os.path.join(SCRIPT_DIR, '..', 'info_suministros',
+                              '2026.04.06 - Plan de Suministros - La Calera II (290526).xlsx')
+PLAN_FILE_OLD = os.path.join(SCRIPT_DIR, '..', 'info_suministros',
+                              '2026.04.06 - Plan de Suministros - La Calera II (210526).xlsx')
+OUT_XLSX      = os.path.join(SCRIPT_DIR, 'Tracker_Suministros_IN_EL_LaCalera_II_v4_290526.xlsx')
+TODAY         = date(2026, 5, 29)
+RFSU          = date(2027, 2, 3)
+VERSION       = 'v4_290526'
 
 # ── Paleta ──────────────────────────────────────────────────────────────────
 C = {
@@ -333,6 +335,35 @@ def load_plan():
         elif esp.startswith('EL'): el_items.append(item)
 
     return sc_in, sc_el, in_items, el_items, crono_items
+
+
+def load_sc_from_file(filepath):
+    """Carga únicamente la hoja Suministros críticos de un Plan de Suministros dado."""
+    wb = openpyxl.load_workbook(filepath, data_only=True)
+    ws_sc = wb['Suministros críticos']
+    sc = []
+    for row in ws_sc.iter_rows(min_row=2, values_only=True):
+        if not row[0]: continue
+        esp = str(row[2]) if row[2] else ''
+        if esp not in ('IN', 'EL'): continue
+        sc.append({
+            'esp':       esp,
+            'crit':      str(row[1]) if row[1] else '',
+            'desc_sc':   str(row[3]) if row[3] else '',
+            'ri_real':   safe_date(row[4]),
+            'solped':    safe_date(row[5]),
+            'recof':     safe_date(row[6]),
+            'at_cierre': safe_date(row[7]),
+            'nec_oc':    safe_date(row[8]),
+            'oc_real_d': safe_date(row[9]),
+            'oc_n':      str(row[11]) if row[11] else '',
+            'prov':      str(row[12]) if row[12] else '',
+            'kom':       safe_date(row[13]),
+            'ent_oc':    safe_date(row[17]),
+            'nec_ent':   safe_date(row[18]),
+            'status':    str(row[19]) if row[19] else '',
+        })
+    return sc
 
 
 # ── Cruzar Preliminar con Suministros críticos ───────────────────────────────
@@ -866,6 +897,147 @@ def write_data_row(ws, row_n, seq, item, sc_item, ri_num, hdr_color, is_alt, cro
     ws.row_dimensions[row_n].height = 32
 
 
+def build_cambios_semana(wb, sc_old, sc_new):
+    """
+    Hoja de comparación semana a semana: plan 210526 vs plan 290526.
+    Muestra únicamente los campos que cambiaron por ítem de Suministros Críticos.
+    """
+    def norm(s): return re.sub(r'\s+', ' ', s.strip().lower())
+    def fmtv(v):
+        if isinstance(v, date): return v.strftime('%d/%m/%y')
+        return str(v or '').strip()
+
+    old_by_desc = {norm(s['desc_sc']): s for s in sc_old}
+    new_by_desc = {norm(s['desc_sc']): s for s in sc_new}
+
+    CAMPOS = [
+        ('ri_real',   'RI Real (emisión)'),
+        ('solped',    'SOLPED'),
+        ('recof',     'Rec. Ofertas'),
+        ('at_cierre', 'AT Cierre / CT0'),
+        ('nec_oc',    'Nec. OC'),
+        ('oc_real_d', 'OC Real'),
+        ('kom',       'KOM'),
+        ('oc_n',      'N° OC'),
+        ('prov',      'Proveedor'),
+    ]
+
+    rows = []  # (esp, desc, campo, v_old, v_new, tipo)
+    for s_new in sc_new:
+        key = norm(s_new['desc_sc'])
+        s_old = old_by_desc.get(key)
+        if s_old is None:
+            rows.append((s_new['esp'], s_new['desc_sc'], 'ÍTEM NUEVO', '—', 'En plan 290526', 'NUEVO'))
+            continue
+        for field, label in CAMPOS:
+            v_old = fmtv(s_old.get(field))
+            v_new = fmtv(s_new.get(field))
+            if v_old != v_new:
+                if not v_old and v_new:
+                    tipo = 'HITO ALCANZADO'
+                elif v_old and not v_new:
+                    tipo = 'DATO ELIMINADO'
+                else:
+                    tipo = 'ACTUALIZACIÓN'
+                rows.append((s_new['esp'], s_new['desc_sc'], label,
+                             v_old or '—', v_new or '—', tipo))
+        # Estado/comentarios: comparar primeros 200 chars
+        vs_old = (s_old.get('status') or '')[:200]
+        vs_new = (s_new.get('status') or '')[:200]
+        if vs_old.strip() != vs_new.strip():
+            rows.append((s_new['esp'], s_new['desc_sc'], 'Estado/Comentarios',
+                         (vs_old[:120] or '—'), (vs_new[:120] or '—'), 'ESTADO ACTUALIZADO'))
+
+    for s_old in sc_old:
+        if norm(s_old['desc_sc']) not in new_by_desc:
+            rows.append((s_old['esp'], s_old['desc_sc'], 'ÍTEM ELIMINADO',
+                         s_old['desc_sc'], '—', 'ELIMINADO'))
+
+    ws = wb.create_sheet('CAMBIOS SEMANA')
+    ws.sheet_view.showGridLines = False
+
+    for col, w in zip('ABCDEFG', [4, 6, 36, 22, 50, 50, 20]):
+        ws.column_dimensions[col].width = w
+
+    ws.merge_cells('A1:G1')
+    t = ws['A1']
+    t.value = 'COMPARACIÓN SEMANAL: Plan 21/05/2026 → Plan 29/05/2026 | CAMBIOS Y AVANCES'
+    t.fill = F(C['titulo']); t.font = ft(True, 'FFFFFF', 13)
+    t.alignment = al('center', 'center'); ws.row_dimensions[1].height = 26
+
+    ws.merge_cells('A2:G2')
+    s2 = ws['A2']
+    s2.value = ('Especialidades: IN (Instrumentación & Control)  |  EL (Electricidad)  |  '
+                'Proyecto: La Calera II CPF2  |  Corte comparación: 29/05/2026')
+    s2.fill = F(C['subtitulo']); s2.font = ft(False, 'FFFFFF', 10)
+    s2.alignment = al('center', 'center'); ws.row_dimensions[2].height = 18
+
+    if not rows:
+        ws.merge_cells('A4:G4')
+        ws['A4'].value = 'No se detectaron cambios entre los dos planes.'
+        ws['A4'].font = ft(sz=10); ws['A4'].alignment = al('center')
+        return ws
+
+    n_hitos  = sum(1 for r in rows if r[5] == 'HITO ALCANZADO')
+    n_estado = sum(1 for r in rows if r[5] == 'ESTADO ACTUALIZADO')
+    n_otros  = len(rows) - n_hitos - n_estado
+    ws.merge_cells('A3:G3')
+    res = ws['A3']
+    res.value = (f'Resumen: {len(rows)} cambios detectados — '
+                 f'{n_hitos} hitos nuevos alcanzados · '
+                 f'{n_estado} estados actualizados · {n_otros} otros')
+    res.fill = F('FFF2CC'); res.font = ft(True, '7F6000', 10)
+    res.alignment = al('center', 'center'); ws.row_dimensions[3].height = 18
+
+    r = 4
+    hdrs = ['N°', 'Esp', 'Suministro / Ítem', 'Campo', 'Plan 210526 (anterior)', 'Plan 290526 (nuevo)', 'Tipo de cambio']
+    for ci, h in enumerate(hdrs, start=1):
+        c = ws.cell(r, ci, h)
+        c.fill = F(C['hdr_grp']); c.font = ft(True, 'FFFFFF', 9)
+        c.alignment = al('center', 'center', wrap=True); c.border = bd()
+    ws.row_dimensions[r].height = 28
+    ws.freeze_panes = 'A5'
+
+    TIPO_COLOR = {
+        'HITO ALCANZADO':    ('C6EFCE', '375623'),
+        'ESTADO ACTUALIZADO':('DDEEFF', '1F3864'),
+        'ACTUALIZACIÓN':     ('FFEB9C', '9C6500'),
+        'NUEVO':             ('E2EFDA', '375623'),
+        'DATO ELIMINADO':    ('FFC7CE', 'C00000'),
+        'ELIMINADO':         ('FFC7CE', 'C00000'),
+    }
+    for i, (esp, desc, campo, v_old, v_new, tipo) in enumerate(rows, start=1):
+        r += 1
+        base_bg = C['row_alt'] if i % 2 == 0 else C['row_norm']
+        tipo_bg, tipo_fg = TIPO_COLOR.get(tipo, (base_bg, '000000'))
+
+        c1 = ws.cell(r, 1, i); c1.fill = F(C['hdr_col']); c1.font = ft(True, sz=8)
+        c1.alignment = al('center'); c1.border = bd()
+
+        espc = C['hdr_el'] if esp == 'EL' else C['hdr_in']
+        c2 = ws.cell(r, 2, esp); c2.fill = F(espc); c2.font = ft(True, 'FFFFFF', 9)
+        c2.alignment = al('center'); c2.border = bd()
+
+        c3 = ws.cell(r, 3, desc); c3.fill = F(base_bg); c3.font = ft(sz=8)
+        c3.alignment = al('left', 'center', wrap=True); c3.border = bd()
+
+        c4 = ws.cell(r, 4, campo); c4.fill = F(base_bg); c4.font = ft(True, sz=8)
+        c4.alignment = al('center', 'center', wrap=True); c4.border = bd()
+
+        c5 = ws.cell(r, 5, v_old); c5.fill = F('FFF2CC'); c5.font = ft(sz=8)
+        c5.alignment = al('left', 'center', wrap=True); c5.border = bd()
+
+        c6 = ws.cell(r, 6, v_new); c6.fill = F(tipo_bg); c6.font = ft(True, tipo_fg, 8)
+        c6.alignment = al('left', 'center', wrap=True); c6.border = bd()
+
+        c7 = ws.cell(r, 7, tipo); c7.fill = F(tipo_bg); c7.font = ft(True, tipo_fg, 8)
+        c7.alignment = al('center', 'center'); c7.border = bd()
+
+        ws.row_dimensions[r].height = 40 if tipo == 'ESTADO ACTUALIZADO' else 22
+
+    return ws
+
+
 def build_detail_sheet(wb, sheet_name, esp, prelim_items, sc_list, hdr_color, ri_map, crono_items):
     ws = wb.create_sheet(sheet_name)
     ws.sheet_view.showGridLines = False
@@ -1073,7 +1245,7 @@ def build_portada(wb):
     data = [
         ('Proyecto',           'La Calera II – CPF2'),
         ('Especialidades',     'Instrumentación & Control (IN) | Electricidad (EL)'),
-        ('Fuente plan',        '2026.04.06 – Plan de Suministros – La Calera II (210526).xlsx'),
+        ('Fuente plan',        '2026.04.06 – Plan de Suministros – La Calera II (290526).xlsx'),
         ('Versión tracker',    VERSION),
         ('Fecha generación',   TODAY.strftime('%d/%m/%Y')),
         ('RFSU objetivo',      RFSU.strftime('%d/%m/%Y')),
@@ -1112,7 +1284,7 @@ def build_portada(wb):
 
 
 def build_cambios(wb):
-    ws = wb.create_sheet('CAMBIOS v3', 0)
+    ws = wb.create_sheet('CAMBIOS v3')
     ws.sheet_view.showGridLines = False
     ws.column_dimensions['A'].width = 4
     ws.column_dimensions['B'].width = 18
@@ -1179,7 +1351,17 @@ def build_cambios(wb):
          'Nuevo estado EN LIBERACIÓN (ámbar oscuro) en columna Estado SOLPED. '
          'Se mejoran las Acciones para todos los ítems SC con lógica más precisa '
          '(seguimiento KOM, completar AT, apertura ofertas, confirmar SOLPED en SAP).'),
-        ('14', 'Revisión nombre',
+        ('14', 'ACTUALIZACIÓN A v4 – Fuente Plan 290526',
+         'Se actualiza la fuente de datos al Plan de Suministros (290526.xlsx). '
+         'Nueva hoja CAMBIOS SEMANA: comparación dinámica 210526 → 290526, detecta '
+         'automáticamente hitos alcanzados, campos actualizados y cambios de estado por ítem SC.'),
+        ('15', 'CAMBIOS DETECTADOS 210526 → 290526',
+         'AT cierre SE#3/SE#4/PMS: 13/03/26 (antes vacío – hito alcanzado). '
+         'Válvulas Control: SOLPED 05/05/26 y RecOf 21/05/26 (antes vacíos), en AT desde 22/05/26. '
+         'PCS: estado actualizado a "terminando de validar técnicamente para avanzar con adjudicación". '
+         'SIS: nueva oferta recibida por los fierros, en validación técnica. '
+         'Cables IN: "Se aguarda liberación para licitar".'),
+        ('16', 'Revisión nombre',
          f'Archivo: Tracker_Suministros_IN_EL_LaCalera_II_{VERSION}.xlsx'),
     ]
 
@@ -1201,39 +1383,46 @@ def build_cambios(wb):
 
 # ── MAIN ────────────────────────────────────────────────────────────────────
 def main():
-    print(f'[1/6] Leyendo Plan de Suministros: {os.path.basename(PLAN_FILE)}')
+    print(f'[1/7] Leyendo Plan 290526 (nuevo): {os.path.basename(PLAN_FILE)}')
     sc_in, sc_el, in_items, el_items, crono_items = load_plan()
     print(f'      IN Preliminar: {len(in_items)} items | EL Preliminar: {len(el_items)} items')
     print(f'      IN Suministros Críticos: {len(sc_in)} | EL: {len(sc_el)}')
     print(f'      Crono 4.11 paquetes: {len(crono_items)} (IN+EL)')
 
-    # Diagnóstico de matching
-    matched_in  = sum(1 for i in in_items  if find_crono_item(i['desc'], 'IN', crono_items))
-    matched_el  = sum(1 for i in el_items  if find_crono_item(i['desc'], 'EL', crono_items))
+    print(f'[2/7] Leyendo Plan 210526 (anterior, para comparación): {os.path.basename(PLAN_FILE_OLD)}')
+    sc_old = load_sc_from_file(PLAN_FILE_OLD)
+    print(f'      SC plan anterior: {len(sc_old)} ítems')
+
+    matched_in = sum(1 for i in in_items if find_crono_item(i['desc'], 'IN', crono_items))
+    matched_el = sum(1 for i in el_items if find_crono_item(i['desc'], 'EL', crono_items))
     print(f'      Crono match IN: {matched_in}/{len(in_items)} | EL: {matched_el}/{len(el_items)}')
 
-    print('[2/6] Creando workbook...')
+    print('[3/7] Creando workbook...')
     wb = openpyxl.Workbook()
     wb.remove(wb.active)
 
-    print('[3/6] Generando hoja CAMBIOS...')
+    print('[4/7] Generando hoja CAMBIOS SEMANA (comparación 210526 → 290526)...')
+    sc_new_all = sc_in + sc_el
+    build_cambios_semana(wb, sc_old, sc_new_all)
+
+    print('[5/7] Generando hoja CAMBIOS v3 (historial de versiones)...')
     build_cambios(wb)
 
-    print('[4/6] Generando PORTADA...')
+    print('[5b/7] Generando PORTADA...')
     build_portada(wb)
 
-    print('[5/6] Generando DASHBOARD...')
+    print('[5c/7] Generando DASHBOARD...')
     build_dashboard(wb, sc_in, sc_el, in_items, el_items)
 
-    print('[5b/6] Generando hoja IN...')
+    print('[5d/7] Generando hoja IN...')
     build_detail_sheet(wb, 'IN', 'IN – INSTRUMENTACIÓN & CONTROL',
                        in_items, sc_in, C['hdr_in'], IN_RI_NUMBER, crono_items)
 
-    print('[5c/6] Generando hoja EL...')
+    print('[5e/7] Generando hoja EL...')
     build_detail_sheet(wb, 'EL', 'EL – ELECTRICIDAD',
                        el_items, sc_el, C['hdr_el'], EL_RI_NUMBER, crono_items)
 
-    print(f'[6/6] Guardando: {OUT_XLSX}')
+    print(f'[6/7] Guardando: {OUT_XLSX}')
     wb.save(OUT_XLSX)
     size = os.path.getsize(OUT_XLSX) // 1024
     print(f'      OK → {os.path.basename(OUT_XLSX)} ({size} KB)')
