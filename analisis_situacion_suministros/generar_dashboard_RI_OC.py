@@ -17,11 +17,11 @@ from datetime import date, datetime
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 PLAN_FILE  = os.path.join(SCRIPT_DIR, '..', 'info_suministros',
-                          '2026.04.06 - Plan de Suministros - La Calera II (290526).xlsx')
-OUT_XLSX   = os.path.join(SCRIPT_DIR, 'Dashboard_RI_OC_IN_EL_LaCalera_II_290526.xlsx')
-TODAY      = date(2026, 5, 29)
+                          '2026.04.06 - Plan de Suministros - La Calera II (040626).xlsx')
+OUT_XLSX   = os.path.join(SCRIPT_DIR, 'Dashboard_RI_OC_IN_EL_LaCalera_II_040626.xlsx')
+TODAY      = date(2026, 6, 4)
 RFSU       = date(2027, 2, 3)
-VERSION    = '290526'
+VERSION    = '040626'
 
 # ── Paleta gerencial ─────────────────────────────────────────────────────────
 C = {
@@ -53,43 +53,43 @@ def dias(d1, d2):
 # DATOS (extraídos y verificados del Plan de Suministros 290526)
 # ═══════════════════════════════════════════════════════════════════════════
 
-# Pipeline actual por especialidad (hoja "Cuadro resumen")
+# Pipeline actual por especialidad (hoja "Cuadro resumen" – plan 040626)
 #   cant_ri, emitidas(en gestión), solped, ofertas, at, oc
 PIPELINE = {
     'EL': {'nombre': 'ELECTRICIDAD',     'cant_ri': 20, 'emitidas': 12,
-           'solped': 2, 'ofertas': 2, 'at': 2, 'oc': 6},
+           'solped': 0, 'ofertas': 4, 'at': 2, 'oc': 6},
     'IN': {'nombre': 'INSTRUMENTACIÓN',  'cant_ri': 48, 'emitidas': 40,
-           'solped': 4, 'ofertas': 14, 'at': 21, 'oc': 1},
+           'solped': 0, 'ofertas': 18, 'at': 21, 'oc': 1},
 }
 
-# Ítems críticos con cadena RI→OC (hoja "Suministros críticos")
+# Ítems críticos con cadena RI→OC (hoja "Suministros críticos" – plan 040626)
 # fechas: ri, solped, recof, at_cierre, necoc, oc_kom (None=no alcanzado)
 CRITICOS = [
     # esp, criticidad, descripcion, ri, solped, recof, at_cierre, necoc, oc_kom, oc_num, proveedor, estado
     ('EL','HITO 2','Shelter Eléctrico SE#4 c/equipamiento',
      date(2026,1,9), date(2026,1,21), date(2026,2,9), date(2026,3,13), date(2026,5,20), date(2026,5,18),
-     '4508944971','ABB','OC COLOCADA – Adjudicado (KOM 18/5)'),
+     '4508944971','ABB','OC COLOCADA – KOM 18/5 – seguimiento semanal iniciado'),
     ('EL','HITO 2','Shelter Eléctrico SE#3 c/equipamiento',
      date(2026,1,9), date(2026,1,21), date(2026,2,9), date(2026,3,13), date(2026,5,20), date(2026,5,18),
-     '4508944973','ABB','OC COLOCADA – Adjudicado (KOM 18/5)'),
+     '4508944973','ABB','OC COLOCADA – KOM 18/5 – seguimiento semanal iniciado'),
     ('EL','LLI','Sistema PMS (Power Management System)',
      date(2026,1,9), date(2026,1,21), date(2026,2,9), date(2026,3,13), date(2026,5,29), date(2026,5,22),
-     '4508945953','ABB','OC COLOCADA – Adjudicado (KOM 22/5)'),
+     '4508945953','ABB','OC COLOCADA – KOM 22/5 – seguimiento semanal iniciado'),
     ('IN','LLI','Sistema de Control PCS',
      date(2026,2,3), date(2026,2,19), date(2026,3,25), None, date(2026,8,19), None,
-     '','Inauco (nom.)','EN AT – validación técnica de oferta'),
+     '','Inauco (nom.)','EN AT – nueva oferta Inauco recibida, validando técnicamente'),
     ('IN','LLI','Sistema de Seguridad SIS',
      date(2026,2,3), date(2026,2,19), date(2026,3,11), None, date(2026,6,21), None,
-     '','HIMA (nom.)','EN AT desde 13/3 – nueva oferta en validación'),
+     '','HIMA (nom.)','EN AT desde 13/3 – nueva oferta fierros en validación técnica'),
     ('IN','LLI','Válvulas de Control y Autorreguladoras',
      date(2026,4,23), date(2026,5,5), date(2026,5,21), None, date(2026,7,26), None,
-     '','—','EN AT desde 22/5 – ofertas en evaluación'),
+     '','—','EN AT desde 22/5 – aguarda respuesta ING al 10/06/26'),
     ('IN','MONTO','Cables de Instrumentación',
      date(2026,5,15), None, None, None, date(2026,10,21), None,
-     '','—','SOLPED en liberación – aguarda licitar'),
+     '','—','SOLPED LIBERADA (23392215/16/13) – en preparación proceso licitatorio'),
     ('EL','MONTO','Cables Eléctricos',
      date(2026,6,11), None, None, None, date(2026,11,18), None,
-     '','—','RI programada – aún no emitida'),
+     '','—','RI prevista 11/06/26 – aún no emitida'),
 ]
 
 # Demora promedio por segmento (cadena completa de los 3 adjudicados ABB)
@@ -121,7 +121,7 @@ def build_resumen(wb):
     ws.merge_cells('B3:M3')
     s = ws['B3']
     s.value = (f'Especialidades: Instrumentación (IN) y Electricidad (EL)   ·   '
-               f'Fuente: Plan de Suministros {VERSION}   ·   Corte: 29/05/2026   ·   RFSU: 03/02/2027')
+               f'Fuente: Plan de Suministros {VERSION}   ·   Corte: 04/06/2026   ·   RFSU: 03/02/2027')
     s.fill = F(C['azul_m']); s.font = ft(False, C['blanco'], 10)
     s.alignment = al('center'); ws.row_dimensions[3].height = 20
 
@@ -215,17 +215,18 @@ def build_resumen(wb):
 
     hallazgos = [
         ('🔴', 'CUELLO DE BOTELLA EN INSTRUMENTACIÓN',
-         'De 40 RIs en gestión, 21 (52%) están detenidas en Análisis Técnico y solo 1 llegó a OC. '
-         'El AT es el principal punto de estancamiento de la especialidad.'),
+         'De 40 RIs en gestión, 21 (52%) están en Análisis Técnico y solo 1 llegó a OC. '
+         'El AT es el principal punto de estancamiento de la especialidad IN.'),
         ('🟠', 'LA COLOCACIÓN DE OC ES EL TRAMO MÁS LENTO',
          'En los 3 paquetes ya adjudicados (ABB), el tramo AT cierre → OC tomó 66 días en promedio: '
          'la mitad de los 129 días totales RI → OC. El gasto de tiempo no está en la ingeniería sino en la gestión comercial post-AT.'),
-        ('🟢', 'ELECTRICIDAD MÁS AVANZADA',
-         'EL ya colocó 6 OCs (30% de sus 20 RIs), incluyendo los 3 shelters/PMS de ABB (HITO 2 / LLI). '
-         'Pipeline más equilibrado y sin concentración en AT.'),
-        ('⚠️', 'CRÍTICOS IN EN RIESGO',
-         'PCS y SIS llevan 115 días desde la RI (emitidas 3/2) sin OC, aún en AT. '
-         'Si replican el patrón ABB (129 días), recién colocarían OC a inicios de junio – ajustado contra NecOC.'),
+        ('🟢', 'AVANCE SEMANA: CABLES IN Y CABLES EL',
+         'Cables IN (23392215/16/13): SOLPEDs liberadas al 04/06 → pasan a proceso licitatorio (NecOC: 21/10/26). '
+         'IN y EL sin ítems en SOLPED (pasaron a petición de ofertas). SE#3/SE#4/PMS: seguimiento semanal iniciado.'),
+        ('⚠️', 'CRÍTICOS IN – PCS Y SIS EN RIESGO',
+         'PCS y SIS llevan 121 días desde la RI (emitidas 3/2) sin OC, aún en AT. '
+         'NecOC SIS: 21/06/26 – riesgo alto de incumplimiento. '
+         'Válvulas: en AT desde 22/5, aguarda respuesta ING al 10/06.'),
     ]
     for icon, titulo, texto in hallazgos:
         ws.merge_cells(start_row=r, start_column=2, end_row=r, end_column=2)
@@ -345,7 +346,7 @@ def build_analisis(wb):
     # nota
     r += 1
     ws.merge_cells(start_row=r, start_column=2, end_row=r, end_column=13)
-    n = ws.cell(r, 2, '(*) Para ítems sin OC, el valor es la cantidad de días transcurridos desde la RI hasta el corte (29/05/26), sin orden de compra colocada todavía.')
+    n = ws.cell(r, 2, '(*) Para ítems sin OC, el valor es la cantidad de días transcurridos desde la RI hasta el corte (04/06/26), sin orden de compra colocada todavía.')
     n.font = ft(False, C['gris'], 8); n.alignment = al('left'); ws.row_dimensions[r].height = 16
 
     # ── Tabla auxiliar para gráfico días RI→OC ───────────────────────────────
@@ -465,9 +466,9 @@ def build_segmentos(wb):
     ws.row_dimensions[r].height = 20
     r += 1
     notas = [
-        ('Fuente', 'Plan de Suministros – La Calera II (290526).xlsx'),
+        ('Fuente', 'Plan de Suministros – La Calera II (040626).xlsx'),
         ('Hojas usadas', 'Cuadro resumen (pipeline) · Suministros críticos (cadena por ítem) · RI y OC x mes.'),
-        ('Fecha de corte', '29/05/2026'),
+        ('Fecha de corte', '04/06/2026'),
         ('Universo', 'IN: 48 RIs · EL: 20 RIs (total 68). Cadena RI→OC detallada disponible para los 8 ítems críticos.'),
         ('Definición OC efectiva', 'Para paquetes adjudicados sin fecha formal de OC, se usa la fecha KOM como hito de OC efectiva.'),
         ('Días en gestión', 'Para ítems sin OC: días entre RI y fecha de corte (proceso aún abierto).'),
