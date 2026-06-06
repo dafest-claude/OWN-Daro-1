@@ -1,0 +1,65 @@
+{
+  "nombre_contrato": "Contrato de Arrendamiento - Local Comercial",
+  "archivo_fuente": "Contract/arrendamiento_local.pdf",
+  "fecha_analisis": "2026-06-06",
+  "analista": "Daro",
+  "datos_generales": {
+    "Tipo de contrato": "Arrendamiento comercial",
+    "Partes involucradas": "Inmobiliaria XYZ S.A. (Arrendador) / Comercial ABC Ltda. (Arrendatario)",
+    "Objeto del contrato": "Arrendamiento de local comercial de 120 m2",
+    "Fecha de firma": "2026-01-15",
+    "Fecha de inicio / vigencia": "2026-02-01",
+    "Fecha de terminación": "2029-01-31",
+    "Duracion / plazo": "36 meses",
+    "Jurisdiccion / ley aplicable": "Leyes de la República de Chile",
+    "Valor / monto": "1.500.000 mensual",
+    "Moneda": "CLP"
+  },
+  "resumen_ejecutivo": "Contrato de arrendamiento de un local comercial por 36 meses con renta mensual de CLP 1.500.000, reajustable anualmente segun IPC. Incluye garantia de dos meses y clausula de renovacion automatica.",
+  "obligaciones": [
+    {
+      "parte": "Arrendador (Inmobiliaria XYZ S.A.)",
+      "items": [
+        "Entregar el local en buen estado de conservacion",
+        "Garantizar el uso pacifico del inmueble",
+        "Realizar reparaciones estructurales mayores"
+      ]
+    },
+    {
+      "parte": "Arrendatario (Comercial ABC Ltda.)",
+      "items": [
+        "Pagar la renta dentro de los primeros 5 dias de cada mes",
+        "Mantener el local y realizar reparaciones menores",
+        "Contratar seguro contra incendios"
+      ]
+    }
+  ],
+  "clausulas_clave": [
+    {"clausula": "Pagos / contraprestacion", "ubicacion": "Clausula 3", "resumen": "Renta mensual CLP 1.500.000 reajustable por IPC", "observacion": "Reajuste anual"},
+    {"clausula": "Garantia", "ubicacion": "Clausula 5", "resumen": "Dos meses de renta en garantia", "observacion": "Reembolsable al termino"},
+    {"clausula": "Terminacion", "ubicacion": "Clausula 9", "resumen": "Aviso previo de 60 dias", "observacion": "Multa por termino anticipado"},
+    {"clausula": "Renovacion", "ubicacion": "Clausula 10", "resumen": "Renovacion automatica por 12 meses", "observacion": "Salvo aviso en contrario"},
+    {"clausula": "Resolucion de disputas", "ubicacion": "Clausula 14", "resumen": "Arbitraje en Santiago", "observacion": ""}
+  ],
+  "fechas_criticas": [
+    {"evento": "Inicio de vigencia", "fecha": "2026-02-01", "accion": "Tomar posesion del local", "responsable": "Arrendatario"},
+    {"evento": "Reajuste anual de renta", "fecha": "2027-02-01", "accion": "Aplicar reajuste IPC", "responsable": "Arrendador"},
+    {"evento": "Aviso de no renovacion", "fecha": "2028-12-01", "accion": "Notificar si no se renueva", "responsable": "Ambas partes"}
+  ],
+  "riesgos": [
+    {"riesgo": "Multa elevada por termino anticipado", "nivel": "Alto", "clausula": "Clausula 9", "recomendacion": "Negociar reduccion de la multa"},
+    {"riesgo": "Reajuste sin tope maximo", "nivel": "Medio", "clausula": "Clausula 3", "recomendacion": "Establecer tope de reajuste anual"}
+  ],
+  "banderas_rojas": [
+    "No existe clausula de limitacion de responsabilidad",
+    "El reajuste por IPC no tiene tope maximo"
+  ],
+  "clausulas_recomendadas": [
+    {"clausula": "Clausula de confidencialidad", "presente": false},
+    {"clausula": "Limitacion de responsabilidad", "presente": false},
+    {"clausula": "Mecanismo de resolucion de disputas", "presente": true},
+    {"clausula": "Clausula de terminacion anticipada", "presente": true},
+    {"clausula": "Proteccion de datos / privacidad", "presente": false}
+  ],
+  "conclusiones": "El contrato es estandar y equilibrado, pero se recomienda negociar un tope al reajuste anual y reducir la multa por termino anticipado antes de la firma."
+}

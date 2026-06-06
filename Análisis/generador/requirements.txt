@@ -1,0 +1,5 @@
+# Dependencias para el generador de análisis (Legal PP Project LC)
+# Instalar con: pip install -r requirements.txt
+python-docx>=1.2.0
+openpyxl>=3.1.5
+reportlab>=4.5.1
