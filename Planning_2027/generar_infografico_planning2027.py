@@ -14,7 +14,7 @@ from datetime import date, datetime, timedelta
 import numpy as np
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-OUT_PNG    = os.path.join(SCRIPT_DIR, 'Gantt_Integrado_CPF2_Planning2027.png')
+OUT_PNG    = os.path.join(SCRIPT_DIR, 'Gantt_Integrado_CPF2_Planning2027_Rev1_120626.png')
 
 # Paleta
 AZ   = '#1F3864'; AZM  = '#2F5496'; AZC  = '#DEEAF1'
@@ -72,28 +72,30 @@ ROWS = [
     ("CABLES INSTRUMENTACIÓN (IN)", None,           None,               INB,   'white', 27, 'grp'),
     ("Llegada cables IN",        date(2026,11,28),  date(2026,11,28),   INB,   'white', 28, 'hito'),
     ("Canaletas IN",             date(2026,11,28),  date(2027,1,31),    INC,   'white', 29, 'act'),
-    ("[!] TENDIDO IN → antes 17-MAR", date(2027,2,1), date(2027,3,14),   REST_C,'white', 30, 'rest'),
+    ("[!] TENDIDO IN → antes 17-MAR (alcance IN PENDIENTE, estim. 300-500 cab.)", date(2027,2,1), date(2027,3,14), REST_C,'white', 30, 'rest'),
     ("Conexionado IN (inicia CON PCS)", date(2027,3,17), date(2027,7,31), INC, 'white', 31, 'act'),
 
     ("CABLES ELÉCTRICOS (EL)",  None,               None,               ELB,   'white', 32, 'grp'),
     ("Llegada cables EL",       date(2027,2,28),    date(2027,2,28),    ELB,   'white', 33, 'hito'),
     ("Bandejas portacables",    date(2027,3,1),     date(2027,4,5),     ELC,   'white', 34, 'act'),
     ("[!] TENDIDO EL → antes SE#3", date(2027,3,1),  date(2027,5,13),    REST_C,'white', 35, 'rest'),
-    ("Conexionado EL S4 (pivota SE#4)", date(2027,4,14), date(2027,5,31), ELC, 'white', 36, 'act'),
-    ("Conexionado EL S3 (pivota SE#3)", date(2027,5,18), date(2027,7,6),  ELC, 'white', 37, 'act'),
+    ("Conexionado EL S4 (tras armado 14d, inicia 23-ABR)", date(2027,4,23), date(2027,6,12), ELC, 'white', 36, 'act'),
+    ("Conexionado EL S3 (tras armado 21d, inicia 05-JUN) <- CRITICA", date(2027,6,5), date(2027,7,25), ELC, 'white', 37, 'act'),
 
     ("CAMPO — COMISIONADO",     None,               None,               CMPC,  'white', 38, 'grp'),
-    ("Montaje celdas+CCMs campo",date(2027,4,14),   date(2027,6,4),     S3C,   'white', 39, 'act'),
-    ("Megger + Energización",   date(2027,7,7),     date(2027,8,13),    CMPC,  'white', 40, 'fat'),
-    ("iFAT integración TODOS",  date(2027,6,25),    date(2027,7,14),    AZ,    'white', 41, 'fat'),
-    ("Precomisionado eléctrico",date(2027,8,14),    date(2027,9,3),     CMPC,  'white', 42, 'act'),
-    ("Comisionado integrado",   date(2027,9,4),     date(2027,12,19),   CMPC,  'white', 43, 'act'),
-    ("SAT PMS (HOLD POINT PIE)",date(2027,10,6),    date(2027,12,5),    PMSC,  'white', 44, 'fat'),
+    ("Armado shelter SE#4 en campo (14d min.)", date(2027,4,8), date(2027,4,22), S4C, 'white', 39, 'act'),
+    ("Armado shelter SE#3 en campo (21d) <- CRITICA", date(2027,5,14), date(2027,6,3), S3C, 'white', 40, 'act'),
+    ("Megger ITP (26-JUL→15-AGO)", date(2027,7,26), date(2027,8,15),    CMPC,  'white', 41, 'fat'),
+    ("Energizacion MT→BT (16-AGO→01-SEP)", date(2027,8,16), date(2027,9,1), CMPC, 'white', 42, 'fat'),
+    ("iFAT integracion TODOS",  date(2027,6,25),    date(2027,7,14),    AZ,    'white', 43, 'fat'),
+    ("Precomisionado electrico (02-SEP→22-SEP)", date(2027,9,2), date(2027,9,22), CMPC, 'white', 44, 'act'),
+    ("Comisionado integrado (23-SEP→19-DIC)", date(2027,9,23), date(2027,12,19), CMPC, 'white', 45, 'act'),
+    ("SAT PMS (HOLD POINT PIE OCT-DIC)", date(2027,10,6), date(2027,12,5), PMSC, 'white', 46, 'fat'),
 
-    ("★★★ RFSU — 20-DIC-2027", date(2027,12,20),   date(2027,12,20),   RFSU_C,'white', 45, 'hito'),
+    ("*** RFSU — 20-DIC-2027",  date(2027,12,20),   date(2027,12,20),   RFSU_C,'white', 47, 'hito'),
 ]
 
-N_ROWS   = 46
+N_ROWS   = 48
 BAR_H    = 0.55
 GRP_H    = 0.35
 Y_SCALE  = 1.0
@@ -228,18 +230,19 @@ ax.spines['left'].set_visible(False)
 
 # Título
 fig.text(0.5, 0.99,
-         'GANTT INTEGRADO — CPF2 La Calera II (Vaca Muerta)  ·  Planning 2027',
+         'GANTT INTEGRADO — CPF2 La Calera II (Vaca Muerta)  ·  Planning 2027  ·  Rev1_120626',
          ha='center', va='top', fontsize=14, fontweight='bold', color=AZ)
 fig.text(0.5, 0.975,
-         'ABB (SE#3 · SE#4 · PMS)  +  INAUCO (PCS/SCADA Sala 7)  +  '
-         'Cables EL/IN  |  RFSU: 20-DIC-2027  |  Corte: 12-JUN-2026',
+         'ABB (SE#3 · SE#4 · PMS)  +  INAUCO (PCS/SCADA Sala 7)  +  Cables EL/IN  |  '
+         'RFSU: 20-DIC-2027  |  Shelters en modulos: armado in situ SE#4 (14d) + SE#3 (21d)  |  Corte: 12-JUN-2026',
          ha='center', va='top', fontsize=9, color=GRIS)
 
 # Restricciones en banner
 fig.text(0.5, 0.955,
-         '[!] RESTRICCIÓN IN: Cables IN tendidos ANTES del 17-MAR-2027 (inicio PCS Sala 7)  ·  '
-         '[!] RESTRICCIÓN EL: Cables EL tendidos ANTES del 14-MAY-2027 (llegada SE#3)  ·  '
-         'Conexionado EL pivota sobre llegada salas  ·  Conexionado IN inicia CON instalación PCS',
+         '[!] RESTRICCION IN: Alcance PENDIENTE (~300-500 cab./40,000-70,000m estimado, AT en proceso). '
+         'Tendido ANTES 17-MAR-2027. Requiere 5-6 cuadrillas.  ·  '
+         '[!] RESTRICCION EL: Tendido ANTES 14-MAY-2027 (llegada SE#3).  ·  '
+         'Conexionado EL inicia TRAS armado shelters en campo (SE#4: +14d, SE#3: +21d)',
          ha='center', va='top', fontsize=8, color='#7B4000',
          bbox=dict(boxstyle='round,pad=0.4', facecolor='#FFF0CC', alpha=0.95, edgecolor='#E36C09'))
 
