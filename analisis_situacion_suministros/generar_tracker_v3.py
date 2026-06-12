@@ -18,13 +18,13 @@ from datetime import date, datetime
 # ── Rutas ───────────────────────────────────────────────────────────────────
 SCRIPT_DIR  = os.path.dirname(os.path.abspath(__file__))
 PLAN_FILE     = os.path.join(SCRIPT_DIR, '..', 'info_suministros',
-                              '2026.04.06 - Plan de Suministros - La Calera II (040626).xlsx')
+                              '2026.04.06 - Plan de Suministros - La Calera II (120626).xlsx')
 PLAN_FILE_OLD = os.path.join(SCRIPT_DIR, '..', 'info_suministros',
-                              '2026.04.06 - Plan de Suministros - La Calera II (290526).xlsx')
-OUT_XLSX      = os.path.join(SCRIPT_DIR, 'Tracker_Suministros_IN_EL_LaCalera_II_v5_040626.xlsx')
-TODAY         = date(2026, 6, 4)
+                              '2026.04.06 - Plan de Suministros - La Calera II (040626).xlsx')
+OUT_XLSX      = os.path.join(SCRIPT_DIR, 'Tracker_Suministros_IN_EL_LaCalera_II_v6_120626.xlsx')
+TODAY         = date(2026, 6, 12)
 RFSU          = date(2027, 2, 3)
-VERSION       = 'v5_040626'
+VERSION       = 'v6_120626'
 
 # ── Paleta ──────────────────────────────────────────────────────────────────
 C = {
@@ -899,7 +899,7 @@ def write_data_row(ws, row_n, seq, item, sc_item, ri_num, hdr_color, is_alt, cro
 
 def build_cambios_semana(wb, sc_old, sc_new):
     """
-    Hoja de comparación semana a semana: plan 290526 vs plan 040626.
+    Hoja de comparación semana a semana: plan 040626 vs plan 120626.
     Muestra únicamente los campos que cambiaron por ítem de Suministros Críticos.
     """
     def norm(s): return re.sub(r'\s+', ' ', s.strip().lower())
@@ -927,7 +927,7 @@ def build_cambios_semana(wb, sc_old, sc_new):
         key = norm(s_new['desc_sc'])
         s_old = old_by_desc.get(key)
         if s_old is None:
-            rows.append((s_new['esp'], s_new['desc_sc'], 'ÍTEM NUEVO', '—', 'En plan 040626', 'NUEVO'))
+            rows.append((s_new['esp'], s_new['desc_sc'], 'ÍTEM NUEVO', '—', 'En plan 120626', 'NUEVO'))
             continue
         for field, label in CAMPOS:
             v_old = fmtv(s_old.get(field))
@@ -961,14 +961,14 @@ def build_cambios_semana(wb, sc_old, sc_new):
 
     ws.merge_cells('A1:G1')
     t = ws['A1']
-    t.value = 'COMPARACIÓN SEMANAL: Plan 29/05/2026 → Plan 04/06/2026 | CAMBIOS Y AVANCES'
+    t.value = 'COMPARACIÓN SEMANAL: Plan 04/06/2026 → Plan 12/06/2026 | CAMBIOS Y AVANCES'
     t.fill = F(C['titulo']); t.font = ft(True, 'FFFFFF', 13)
     t.alignment = al('center', 'center'); ws.row_dimensions[1].height = 26
 
     ws.merge_cells('A2:G2')
     s2 = ws['A2']
     s2.value = ('Especialidades: IN (Instrumentación & Control)  |  EL (Electricidad)  |  '
-                'Proyecto: La Calera II CPF2  |  Corte comparación: 04/06/2026')
+                'Proyecto: La Calera II CPF2  |  Corte comparación: 12/06/2026')
     s2.fill = F(C['subtitulo']); s2.font = ft(False, 'FFFFFF', 10)
     s2.alignment = al('center', 'center'); ws.row_dimensions[2].height = 18
 
@@ -990,7 +990,7 @@ def build_cambios_semana(wb, sc_old, sc_new):
     res.alignment = al('center', 'center'); ws.row_dimensions[3].height = 18
 
     r = 4
-    hdrs = ['N°', 'Esp', 'Suministro / Ítem', 'Campo', 'Plan 290526 (anterior)', 'Plan 040626 (nuevo)', 'Tipo de cambio']
+    hdrs = ['N°', 'Esp', 'Suministro / Ítem', 'Campo', 'Plan 040626 (anterior)', 'Plan 120626 (nuevo)', 'Tipo de cambio']
     for ci, h in enumerate(hdrs, start=1):
         c = ws.cell(r, ci, h)
         c.fill = F(C['hdr_grp']); c.font = ft(True, 'FFFFFF', 9)
@@ -1351,17 +1351,16 @@ def build_cambios(wb):
          'Nuevo estado EN LIBERACIÓN (ámbar oscuro) en columna Estado SOLPED. '
          'Se mejoran las Acciones para todos los ítems SC con lógica más precisa '
          '(seguimiento KOM, completar AT, apertura ofertas, confirmar SOLPED en SAP).'),
-        ('14', 'ACTUALIZACIÓN A v4/v5 – Fuente Plan 040626',
-         'v4: fuente a Plan 290526 + hoja CAMBIOS SEMANA. '
-         'v5: fuente actualizada a Plan 040626 (04/06/2026). '
-         'Comparación dinámica ahora refleja 290526 → 040626.'),
-        ('15', 'CAMBIOS DETECTADOS 290526 → 040626',
-         'Cables IN (23392215/16/13): SOLPEDs LIBERADAS (antes "en liberación" – hito alcanzado). '
-         'IN: 0 en SOLPED / 18 en petición ofertas (antes 4/14). '
-         'EL: 0 en SOLPED / 4 en petición ofertas (antes 2/2). '
-         'Válvulas: "aguarda respuesta ING al 10/06". '
-         'SE#3/SE#4/PMS: reuniones semanales de seguimiento iniciadas. '
-         'Cables EL: solicitud entrega en obra para diciembre-26.'),
+        ('14', 'ACTUALIZACIÓN A v4/v5/v6 – Historial fuentes',
+         'v4: Plan 290526 + hoja CAMBIOS SEMANA. '
+         'v5: Plan 040626 (04/06/2026), comparación 290526→040626. '
+         'v6: Plan 120626 (12/06/2026), comparación 040626→120626.'),
+        ('15', 'CAMBIOS DETECTADOS 040626 → 120626',
+         'PCS: AT CERRADO – aguarda oferta comercial Inauco (HITO MAYOR). '
+         'SIS: AT CERRADO – cierre comercial, SBL solicitado, pendiente oferta servicios HIMA-Arg (HITO MAYOR). '
+         'Cables IN: Ofertas enviadas a AT el 12/06 (hito nuevo). '
+         'SE#3/SE#4/PMS: Fechas entrega OC y NecEnt incorporadas al plan. '
+         'Válvulas: Plazo ING 10/06 vencido sin respuesta – riesgo de demora.'),
         ('16', 'Revisión nombre',
          f'Archivo: Tracker_Suministros_IN_EL_LaCalera_II_{VERSION}.xlsx'),
     ]
@@ -1384,7 +1383,7 @@ def build_cambios(wb):
 
 # ── MAIN ────────────────────────────────────────────────────────────────────
 def main():
-    print(f'[1/7] Leyendo Plan 040626 (nuevo): {os.path.basename(PLAN_FILE)}')
+    print(f'[1/7] Leyendo Plan 120626 (nuevo): {os.path.basename(PLAN_FILE)}')
     sc_in, sc_el, in_items, el_items, crono_items = load_plan()
     print(f'      IN Preliminar: {len(in_items)} items | EL Preliminar: {len(el_items)} items')
     print(f'      IN Suministros Críticos: {len(sc_in)} | EL: {len(sc_el)}')
@@ -1402,7 +1401,7 @@ def main():
     wb = openpyxl.Workbook()
     wb.remove(wb.active)
 
-    print('[4/7] Generando hoja CAMBIOS SEMANA (comparación 290526 → 040626)...')
+    print('[4/7] Generando hoja CAMBIOS SEMANA (comparación 040626 → 120626)...')
     sc_new_all = sc_in + sc_el
     build_cambios_semana(wb, sc_old, sc_new_all)
 

@@ -12,7 +12,7 @@ from matplotlib.patches import FancyBboxPatch, Rectangle
 import matplotlib.font_manager as fm
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-OUT_PNG = os.path.join(SCRIPT_DIR, 'Infografico_RI_OC_IN_EL_LaCalera_II_040626.png')
+OUT_PNG = os.path.join(SCRIPT_DIR, 'Infografico_RI_OC_IN_EL_LaCalera_II_120626.png')
 
 # Paleta
 AZUL='#1F3864'; AZUL_M='#2F5496'; VERDE='#2E6B2E'; NARANJA='#9C4500'
@@ -31,7 +31,7 @@ axT.add_patch(Rectangle((0,0),1,1, transform=axT.transAxes, color=AZUL))
 axT.text(0.015, 0.62, 'ANÁLISIS DE TIEMPOS  RI → ORDEN DE COMPRA',
          color='white', fontsize=23, fontweight='bold', va='center')
 axT.text(0.015, 0.22, 'La Calera II CPF2  ·  Instrumentación (IN) y Electricidad (EL)  ·  '
-                      'Plan de Suministros 040626  ·  corte 04/06/2026',
+                      'Plan de Suministros 120626  ·  corte 12/06/2026',
          color='#D6E4F0', fontsize=11, va='center')
 
 # ── KPIs ─────────────────────────────────────────────────────────────────────
@@ -97,11 +97,11 @@ axI.text(0.0,1.02,'Ítems críticos – tiempo RI → OC', fontsize=13, fontweig
 items = [
     ('EL','Shelter SE#4 / SE#3 (ABB)','09/01','18/05 (OC)','129 d','OC COLOCADA', VERDE_OK),
     ('EL','Sistema PMS (ABB)','09/01','22/05 (OC)','133 d','OC COLOCADA', VERDE_OK),
-    ('IN','Sistema Control PCS','03/02','— (en AT)','121 d*','EN AT', AMBAR),
-    ('IN','Sistema Seguridad SIS','03/02','— (en AT)','121 d*','EN AT', AMBAR),
-    ('IN','Válvulas Control','23/04','— (en AT)','42 d*','EN AT', AMBAR),
-    ('IN','Cables Instrumentación','15/05','— (SOLPED lib.)','20 d*','SOLPED LIB.', AZUL_M),
-    ('EL','Cables Eléctricos','11/06','— (no emit.)','RI futura','PROGRAMADA', GRIS),
+    ('IN','Sistema Control PCS','03/02','— (AT cerrado)','129 d*','AT CERRADO', AMBAR),
+    ('IN','Sistema Seguridad SIS','03/02','— (AT cerrado)','129 d*','AT CERRADO', AMBAR),
+    ('IN','Válvulas Control','23/04','— (en AT)','50 d*','EN AT ⚠', ROJO),
+    ('IN','Cables Instrumentación','15/05','— (en AT)','28 d*','OFERT. A AT', AZUL_M),
+    ('EL','Cables Eléctricos','11/06','— (sin SOLPED)','1 d*','RI EMITIDA', GRIS),
 ]
 cols_x = [0.0, 0.07, 0.42, 0.55, 0.71, 0.81, 0.99]
 hdrs = ['Esp','Suministro','RI','OC efectiva','RI→OC','Estado']
@@ -126,7 +126,7 @@ for r,(esp,desc,ri,oc,d,est,ecol) in enumerate(items):
                   facecolor=ecol, edgecolor='none'))
     axI.text(cols_x[5]+0.079, yy, est, fontsize=8.5, fontweight='bold', color='white',
              ha='center', transform=axI.transAxes, va='center')
-axI.text(0.0,-0.04,'(*) días transcurridos desde la RI sin OC colocada (proceso abierto al 04/06/26).  '
+axI.text(0.0,-0.04,'(*) días transcurridos desde la RI sin OC colocada (proceso abierto al 12/06/26).  '
                    'OC efectiva = fecha KOM en adjudicados.',
          fontsize=8.5, style='italic', color=GRIS, transform=axI.transAxes)
 
