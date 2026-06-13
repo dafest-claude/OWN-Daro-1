@@ -21,6 +21,7 @@ T0=date(2026,5,1); T1=date(2028,1,31)
 def d(s): y,m,dd=map(int,s.split('-')); return date(y,m,dd)
 
 C_PMS='#c55a11'; C_INA='#2e75b6'; C_INT='#548235'; C_MILE='#bf9000'; C_CRIT='#c00000'
+C_FGS='#7030a0'; C_DEF='#808080'
 
 # (lane, id, nombre, inicio, fin|None, color, critico, nota)
 T=[
