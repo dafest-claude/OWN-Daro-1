@@ -361,6 +361,53 @@ if os.path.exists(_gp):
         "Detalle en Cronograma_INS_EL_CPF2.pdf (Gantt + tabla de tareas + bases). RFSU 20-DIC-2027.",10.5,GREY)
     footer(s,17)
 
+# ============ 18 RUTA CRÍTICA (visión transversal) ============
+def chev(s,x,y,w,h,text,fill,fc=WHITE,fs=10.5):
+    sp=s.shapes.add_shape(MSO_SHAPE.CHEVRON,x,y,w,h)
+    sp.fill.solid(); sp.fill.fore_color.rgb=fill; sp.line.fill.background(); sp.shadow.inherit=False
+    tf=sp.text_frame; tf.word_wrap=True; tf.vertical_anchor=MSO_ANCHOR.MIDDLE
+    tf.margin_left=Pt(10); tf.margin_right=Pt(12); tf.margin_top=Pt(1); tf.margin_bottom=Pt(1)
+    for i,ln in enumerate(text.split('\n')):
+        p=tf.paragraphs[0] if i==0 else tf.add_paragraph(); p.alignment=PP_ALIGN.CENTER
+        r=p.add_run(); r.text=ln; r.font.size=Pt(fs if i==0 else fs-2); r.font.bold=(i==0)
+        r.font.color.rgb=fc; r.font.name='Calibri'
+    return sp
+s=slide(); header(s,"Ruta crítica — visión transversal EL · IN · Precom (a hoy)",RED)
+txt(s,Inches(0.45),Inches(1.32),Inches(12.4),Inches(0.3),
+    "Cadena que gobierna el RFSU según lo observado al 13-06-2026 — cruza Electricidad, Instrumentación y Precomisionado",12,GREY)
+# Lane EL/Pruebas/Comis (critica)
+txt(s,Inches(0.45),Inches(1.85),Inches(10),Inches(0.3),"FRENTE CRÍTICO  ·  Eléctrico → Pruebas → Comisionado",11.5,EL,True)
+chain=[("SE#3\n14-MAY",EL),("Armado 21 d\n→03-JUN",EL),("Conexion. EL 51 d\n→25-JUL",EL),
+ ("Megger 21 d\n→15-AGO",GREEN),("Energiz. 17 d\n→01-SEP",GREEN),
+ ("Precom 21 d\n→22-SEP",GREEN),("Comision. 88 d\n→19-DIC",GREEN)]
+x0=Inches(0.45); w=Inches(1.62); step=Inches(1.42); yT=Inches(2.2); h=Inches(1.05)
+for i,(t,c) in enumerate(chain):
+    chev(s,x0+step*i,yT,w,h,t,c)
+# RFSU box
+rf=s.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE,Inches(10.85),Inches(2.25),Inches(2.05),Inches(1.0))
+rf.fill.solid(); rf.fill.fore_color.rgb=RED; rf.line.fill.background(); rf.shadow.inherit=False
+tf=rf.text_frame; tf.vertical_anchor=MSO_ANCHOR.MIDDLE; p=tf.paragraphs[0]; p.alignment=PP_ALIGN.CENTER
+r=p.add_run(); r.text="★ RFSU\n20-DIC-27"; r.font.size=Pt(13); r.font.bold=True; r.font.color.rgb=WHITE; r.font.name='Calibri'
+# Lane IN (converge)
+txt(s,Inches(0.45),Inches(3.95),Inches(11),Inches(0.3),"INSTRUMENTACIÓN  ·  debe converger (loop check listo) al comisionado",11.5,IN,True)
+chainIN=[("Cables IN tend.\n→14-MAR",IN),("PCS Sala INS\n17-MAR",IN),
+ ("Conexion. IN\n→31-JUL",IN),("Loop check IN\n→20-AGO",IN)]
+yB=Inches(4.3); wI=Inches(2.25); stepI=Inches(1.98)
+for i,(t,c) in enumerate(chainIN):
+    chev(s,x0+stepI*i,yB,wI,Inches(1.0),t,c)
+# flecha convergencia IN -> comisionado
+ar=s.shapes.add_shape(MSO_SHAPE.UP_ARROW,Inches(8.35),Inches(3.35),Inches(0.55),Inches(0.95))
+ar.fill.solid(); ar.fill.fore_color.rgb=IN; ar.line.fill.background(); ar.shadow.inherit=False
+txt(s,Inches(8.05),Inches(3.2),Inches(1.3),Inches(0.25),"converge",9,IN,True,PP_ALIGN.CENTER)
+# Nota
+rect(s,Inches(0.45),Inches(5.65),Inches(12.45),Inches(1.25),LGREY)
+bullets(s,Inches(0.6),Inches(5.72),Inches(12.2),Inches(1.2),[
+ (0,"Cadena crítica: SE#3 14-MAY → armado 21 d → conexionado EL 51 d → megger 21 d → energización 17 d → precom 21 d → comisionado 88 d ≈ 19-DIC (margen mínimo a RFSU 20-DIC).",RED),
+ (0,"Gatillos que la sostienen: OC Cables IN ≤01-AGO-26 · OC Cables EL ≤01-OCT-26 · ⛔ cables IN tendidos antes 17-MAR (PCS) · ⛔ cables EL tendidos antes 14-MAY (SE#3).",NAVY),
+ (0,"IN no está en la ruta crítica del frente EL, pero su loop check debe estar listo para no frenar el comisionado integrado.",IN),
+],size=11.5,gap=4)
+footer(s,18)
+
 prs.save(OUT)
 for _t in (tmp3d,tmpg):
     try: os.remove(_t)
