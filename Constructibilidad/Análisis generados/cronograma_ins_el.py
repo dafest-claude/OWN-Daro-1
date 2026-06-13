@@ -16,8 +16,12 @@ from datetime import date, timedelta
 from collections import OrderedDict
 
 BASE = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.dirname(BASE)
+IN_DIR = os.path.join(ROOT, "Datos entrada")
+THREED = os.path.join(IN_DIR, "3D LC 120626.pdf")
 OUT_PDF = os.path.join(BASE, "Cronograma_INS_EL_CPF2.pdf")
 OUT_XLS = os.path.join(BASE, "Cronograma_INS_EL_CPF2.xlsx")
+REV = "1"
 
 HOY   = date(2026, 6, 13)
 RFSU  = date(2027, 12, 20)
@@ -38,7 +42,8 @@ TASKS = [
  ('H','M1','★ OC Cables IN (target)','2026-08-01',None,C_MILE,False,'LT 150 d'),
  ('H','M2','★ OC Cables EL (target)','2026-10-01',None,C_MILE,False,'LT 150 d'),
  ('H','M3','▼ Llegada Cables IN a sitio','2026-11-28',None,C_MILE,False,'885 c / 65.315 m'),
- ('H','M4','▼ Entrega instrumentos AESA (a banco)','2027-01-15',None,C_MILE,False,'~1.163 instr AESA'),
+ ('H','M4a','▼ Entrega instrum. Fase 1 (válvulas + en línea)','2026-12-15',None,C_MILE,False,'920 en línea (válv 485+elem 435)'),
+ ('H','M4b','▼ Entrega instrum. Fase 2 (resto, progresiva)','2027-02-15',None,C_MILE,False,'1.878 montaje específico'),
  ('H','M5','▼ Llegada Cables EL a sitio','2027-02-28',None,C_MILE,False,'513 c / 81.231 m'),
  ('H','M6','★ Inicio campo PCS — Sala INS (Sala 7)','2027-03-17',None,C_CRIT,True,'ancla IN'),
  ('H','M7','★ Llegada SE#4 (con PMS-101)','2027-04-08',None,C_MILE,False,'ancla EL'),
@@ -49,8 +54,10 @@ TASKS = [
  ('IN','I2','Tendido cables IN — señal 1P/1T (≈609 c)','2027-02-01','2027-02-28',C_IN,True,'~31.600 m'),
  ('IN','I3','Tendido cables IN — multipar/terna (≈260 c)','2027-02-10','2027-03-14',C_IN,True,'~30.000 m · 5-6 cuad.'),
  ('IN','I4','Tendido cables IN — FO / FTP (16 c)','2027-03-01','2027-03-14',C_IN,False,'~3.300 m'),
- ('IN','I5','Recepción + prueba en banco instrumentos (calib.)','2027-01-15','2027-03-31',C_IN,False,'~1.163 instr · pre-montaje'),
- ('IN','I6','Montaje instrumentos en campo — AESA','2027-03-01','2027-06-30',C_IN,False,'1.163 instr (7 típicos)'),
+ ('IN','I5a','Recepción + banco Fase 1 (válvulas/PSV + en línea)','2026-12-15','2027-02-28',C_IN,False,'en línea · pre-montaje'),
+ ('IN','I6a','Montaje instrum. en línea — AESA (con cañería)','2027-01-15','2027-04-30',C_IN,False,'válvulas + elementos'),
+ ('IN','I5b','Recepción + banco Fase 2 (resto instrumentos)','2027-02-15','2027-05-15',C_IN,False,'montaje específico'),
+ ('IN','I6b','Montaje instrum. montaje específico — AESA','2027-03-15','2027-06-30',C_IN,False,'transmisores/sw/F&G'),
  ('IN','I7','Conexionado IN — campo→JB→Sala INS','2027-03-17','2027-07-31',C_IN,True,'15.752 puntas'),
  ('IN','I8','Loop check IN (sensor→JB→PCS/SIS)','2027-06-01','2027-08-20',C_IN,False,'~885 lazos'),
 
@@ -186,7 +193,7 @@ class Gantt(Flowable):
 def footer(canvas,doc):
     canvas.saveState(); canvas.setFont('Helvetica',7)
     canvas.setFillColor(colors.HexColor('#888888'))
-    canvas.drawString(12*mm,7*mm,"Constructibilidad CPF2 — Cronograma INS+EL  |  Rev. 0  |  RFSU 20-DIC-2027")
+    canvas.drawString(12*mm,7*mm,"Constructibilidad CPF2 — Cronograma INS+EL  |  Rev. %s  |  RFSU 20-DIC-2027"%REV)
     canvas.drawRightString(285*mm,7*mm,"Pag. %d"%doc.page)
     canvas.restoreState()
 
@@ -199,7 +206,7 @@ doc.addPageTemplates([PageTemplate(id='main',frames=[frame],onPage=footer)])
 E=[]
 E.append(Paragraph("Cronograma de Construcción — Instrumentación y Electricidad", H1))
 E.append(Paragraph("Constructibilidad · Proyecto LA CALERA CPF2 - FASE 2 (Vaca Muerta) · "
-                   "Rev. 0 · %s · Hito gobernante RFSU 20-DIC-2027"%HOY.strftime('%d-%m-%Y'), SUB))
+                   "Rev. %s · %s · Hito gobernante RFSU 20-DIC-2027"%(REV,HOY.strftime('%d-%m-%Y')), SUB))
 E.append(Spacer(1,3*mm))
 # Gantt ocupa el resto de la pagina
 g_h = doc.height - 36*mm
@@ -288,10 +295,37 @@ E.append(Paragraph("Notas: (1) Fechas alineadas al Gantt Integrado Rev1 (RFSU 20
   "eléctrico Rev3 contempla RFSU contractual 31-ENE-2028 como respaldo (margen ~6 semanas). "
   "(2) El alcance de montaje de instrumentos AESA incluye los suministrados por AESA más los de "
   "proveedor marcados 'MONTAJE POR EPC'; los instrumentos en skids de vendor llegan premontados. "
-  "(3) Productividades referenciales O&G Patagonia; aplicar factor de contingencia 1,20. "
-  "(4) Documento preliminar para depuración conjunta.", CELL))
+  "(3) <b>Entrega progresiva de instrumentos (Rev.1):</b> Fase 1 = válvulas y todo instrumento en "
+  "línea de cañería (920), entregados/montados primero junto con la cañería; Fase 2 = resto de "
+  "instrumentos de montaje específico (1.878), entrega progresiva a partir de FEB-2027. "
+  "(4) Productividades referenciales O&G Patagonia; aplicar factor de contingencia 1,20. "
+  "(5) Documento preliminar para depuración conjunta.", CELL))
+
+# ---- Pagina 4: contexto de planta (vista 3D) ----
+from reportlab.platypus import Image as RLImage
+import fitz as _fitz; _fitz.TOOLS.mupdf_display_errors(False)
+_png = os.path.join(BASE, "_3d_contexto.png")
+_pg = _fitz.open(THREED)[0]
+_pg.get_pixmap(dpi=200).save(_png)
+E.append(PageBreak())
+E.append(Paragraph("Contexto de planta — Vista 3D (volumen y congestión)", H2))
+_iw, _ih = _pg.rect.width, _pg.rect.height
+_h = 138*mm; _w = _h * _iw / _ih
+img = RLImage(_png, width=_w, height=_h)
+img.hAlign = 'CENTER'
+E.append(img)
+E.append(Spacer(1,2*mm))
+E.append(Paragraph("Modelo 3D CPF2 La Calera II (3D LC 12-06-26). Da escala del <b>volumen y la "
+  "congestión</b> de la planta: footprint, densidad de áreas de proceso, recorridos de bandejas/"
+  "canalizaciones y accesos. Es el sustento físico de los volúmenes que gobiernan el cronograma "
+  "(81.231 m de cable EL · 65.315 m de cable IN · ~20.930 puntas · 2.798 instrumentos) y de los "
+  "<b>factores de productividad</b> (trabajo en altura, congestión de canalización, accesos) y del "
+  "<b>dimensionamiento y pico de cuadrillas</b> (~40-50 personas en MAR-2027). Uso previsto: "
+  "validar secuencia por sectores/áreas y planificar logística de acceso e izaje.", CELL))
 
 doc.build(E)
+try: os.remove(_png)
+except OSError: pass
 print("OK PDF ->",OUT_PDF)
 
 # ---------------- XLSX ----------------
