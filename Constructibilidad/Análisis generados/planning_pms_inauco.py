@@ -16,7 +16,7 @@ from collections import OrderedDict
 BASE=os.path.dirname(os.path.abspath(__file__))
 OUT_PDF=os.path.join(BASE,"Planning_PMS_Inauco_CPF2.pdf")
 OUT_XLS=os.path.join(BASE,"Planning_PMS_Inauco_CPF2.xlsx")
-REV="0"; HOY=date(2026,6,13); RFSU=date(2027,12,20)
+REV="1"; HOY=date(2026,6,13); RFSU=date(2027,12,20)
 T0=date(2026,5,1); T1=date(2028,1,31)
 def d(s): y,m,dd=map(int,s.split('-')); return date(y,m,dd)
 
@@ -32,7 +32,7 @@ T=[
  ('PMS','◆','FP Ing. Detalle PMS (último)','2026-10-23',None,C_MILE,False,'freezing point'),
  ('PMS','PP-PR','Procura (switches · AC800M · tableros)','2026-05-22','2026-11-05',C_PMS,False,'acopio 25% 05-NOV'),
  ('PMS','PP-SW','Software y config 800XA','2026-08-03','2026-11-27',C_PMS,False,'IEC61850/PROFINET/MODBUS'),
- ('PMS','PP-MQ','FAT Maqueta (prueba temprana, AESA)','2026-09-22','2026-09-25',C_PMS,False,'witness AESA'),
+ ('PMS','★MQ','★ FAT Maqueta PMS (prueba temprana — pedido CLIENTE)','2026-09-22','2026-09-25',C_CRIT,True,'REQUISITO CLIENTE · witness AESA'),
  ('PMS','PP-FAB','Armado tableros PMS-001 + PMS-101','2026-09-11','2026-12-17',C_PMS,False,'BsAs'),
  ('PMS','PP-TI','Pruebas internas ABB','2026-12-18','2027-01-07',C_PMS,False,'IV per PIE'),
  ('PMS','★FAT','★ FAT PMS (tableros + sistema, witness)','2027-01-25','2027-01-29',C_CRIT,True,'FAT · 16% OC'),
@@ -58,10 +58,16 @@ T=[
  ('INA','MCE','Prueba Matriz C&E (MCE)','2027-08-04','2027-08-24',C_INA,False,'15 d'),
  ('INA','CAO','CAO / As-Built Inauco','2027-08-25','2027-09-21',C_INA,False,''),
 
+ ('FGS','##','ESD · F&G · PSS  (HIMA + PPSA)',None,None,None,False,''),
+ ('FGS','HIMA','Tablero marshalling HIMA (provee ESD/F&G/PSS) — 25 sem','2026-07-01','2026-12-23',C_FGS,False,'lead 25 sem desde JUL'),
+ ('FGS','◆','Tablero marshalling HIMA listo','2026-12-23',None,C_MILE,False,'para FAT SIS / iFAT'),
+ ('FGS','PPSA','Config. y readecuación ESD/F&G/PSS — PPSA','2026-08-01','2027-06-24',C_DEF,True,'A DEFINIR · arranca AGO · FAT incl.'),
+ ('FGS','◆','FAT ESD/F&G/PSS (PPSA) completo','2027-06-24',None,C_CRIT,True,'A DEFINIR · antes del iFAT'),
+
  ('INT','##','INTEGRACIÓN Y CONVERGENCIA → RFSU',None,None,None,False,''),
  ('INT','★INT','★ Integración PCS↔PMS — Pruebas ABB Bs.As.','2027-02-24','2027-03-02',C_CRIT,True,'PUNTO EN COMÚN'),
  ('INT','◆','Inicio campo PCS — Sala INS (Sala 7)','2027-03-17',None,C_CRIT,True,'ancla campo IN'),
- ('INT','★iFAT','★ iFAT — SE#3+SE#4+PMS+PCS+SIS','2027-06-25','2027-07-14',C_CRIT,True,'PRUEBA INTEGRADA'),
+ ('INT','★iFAT','★ iFAT — SE#3+S#4+PMS+PCS+SIS (incl. PCS↔PMS en sitio)','2027-06-25','2027-07-14',C_CRIT,True,'integra PCS↔PMS en sitio + ESD/F&G/PSS'),
  ('INT','PREC','Precomisionado (EL + IN)','2027-09-02','2027-09-30',C_INT,True,'banco + campo + punta-punta'),
  ('INT','COM','Comisionado integrado (EL+PCS+PMS+SIS)','2027-09-23','2027-12-19',C_INT,True,'88 d'),
  ('INT','★RFSU','★★★ RFSU — READY FOR START UP','2027-12-20',None,C_CRIT,True,'objetivo'),
@@ -151,13 +157,13 @@ class Flow(Flowable):
         bw=W/5-6*mm; bh=24*mm; gap=(W-5*bw)/4
         r1=H-bh-6*mm; r2=r1-bh-18*mm
         B=[]
-        row1=[("Ingeniería + Freezing\nPoints (PMS + Inauco)\nJUN→NOV-26",C_PMS),
-              ("Fabricación tableros\nPMS-001/101 · PCS 7A/7B\nSEP-26→ENE-27",C_INA),
-              ("FAT individuales\nPMS 29-ENE · PCS 19-FEB\nSIS 23-FEB",C_MILE),
+        row1=[("Ingeniería + FP +\nFAT Maqueta PMS (cliente)\nJUN→NOV-26",C_PMS),
+              ("Fabricación tableros\nPMS-001/101 · PCS 7A/7B\n+ marshalling HIMA",C_INA),
+              ("FAT individuales\nPMS · PCS · SIS\n+ ESD/F&G/PSS (PPSA, a def.)",C_MILE),
               ("★ Integración PCS↔PMS\nPruebas ABB Bs.As.\n24-FEB→02-MAR-27",C_CRIT),
               ("Montaje Shelter Mendoza\n+ FAT Integral PMS\n31-MAR-27",C_PMS)]
         row2=[("Campo: llegada salas\n08-ABR / 14-MAY + SAT\nPCS · SIS · PMS",C_INA),
-              ("★ iFAT integrado\nSE#3+SE#4+PMS+PCS+SIS\n25-JUN→14-JUL-27",C_CRIT),
+              ("★ iFAT integrado\nintegración PCS↔PMS EN SITIO\n+ ESD/F&G/PSS · 25-JUN→14-JUL",C_CRIT),
               ("MCE + Precomisionado\n(banco·campo·punta-punta)\nAGO → SEP-27",C_INT),
               ("Comisionado integrado\nEL+PCS+PMS+SIS\n23-SEP→19-DIC-27",C_INT),
               ("★★★ RFSU\nREADY FOR START UP\n20-DIC-2027",C_CRIT)]
@@ -174,7 +180,7 @@ class Flow(Flowable):
         for i in range(4): arrow(c,xs[i]+bw,r2+bh/2,xs[i+1],r2+bh/2)
         # nota
         c.setFillColor(colors.HexColor('#777'));c.setFont('Helvetica-Oblique',6.5)
-        c.drawString(6*mm,2*mm,"Puntos en común: FAT de cada provisión → Integración PCS↔PMS (Bs.As.) → iFAT integrado → comisionado. Convergen al RFSU 20-DIC-2027.")
+        c.drawString(6*mm,2*mm,"Puntos en común: FAT Maqueta PMS (cliente) → FAT de cada provisión → Integración PCS↔PMS (Bs.As. + EN SITIO en iFAT) → iFAT (con ESD/F&G/PSS) → comisionado → RFSU 20-DIC-2027.")
 
 def footer(cv,doc):
     cv.saveState();cv.setFont('Helvetica',7);cv.setFillColor(colors.HexColor('#888'))
@@ -189,12 +195,12 @@ E.append(Paragraph("Planning de Provisiones · PMS (ABB) + PCS/SCADA/SIS (Inauco
 E.append(Paragraph("Constructibilidad CPF2 La Calera II · Encadenamiento, puntos en común (FAT · integración · iFAT) y convergencia a precom/comisionado · Rev. %s · %s · RFSU 20-DIC-2027"%(REV,HOY.strftime('%d-%m-%Y')),SUB))
 E.append(Spacer(1,3*mm))
 E.append(Gantt(T,doc.width,doc.height-34*mm))
-leg=[["■ PMS (ABB)","■ Inauco PCS/SCADA/SIS","■ Integración/Campo","◆ Hito / FAT","▭ borde rojo = crítico/FAT","Líneas: HOY · RFSU"]]
+leg=[["■ PMS (ABB)","■ Inauco PCS/SCADA/SIS","■ ESD/F&G/PSS (HIMA+PPSA)","■ Integración/Campo","◆ Hito / FAT","▭ rojo=crítico · gris=A DEFINIR"]]
 tl=Table(leg,colWidths=[doc.width/6]*6)
 tl.setStyle(TableStyle([('FONTSIZE',(0,0),(-1,-1),7),
   ('TEXTCOLOR',(0,0),(0,0),colors.HexColor(C_PMS)),('TEXTCOLOR',(1,0),(1,0),colors.HexColor(C_INA)),
-  ('TEXTCOLOR',(2,0),(2,0),colors.HexColor(C_INT)),('TEXTCOLOR',(3,0),(3,0),colors.HexColor(C_MILE)),
-  ('TEXTCOLOR',(4,0),(4,0),colors.HexColor(C_CRIT))]))
+  ('TEXTCOLOR',(2,0),(2,0),colors.HexColor(C_FGS)),('TEXTCOLOR',(3,0),(3,0),colors.HexColor(C_INT)),
+  ('TEXTCOLOR',(4,0),(4,0),colors.HexColor(C_MILE)),('TEXTCOLOR',(5,0),(5,0),colors.HexColor(C_CRIT))]))
 E.append(tl); E.append(PageBreak())
 
 # Pagina 2 - flujo
@@ -203,7 +209,7 @@ E.append(Flow(doc.width,doc.height-20*mm)); E.append(PageBreak())
 
 # Pagina 3 - planilla
 E.append(Paragraph("Planilla de tareas e hitos",H2))
-BL={'PMS':'PMS (ABB)','INA':'Inauco','INT':'Integración'}
+BL={'PMS':'PMS (ABB)','INA':'Inauco','FGS':'ESD/F&G/PSS','INT':'Integración'}
 data=[["Sist.","ID","Tarea / Hito","Inicio","Fin","Días","Nota"]]
 for t in T:
     lane,tid,name,ini,fin,color,crit,note=t
@@ -241,17 +247,23 @@ def kv(title,rows):
       ('ROWBACKGROUNDS',(0,1),(-1,-1),[colors.white,colors.HexColor('#f4f4f4')])]))
     return t
 E.append(kv("PUNTOS EN COMÚN (deben comunicarse, probarse e integrarse)",[
+  ("FAT Maqueta PMS (cliente)","Prueba de maqueta temprana solicitada por el CLIENTE (22-25-SEP-26, witness AESA): valida arquitectura y comunicaciones del PMS ANTES de fabricar tableros. Mitigación de riesgo."),
   ("FAT individuales","FAT PMS (25-29-ENE-27) · FAT PCS+Comunicaciones (27-ENE→19-FEB) · FAT SIS (27-ENE→23-FEB). Cada provisión valida en fábrica antes de integrar."),
-  ("Integración PCS↔PMS","Pruebas en ABB Bs.As. (24-FEB→02-MAR-27): se prueba la comunicación PCS (Inauco) ↔ PMS (ABB) por Modbus TCP/IP. Punto de convergencia temprano."),
-  ("iFAT (prueba integrada)","Integración SE#3+SE#4+PMS+PCS+SIS (25-JUN→14-JUL-27) con todos los vendors (ABB+Inauco+HIMA+AESA). Valida el conjunto antes del comisionado."),
+  ("Integración PCS↔PMS","En fábrica: Pruebas ABB Bs.As. (24-FEB→02-MAR-27, Modbus TCP/IP). EN SITIO: la instancia de prueba de campo se realiza durante el iFAT (JUN-JUL-27)."),
+  ("iFAT (prueba integrada)","SE#3+SE#4+PMS+PCS+SIS (25-JUN→14-JUL-27) con todos los vendors. Incluye la integración PCS↔PMS en sitio y requiere ESD/F&G/PSS (HIMA+PPSA) operativo."),
   ("Campo / convergencia","SAT PCS (17-MAR→01-JUN) · SAT SCADA-SIS (17-MAR→03-AGO) · MCE (04-24-AGO) · SAT PMS (06-OCT→05-DIC) → Comisionado integrado (23-SEP→19-DIC) → RFSU."),
 ]))
 E.append(Spacer(1,3*mm))
+E.append(kv("ESD · F&G · PSS  (HIMA + PPSA)",[
+  ("Tablero marshalling HIMA","HIMA provee el tablero marshalling de ESD/F&G/PSS. Lead de provisión 25 semanas desde JUL-2026 → listo ~23-DIC-2026; disponible para FAT SIS (ENE-27) e iFAT (JUN-27)."),
+  ("Config. y readecuación — PPSA  [A DEFINIR]","Trabajos de configuración y readecuación de todo el sistema ESD/F&G/PSS a cargo de PPSA. Arranca AGO-2026 y debe confluir y estar COMPLETO (FAT incluido) al momento del iFAT (25-JUN-2027). Alcance y fechas A DEFINIR."),
+]))
+E.append(Spacer(1,3*mm))
 E.append(kv("SUPUESTOS Y OBJETIVO",[
-  ("Inauco — arranque JUL-2026","La OC Inauco aún no se emitió; el planning se ancla en INICIO 01-JUL-2026 (OC + ingeniería Rev0 + recepción tableros HIMA). Si la OC slipa, todo el encadenamiento Inauco se desplaza."),
-  ("PMS — base","Cronograma ABB actualizado 09-JUN-2026 (OC 4508945953). FAT PMS 29-ENE-27, FAT Integral Shelter 31-MAR-27, SAT PMS en sitio OCT-DIC-27 (HOLD POINT)."),
+  ("Inauco — arranque JUL-2026","La OC Inauco aún no se emitió; el planning se ancla en INICIO 01-JUL-2026. Si la OC slipa, todo el encadenamiento Inauco se desplaza."),
+  ("PMS — base","Cronograma ABB actualizado 09-JUN-2026 (OC 4508945953). FAT Maqueta 22-25-SEP-26 (cliente), FAT PMS 29-ENE-27, FAT Integral Shelter 31-MAR-27, SAT PMS en sitio OCT-DIC-27 (HOLD POINT)."),
   ("RFSU objetivo","20-DIC-2027 (planning integrado). El cronograma ABB contempla RFSU contractual 31-ENE-2028 como respaldo (~6 semanas de margen)."),
-  ("Riesgo de convergencia","La integración PCS↔PMS depende de FAT PMS y FAT PCS/SIS completados; el iFAT depende de salas en sitio (SE#3 14-MAY) y PMS integrado. Cualquier atraso de una provisión arrastra a la otra."),
+  ("Riesgo de convergencia","El iFAT depende de salas en sitio (SE#3 14-MAY), PMS integrado, integración PCS↔PMS y ESD/F&G/PSS completo (HIMA + PPSA). Cualquier atraso de una provisión arrastra al conjunto."),
 ]))
 doc.build(E)
 print("OK PDF ->",OUT_PDF)
