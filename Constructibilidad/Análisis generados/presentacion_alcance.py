@@ -211,8 +211,8 @@ s=slide(); header(s,"Instrumentación · Sistemas y suministro",IN)
 rows=[["Sistema","Descripción","Provee"],
  ["PCS","Control de procesos (DCS) — Sala INS / Sala 7","Inauco"],
  ["ESD / SIS","Parada de emergencia (seguridad)","HIMA"],
- ["PSS","Sistema de seguridad/parada de procesos","Inauco / HIMA"],
- ["F&G","Fuego y Gas — 120 dispositivos de campo","AESA"],
+ ["PSS","Sistema de seguridad/parada de procesos","HIMA"],
+ ["F&G","Fuego y Gas — detectores de campo + hardware","AESA (det.) / HIMA (HW)"],
  ["SCADA","Supervisión y adquisición de datos","Inauco"],
  ["PMS","Power Management System (interfase EL)","ABB"]]
 table(s,Inches(0.45),Inches(1.5),Inches(7.3),rows,[1.4,4.3,2.0],hfill=IN,fs=11.5,rowh=Inches(0.52))
@@ -261,7 +261,7 @@ rows=[["Típico de montaje","Monta AESA","Premont. vendor","Total"],
  ["TOTAL","1.163","1.635","2.798"]]
 table(s,Inches(0.45),Inches(3.3),Inches(12.45),rows,[4.6,2.2,2.4,1.4],hfill=IN,fs=11.5,rowh=Inches(0.355),accent_rows=[8])
 txt(s,Inches(0.45),Inches(6.55),Inches(12.4),Inches(0.4),
-    "AESA monta sus instrumentos + los de proveedor marcados 'montaje por EPC' (266). Los premontados en skids requieren igual conexionado y loop check.",11.5,GREY)
+    "AESA monta sus instrumentos + los de proveedor 'montaje por EPC' (266). Los premontados en skids los instala el vendor, pero los LOOP CHECKS son alcance AESA.",11.5,GREY)
 footer(s,11)
 
 # ============ 12 IN POR TIPO ============
@@ -334,5 +334,35 @@ flat=[["Cables IN sitio","Tendido IN/PCS","Cables EL sitio","SE#4 / SE#3","Conex
 table(s,Inches(0.45),Inches(5.75),Inches(12.45),flat,[1,1,1,1.1,1,1,1,1],hfill=NAVY,fs=10,hfs=10,rowh=Inches(0.42))
 footer(s,15)
 
+# ============ 16 CONTEXTO 3D ============
+import fitz as _fitz; _fitz.TOOLS.mupdf_display_errors(False)
+ROOT=os.path.dirname(BASE)
+_3d=os.path.join(ROOT,"Datos entrada","3D LC 120626.pdf")
+_gp=os.path.join(BASE,"Cronograma_INS_EL_CPF2.pdf")
+tmp3d=os.path.join(BASE,"_t3d.png"); tmpg=os.path.join(BASE,"_tg.png")
+_pg=_fitz.open(_3d)[0]; _pg.get_pixmap(dpi=160).save(tmp3d)
+iw,ih=_pg.rect.width,_pg.rect.height
+s=slide(); header(s,"Anexo · Contexto de planta (vista 3D)",NAVY)
+ph=Inches(5.3); pw=ph*iw/ih
+s.shapes.add_picture(tmp3d,int(SW/2-pw/2),Inches(1.45),height=ph)
+txt(s,Inches(0.45),Inches(6.85),Inches(12.4),Inches(0.3),
+    "Modelo 3D CPF2 — escala de volumen y congestión: sustento físico de los volúmenes (cables, puntas, instrumentos) y de los factores de productividad y pico de cuadrillas.",10.5,GREY)
+footer(s,16)
+
+# ============ 17 GANTT DETALLADO ============
+if os.path.exists(_gp):
+    _g=_fitz.open(_gp)[0]; _g.get_pixmap(dpi=170).save(tmpg)
+    gw,gh=_g.rect.width,_g.rect.height
+    s=slide(); header(s,"Anexo · Cronograma detallado (Gantt INS+EL)",NAVY)
+    iw2=Inches(12.5); ih2=iw2*gh/gw
+    if ih2>Inches(5.4): ih2=Inches(5.4); iw2=ih2*gw/gh
+    s.shapes.add_picture(tmpg,int(SW/2-iw2/2),Inches(1.4),width=int(iw2),height=int(ih2))
+    txt(s,Inches(0.45),Inches(6.95),Inches(12.4),Inches(0.3),
+        "Detalle en Cronograma_INS_EL_CPF2.pdf (Gantt + tabla de tareas + bases). RFSU 20-DIC-2027.",10.5,GREY)
+    footer(s,17)
+
 prs.save(OUT)
+for _t in (tmp3d,tmpg):
+    try: os.remove(_t)
+    except OSError: pass
 print("OK ->",OUT,"| slides:",len(prs.slides._sldIdLst))

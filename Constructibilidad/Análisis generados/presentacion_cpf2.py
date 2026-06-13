@@ -207,9 +207,9 @@ footer(s,6)
 s=slide(); header(s,"Sistemas a instalar y ampliar",IN)
 rows=[["Sistema","Descripción","Proveedor","Hito / ancla"],
  ["PCS","Sistema de Control de Procesos (DCS) — Sala INS / Sala 7","Inauco","Inicio campo 17-MAR-27 · SAT 55 d"],
- ["PSS","Sistema de seguridad de procesos (parada de planta)","Inauco / HIMA","Integrado con ESD/SIS"],
+ ["PSS","Sistema de seguridad de procesos (parada de planta)","HIMA","Integrado con ESD/SIS"],
  ["ESD","Parada de emergencia (Emergency Shutdown / SIS)","HIMA","SAT SIS 100 d (17-MAR→03-AGO)"],
- ["F&G","Fuego y Gas — 120 dispositivos de campo (AESA)","AESA / Inauco","Detección + matriz C&E"],
+ ["F&G","Fuego y Gas — detectores de campo (AESA) + HW","AESA (det.) / HIMA (HW)","Detección + matriz C&E"],
  ["SCADA","Supervisión y adquisición de datos","Inauco","Prueba Matriz C&E AGO-27"],
  ["PMS","Power Management System — PMS-001 (SE#3) + PMS-101 (SE#4)","ABB","SAT PMS HOLD POINT OCT-DIC"]]
 table(s,Inches(0.45),Inches(1.5),Inches(12.45),rows,[1.2,5.0,2.0,4.3],fs=12,hfs=12.5,rowh=Inches(0.62))
