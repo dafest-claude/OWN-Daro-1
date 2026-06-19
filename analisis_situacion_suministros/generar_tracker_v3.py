@@ -18,13 +18,13 @@ from datetime import date, datetime
 # ── Rutas ───────────────────────────────────────────────────────────────────
 SCRIPT_DIR  = os.path.dirname(os.path.abspath(__file__))
 PLAN_FILE     = os.path.join(SCRIPT_DIR, '..', 'info_suministros',
-                              '2026.04.06 - Plan de Suministros - La Calera II (120626).xlsx')
+                              '2026.04.06 - Plan de Suministros - La Calera II (180626).xlsx')
 PLAN_FILE_OLD = os.path.join(SCRIPT_DIR, '..', 'info_suministros',
-                              '2026.04.06 - Plan de Suministros - La Calera II (040626).xlsx')
-OUT_XLSX      = os.path.join(SCRIPT_DIR, 'Tracker_Suministros_IN_EL_LaCalera_II_v6_120626.xlsx')
-TODAY         = date(2026, 6, 12)
+                              '2026.04.06 - Plan de Suministros - La Calera II (120626).xlsx')
+OUT_XLSX      = os.path.join(SCRIPT_DIR, 'Tracker_Suministros_IN_EL_LaCalera_II_v7_190626.xlsx')
+TODAY         = date(2026, 6, 19)
 RFSU          = date(2027, 2, 3)
-VERSION       = 'v6_120626'
+VERSION       = 'v7_190626'
 
 # ── Paleta ──────────────────────────────────────────────────────────────────
 C = {
