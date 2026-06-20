@@ -3,12 +3,14 @@ import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.formatting.rule import FormulaRule
 from openpyxl.utils import get_column_letter
-from datetime import date
+from datetime import date, timedelta
 import os
 
 BASE="/home/user/OWN-Daro-1/Constructibilidad/Análisis generados"
-OUT=os.path.join(BASE,"Programa_Conexionado_EL_IN_CPF2_Rev0.xlsx")
+OUT=os.path.join(BASE,"Programa_Conexionado_EL_IN_CPF2_Rev1.xlsx")
 def d(y,m,dd): return date(y,m,dd)
+def meom(dt):  # ultimo dia del mes
+    nx=date(dt.year+(dt.month//12),(dt.month%12)+1,1); return nx-timedelta(days=1)
 
 wb=openpyxl.Workbook(); ws=wb.active; ws.title="Cronograma"
 NAVY="1F3B63"; ORANGE="ED7D31"; BLUE="2E75B6"; DKOR="C55A11"; GREEN="548235"; REDc="C00000"; GREY="808080"
@@ -17,7 +19,7 @@ thin=Side(style="thin",color="D0D0D0"); border=Border(left=thin,right=thin,top=t
 # Titulo
 ws["A1"]="C5551 - LA CALERA 2  ·  Determinación de plazos para conexionado  ·  Electricidad e Instrumentación"
 ws["A1"].font=Font(bold=True,size=13,color=NAVY)
-ws["A2"]="Reconstrucción del programa (imagen original) · RFSU 31-ENE-2028 · Rev.0 · 2026-06-14 · Valores transcriptos de la imagen — VERIFICAR"
+ws["A2"]="Reconstrucción del programa (imagen original) · RFSU 31-ENE-2028 · Rev.1 · 2026-06-14 · Barras pintadas según Inicio/Fin · Valores transcriptos — VERIFICAR"
 ws["A2"].font=Font(size=9,italic=True,color="C00000")
 
 # Meses
@@ -86,15 +88,12 @@ for i,(aid,name,dur,st,fi,tf,cant,hhs,qsm,hhsq,sec,ind) in enumerate(R):
     # color etiqueta de seccion (header rows)
     if ind==0 and (aid=="" or sec in("SALAS","PRECOM")):
         ws.cell(r,2).font=Font(size=9,bold=True,color=SECCOL[sec])
-    for k in range(len(months)):
-        ws.cell(r,COL0+k).border=border
-# CF Gantt por seccion
-lastcol=get_column_letter(COL0+len(months)-1)
-for sec,rows in sec_rows.items():
-    a,b=min(rows),max(rows)
-    rng="%s%d:%s%d"%(get_column_letter(COL0),a,lastcol,b)
-    f="AND($D%d<=EOMONTH(%s$%d,0),$E%d>=%s$%d,$D%d<>\"\")"%(a,get_column_letter(COL0),HDRROW,a,get_column_letter(COL0),HDRROW,a)
-    ws.conditional_formatting.add(rng,FormulaRule(formula=[f],fill=PatternFill("solid",fgColor=SECCOL[sec])))
+    fill=PatternFill("solid",fgColor=SECCOL[sec])
+    for k,mo in enumerate(months):
+        cc=ws.cell(r,COL0+k); cc.border=border
+        # pintar la barra si el mes se solapa con [start, finish]
+        if isinstance(st,date) and isinstance(fi,date) and st<=meom(mo) and fi>=mo:
+            cc.fill=fill
 # anchos
 for col,w in zip("ABCDEFGHIJ",[10,40,6,10,10,5,8,9,7,7]): ws.column_dimensions[col].width=w
 for k in range(len(months)): ws.column_dimensions[get_column_letter(COL0+k)].width=4.2
