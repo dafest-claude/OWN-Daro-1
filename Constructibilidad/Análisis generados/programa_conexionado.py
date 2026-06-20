@@ -7,7 +7,7 @@ from datetime import date, timedelta
 import os
 
 BASE="/home/user/OWN-Daro-1/Constructibilidad/Análisis generados"
-OUT=os.path.join(BASE,"Programa_Conexionado_EL_IN_CPF2_Rev2.xlsx")
+OUT=os.path.join(BASE,"Programa_Conexionado_EL_IN_CPF2_Rev3.xlsx")
 def d(y,m,dd): return date(y,m,dd)
 def meom(dt):  # ultimo dia del mes
     nx=date(dt.year+(dt.month//12),(dt.month%12)+1,1); return nx-timedelta(days=1)
@@ -19,23 +19,36 @@ thin=Side(style="thin",color="D0D0D0"); border=Border(left=thin,right=thin,top=t
 # Titulo
 ws["A1"]="C5551 - LA CALERA 2  ·  Determinación de plazos para conexionado  ·  Electricidad e Instrumentación"
 ws["A1"].font=Font(bold=True,size=13,color=NAVY)
-ws["A2"]="Reconstrucción del programa (imagen original) · RFSU 31-ENE-2028 · Rev.2 · 2026-06-14 · + barras de REFERENCIA del cronograma ORIGINAL (amarillo, aprox · ver hoja 'Ref_Imagen_Original')"
+ws["A2"]="Reconstrucción del programa (imagen original) · RFSU 31-ENE-2028 · Rev.3 · 2026-06-14 · Gantt SEMANAL · barras pintadas según Inicio/Fin · REFERENCIA original en amarillo (ver hoja 'Ref_Imagen_Original')"
 ws["A2"].font=Font(size=9,italic=True,color="C00000")
 
-# Meses
-months=[]
-y,m=2026,6
-while (y,m)<=(2028,2):
-    months.append(d(y,m,1)); m+=1
-    if m>12: m=1;y+=1
-HDRROW=4; COL0=11  # K
+# Semanas (columnas) + encabezado de meses agrupado
+weeks=[]
+wk=d(2026,6,1)
+while wk<=d(2028,2,29):
+    weeks.append(wk); wk=wk+timedelta(days=7)
+MONROW=3; HDRROW=4; COL0=11  # K
 heads=["Activity ID","Activity Name","Dur","Start","Finish","TF","Cant","hhs","Q/sm","hhs/Q"]
 for j,h in enumerate(heads,1):
     cc=ws.cell(HDRROW,j,h); cc.font=Font(bold=True,color="FFFFFF",size=9); cc.fill=PatternFill("solid",fgColor=NAVY)
     cc.alignment=Alignment(horizontal="center",vertical="center",wrap_text=True); cc.border=border
-for k,mo in enumerate(months):
-    cc=ws.cell(HDRROW,COL0+k,mo); cc.number_format="mmm-yy"; cc.font=Font(bold=True,color="FFFFFF",size=8)
-    cc.fill=PatternFill("solid",fgColor=NAVY); cc.alignment=Alignment(horizontal="center"); cc.border=border
+# fila de semanas (grilla) + agrupado por mes (merge)
+navyfill=PatternFill("solid",fgColor=NAVY)
+seg_start=0
+for k,w in enumerate(weeks):
+    cc=ws.cell(HDRROW,COL0+k); cc.fill=navyfill; cc.border=Border(left=Side(style="thin",color="3A5A85"),bottom=thin)
+    # cambio de mes -> cerrar segmento anterior y rotular
+    if k>0 and (w.year,w.month)!=(weeks[k-1].year,weeks[k-1].month):
+        c1=get_column_letter(COL0+seg_start); c2=get_column_letter(COL0+k-1)
+        ws.merge_cells("%s%d:%s%d"%(c1,MONROW,c2,MONROW))
+        mc=ws.cell(MONROW,COL0+seg_start,weeks[seg_start]); mc.number_format="mmm-yy"
+        mc.font=Font(bold=True,color="FFFFFF",size=8); mc.fill=navyfill; mc.alignment=Alignment(horizontal="center")
+        seg_start=k
+# ultimo segmento
+c1=get_column_letter(COL0+seg_start); c2=get_column_letter(COL0+len(weeks)-1)
+ws.merge_cells("%s%d:%s%d"%(c1,MONROW,c2,MONROW))
+mc=ws.cell(MONROW,COL0+seg_start,weeks[seg_start]); mc.number_format="mmm-yy"
+mc.font=Font(bold=True,color="FFFFFF",size=8); mc.fill=navyfill; mc.alignment=Alignment(horizontal="center")
 
 # (id,name,dur,start,finish,tf,cant,hhs,qsm,hhsq,section,indent)
 R=[
@@ -90,14 +103,14 @@ for i,(aid,name,dur,st,fi,tf,cant,hhs,qsm,hhsq,sec,ind) in enumerate(R):
     if ind==0 and (aid=="" or sec in("SALAS","PRECOM")):
         ws.cell(r,2).font=Font(size=9,bold=True,color=SECCOL[sec])
     fill=PatternFill("solid",fgColor=SECCOL[sec])
-    for k,mo in enumerate(months):
+    for k,w in enumerate(weeks):
         cc=ws.cell(r,COL0+k); cc.border=border
-        # pintar la barra si el mes se solapa con [start, finish]
-        if isinstance(st,date) and isinstance(fi,date) and st<=meom(mo) and fi>=mo:
+        # pintar la barra si la semana [w, w+6] se solapa con [start, finish]
+        if isinstance(st,date) and isinstance(fi,date) and st<=w+timedelta(days=6) and fi>=w:
             cc.fill=fill
 # anchos
-for col,w in zip("ABCDEFGHIJ",[10,40,6,10,10,5,8,9,7,7]): ws.column_dimensions[col].width=w
-for k in range(len(months)): ws.column_dimensions[get_column_letter(COL0+k)].width=4.2
+for col,wd in zip("ABCDEFGHIJ",[10,40,6,10,10,5,8,9,7,7]): ws.column_dimensions[col].width=wd
+for k in range(len(weeks)): ws.column_dimensions[get_column_letter(COL0+k)].width=2.0
 ws.freeze_panes=ws.cell(r0,COL0)
 ws.row_dimensions[1].height=18
 
