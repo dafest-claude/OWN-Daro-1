@@ -7,7 +7,7 @@ from datetime import date, timedelta
 import os
 
 BASE="/home/user/OWN-Daro-1/Constructibilidad/Análisis generados"
-OUT=os.path.join(BASE,"Programa_Conexionado_EL_IN_CPF2_Rev1.xlsx")
+OUT=os.path.join(BASE,"Programa_Conexionado_EL_IN_CPF2_Rev2.xlsx")
 def d(y,m,dd): return date(y,m,dd)
 def meom(dt):  # ultimo dia del mes
     nx=date(dt.year+(dt.month//12),(dt.month%12)+1,1); return nx-timedelta(days=1)
@@ -19,7 +19,7 @@ thin=Side(style="thin",color="D0D0D0"); border=Border(left=thin,right=thin,top=t
 # Titulo
 ws["A1"]="C5551 - LA CALERA 2  ·  Determinación de plazos para conexionado  ·  Electricidad e Instrumentación"
 ws["A1"].font=Font(bold=True,size=13,color=NAVY)
-ws["A2"]="Reconstrucción del programa (imagen original) · RFSU 31-ENE-2028 · Rev.1 · 2026-06-14 · Barras pintadas según Inicio/Fin · Valores transcriptos — VERIFICAR"
+ws["A2"]="Reconstrucción del programa (imagen original) · RFSU 31-ENE-2028 · Rev.2 · 2026-06-14 · + barras de REFERENCIA del cronograma ORIGINAL (amarillo, aprox · ver hoja 'Ref_Imagen_Original')"
 ws["A2"].font=Font(size=9,italic=True,color="C00000")
 
 # Meses
@@ -39,17 +39,18 @@ for k,mo in enumerate(months):
 
 # (id,name,dur,start,finish,tf,cant,hhs,qsm,hhsq,section,indent)
 R=[
- ("","HITOS / EVENTOS PREVIOS (fechas a confirmar)","","","","","","","","","HITOS",0),
- ("","PHs (Permisos / Hold Points)","",None,None,"","","","","","HITOS",1),
- ("","Llegan canalizaciones Eléctricas","",None,None,"","","","","","HITOS",1),
- ("","Llegan canalizaciones Instrumentación","",None,None,"","","","","","HITOS",1),
- ("","Llegan cables Instrumentación","",None,None,"","","","","","HITOS",1),
- ("","Llegan cables Eléctricos","",None,None,"","","","","","HITOS",1),
- ("","Llegada de Instrumentos","",None,None,"","","","","","HITOS",1),
- ("","Fundaciones","",None,None,"","","","","","HITOS",1),
- ("","EE.MM. (equipos electromecánicos)","",None,None,"","","","","","HITOS",1),
- ("","Canalizaciones Eléctricas","",None,None,"","","","","","HITOS",1),
- ("","Canalizaciones Instrumentación","",None,None,"","","","","","HITOS",1),
+ ("","REFERENCIA — CRONOGRAMA ORIGINAL (amarillo · aprox · ver hoja imagen)","","","","","","","","","REF",0),
+ ("","PHs (Permisos / Hold Points)","",d(2027,8,1),d(2027,9,30),"","","","","","REF",1),
+ ("","Llegan canalizaciones Eléctricas","",d(2026,10,1),d(2027,3,31),"","","","","","REF",1),
+ ("","Llegan canalizaciones Instrumentación","",d(2026,7,1),d(2026,10,31),"","","","","","REF",1),
+ ("","Llegan cables Instrumentación","",d(2026,9,1),d(2026,10,31),"","","","","","REF",1),
+ ("","Llegan cables Eléctricos","",d(2026,9,1),d(2027,5,31),"","","","","","REF",1),
+ ("","Llegada de Instrumentos","",d(2026,8,1),d(2027,5,31),"","","","","","REF",1),
+ ("","Fundaciones","",d(2026,7,1),d(2027,4,30),"","","","","","REF",1),
+ ("","EE.MM. (equipos electromecánicos)","",d(2026,7,1),d(2027,8,31),"","","","","","REF",1),
+ ("","Canalizaciones Eléctricas","",d(2026,10,1),d(2026,12,31),"","","","","","REF",1),
+ ("","Canalizaciones Instrumentación","",d(2026,11,1),d(2027,1,31),"","","","","","REF",1),
+ ("","Montaje de Instrumentos (original)","",d(2027,1,1),d(2027,9,30),"","","","","","REF",1),
  # Montaje instrumentos
  ("","Montaje de Instrumentos",222.9,d(2027,2,10),d(2027,10,28),"","","","","","INST",0),
  ("","Válvulas","",d(2027,2,10),d(2027,10,28),"",362,7682,"",21.22,"INST",1),
@@ -76,7 +77,7 @@ R=[
  ("","Propuesta 1 — Energización","",d(2027,10,15),d(2027,10,31),"","","","","","PRECOM",1),
  ("","Propuesta 2 — Energización","",d(2027,11,15),d(2027,11,30),"","","","","","PRECOM",1),
 ]
-SECCOL={"HITOS":GREY,"INST":ORANGE,"CABIN":BLUE,"CABEL":DKOR,"SALAS":GREEN,"PRECOM":REDc}
+SECCOL={"REF":"FFC000","INST":ORANGE,"CABIN":BLUE,"CABEL":DKOR,"SALAS":GREEN,"PRECOM":REDc}
 r0=HDRROW+1; sec_rows={}
 for i,(aid,name,dur,st,fi,tf,cant,hhs,qsm,hhsq,sec,ind) in enumerate(R):
     r=r0+i; sec_rows.setdefault(sec,[]).append(r)
@@ -146,5 +147,26 @@ for i,t in enumerate(notas,1):
     cc=ws3.cell(i,1,t); cc.font=Font(bold=(i==1 or t.endswith(":")),size=11 if i==1 else 9)
 ws3.column_dimensions["A"].width=120
 
+# ===== Hoja 4: imagen real del cronograma ORIGINAL (referencia fiel) =====
+ws4=wb.create_sheet("Ref_Imagen_Original")
+ws4["A1"]="CRONOGRAMA ORIGINAL — recorte fiel de la imagen (referencia para análisis futuro)"
+ws4["A1"].font=Font(bold=True,size=12,color=NAVY)
+ws4["A2"]="Las barras amarillas de la hoja 'Cronograma' aproximan estas barras. Eje: JUN-26 → ENE-28."
+ws4["A2"].font=Font(italic=True,size=9)
+# generar el recorte desde la imagen fuente (autónomo)
+refpng=os.path.join(BASE,"_ref_original.png")
+SRC=os.path.join(os.path.dirname(BASE),"Datos entrada","Imagen PNG.png")
+try:
+    from PIL import Image as PILImage
+    src=PILImage.open(SRC); w,h=src.size
+    src.crop((int(w*0.295),0,int(w*0.66),int(h*0.42))).save(refpng)
+except Exception as e:
+    print("aviso: no se pudo generar recorte:",e)
+if os.path.exists(refpng):
+    from openpyxl.drawing.image import Image as XLImage
+    img=XLImage(refpng); img.anchor="A4"; ws4.add_image(img)
+
 wb.save(OUT)
+try: os.remove(refpng)
+except OSError: pass
 print("OK ->",OUT)
