@@ -12,7 +12,7 @@ from matplotlib.patches import FancyBboxPatch, Rectangle
 import matplotlib.font_manager as fm
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-OUT_PNG = os.path.join(SCRIPT_DIR, 'Infografico_RI_OC_IN_EL_LaCalera_II_190626.png')
+OUT_PNG = os.path.join(SCRIPT_DIR, 'Infografico_RI_OC_IN_EL_LaCalera_II_260626.png')
 
 # Paleta
 AZUL='#1F3864'; AZUL_M='#2F5496'; VERDE='#2E6B2E'; NARANJA='#9C4500'
@@ -31,28 +31,40 @@ axT.add_patch(Rectangle((0,0),1,1, transform=axT.transAxes, color=AZUL))
 axT.text(0.015, 0.62, 'ANÁLISIS DE TIEMPOS  RI → ORDEN DE COMPRA',
          color='white', fontsize=23, fontweight='bold', va='center')
 axT.text(0.015, 0.22, 'La Calera II CPF2  ·  Instrumentación (IN) y Electricidad (EL)  ·  '
-                      'Plan de Suministros 180626  ·  corte 19/06/2026',
+                      'Plan de Suministros 250626  ·  corte 26/06/2026',
          color='#D6E4F0', fontsize=11, va='center')
 
 # ── KPIs ─────────────────────────────────────────────────────────────────────
-kpis = [('68','RIs TOTALES\nIN + EL', AZUL),
-        ('10','OCs\nCOLOCADAS', VERDE),
-        ('57','EN GESTIÓN\nDE COMPRA', NARANJA),
-        ('11','RIs SIN\nEMITIR', '#7030A0')]
-for i,(num,lbl,col) in enumerate(kpis):
-    ax = fig.add_subplot(gs[11:25, i*25+1:i*25+23]); ax.axis('off')
+kpis = [('68','RIs TOTALES\nIN + EL', AZUL, ''),
+        ('11','OCs\nCOLOCADAS', VERDE, '+1'),
+        ('58','EN GESTIÓN\nDE COMPRA', NARANJA, '+1'),
+        ('10','RIs SIN\nEMITIR', '#7030A0', '-1')]
+for i,(num,lbl,col,delta) in enumerate(kpis):
+    ax = fig.add_subplot(gs[11:24, i*25+1:i*25+23]); ax.axis('off')
     box = FancyBboxPatch((0.02,0.05),0.96,0.9, boxstyle='round,pad=0.02,rounding_size=0.06',
                          transform=ax.transAxes, facecolor=col, edgecolor='none')
     ax.add_patch(box)
-    ax.text(0.5,0.62,num, transform=ax.transAxes, color='white', fontsize=42,
+    ax.text(0.5,0.64,num, transform=ax.transAxes, color='white', fontsize=42,
             fontweight='bold', ha='center', va='center')
-    ax.text(0.5,0.20,lbl, transform=ax.transAxes, color='white', fontsize=11,
+    ax.text(0.5,0.22,lbl, transform=ax.transAxes, color='white', fontsize=11,
             ha='center', va='center')
+    if delta:
+        ax.text(0.93,0.90,delta, transform=ax.transAxes, color='white', fontsize=12,
+                fontweight='bold', ha='right', va='center')
+
+# ── Novedades vs versión anterior (180626) ───────────────────────────────────
+axN = fig.add_subplot(gs[24:28, 1:99]); axN.axis('off')
+axN.text(0.0,0.5,'NOVEDADES vs 180626:', fontsize=10.5, fontweight='bold', color=AZUL,
+         transform=axN.transAxes, va='center')
+axN.text(0.135,0.5,'+1 OC nueva (IN 4→5)   ·   +1 RI EL emitida (14→15)   ·   '
+                   'avances a AT: EL 2→5, IN 30→31   ·   ofertas en gestión (petición): EL 2 · IN 4   ·   '
+                   'SOLPED en proceso: 5 (=)',
+         fontsize=10, color=GRIS, transform=axN.transAxes, va='center')
 
 # ── Embudo pipeline por especialidad ─────────────────────────────────────────
 axP = fig.add_subplot(gs[29:62, 1:48])
 etapas = ['En\nSOLPED','Petición\nOfertas','Análisis\nTécnico','Con OC']
-el = [2,4,2,6]; inn = [3,6,30,4]
+el = [2,2,5,6]; inn = [3,4,31,5]
 x = range(len(etapas)); w=0.38
 b1=axP.bar([i-w/2 for i in x], el, w, label='ELECTRICIDAD (20 RIs)', color=VERDE)
 b2=axP.bar([i+w/2 for i in x], inn, w, label='INSTRUMENTACIÓN (48 RIs)', color=NARANJA)
@@ -66,10 +78,10 @@ for bars in (b1,b2):
         if h > 0:
             axP.text(b.get_x()+b.get_width()/2, h+0.3, str(int(h)), ha='center', fontsize=9, fontweight='bold')
 # resaltar cuello de botella AT en IN
-axP.annotate('CUELLO DE BOTELLA', xy=(2.19,30), xytext=(1.3,33),
+axP.annotate('CUELLO DE BOTELLA', xy=(2.19,31), xytext=(1.3,34),
              fontsize=10, fontweight='bold', color=ROJO,
              arrowprops=dict(arrowstyle='->', color=ROJO, lw=2))
-axP.set_ylim(0,38); axP.spines['top'].set_visible(False); axP.spines['right'].set_visible(False)
+axP.set_ylim(0,40); axP.spines['top'].set_visible(False); axP.spines['right'].set_visible(False)
 
 # ── Descomposición de la demora (segmentos) ──────────────────────────────────
 axS = fig.add_subplot(gs[29:62, 53:99])
@@ -98,11 +110,11 @@ axI.text(0.0,1.02,'Ítems críticos – tiempo RI → OC', fontsize=13, fontweig
 items = [
     ('EL','Shelter SE#4 / SE#3 (ABB)','09/01','18/05 (OC)','129 d','OC COLOCADA', VERDE_OK),
     ('EL','Sistema PMS (ABB)','09/01','22/05 (OC)','133 d','OC COLOCADA', VERDE_OK),
-    ('IN','Sistema Control PCS','03/02','AT 05/06 (122 d)','136 d*','AT CERRADO', AMBAR),
-    ('IN','Sistema Seguridad SIS','03/02','AT 05/06 (122 d)','136 d*','AT CERRADO', AMBAR),
-    ('IN','Válvulas Control','23/04','— (en AT)','57 d*','EN AT [!]', ROJO),
-    ('IN','Cables Instrumentación','15/05','SOLPED 30/05','35 d*','EN REVISION AT', AZUL_M),
-    ('EL','Cables Eléctricos','11/06','— (sin SOLPED)','8 d*','RI EMITIDA', GRIS),
+    ('IN','Sistema Seguridad SIS','03/02','AT 05/06 · legajo OK','143 d*','NecOC VENCIDA', ROJO),
+    ('IN','Sistema Control PCS','03/02','AT 05/06 (122 d)','143 d*','AT CERRADO', AMBAR),
+    ('IN','Válvulas Control','23/04','— (en AT)','64 d*','EN AT [!]', ROJO),
+    ('IN','Cables Instrumentación','15/05','SOLPED 30/05','42 d*','EN AT', AZUL_M),
+    ('EL','Cables Eléctricos','11/06','— (en SOLPED)','15 d*','RI EMITIDA', GRIS),
 ]
 cols_x = [0.0, 0.07, 0.42, 0.55, 0.71, 0.81, 0.99]
 hdrs = ['Esp','Suministro','RI','OC efectiva','RI→OC','Estado']
@@ -127,7 +139,7 @@ for r,(esp,desc,ri,oc,d,est,ecol) in enumerate(items):
                   facecolor=ecol, edgecolor='none'))
     axI.text(cols_x[5]+0.079, yy, est, fontsize=8.5, fontweight='bold', color='white',
              ha='center', transform=axI.transAxes, va='center')
-axI.text(0.0,-0.04,'(*) dias transcurridos desde la RI al corte 19/06/26. PCS/SIS: AT cerrado 05/06 (122 d) – OC pendiente (136 d).  '
+axI.text(0.0,-0.04,'(*) dias transcurridos desde la RI al corte 26/06/26. SIS: legajo aprobado, se aguarda SBL – NecOC 21/06 VENCIDA (OC inminente). PCS/SIS AT cerrado 05/06 (122 d) – 143 d sin OC.  '
                    'OC efectiva = fecha KOM en adjudicados.',
          fontsize=8.5, style='italic', color=GRIS, transform=axI.transAxes)
 
