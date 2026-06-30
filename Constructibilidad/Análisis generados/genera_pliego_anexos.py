@@ -1,43 +1,48 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Word NUEVO = Pliego subcontrato E&I (cuerpo original PRESERVADO) + Anexos en CONTINUIDAD de estilo.
-Usa los estilos del propio pliego (Heading 1/2, tabla 'Tabla Cuadro', Normal) para que los anexos
-se lean como continuación del documento. Incluye:
- - Anexo E (Electricidad) y Anexo I (Instrumentación): cantidades por formación/sección, puntas,
-   montaje de tableros / instrumentos por tipo y modalidad / cajas de conexión.
- - Detalle COMPLETO de formaciones (49 EL / 22 IN).
- - Personal especializado para precomisionado y comisionado por especialidad.
- - Planilla de cómputo (precios unitarios a cargo del oferente).
-Salida: 'Pliego subcontrato E&I - Rev1 - 2026-06-30 (con Anexos E-I).docx'
+Word = Pliego subcontrato E&I (cuerpo original PRESERVADO) + Anexos en continuidad de estilo.
+Rev.2: carátula propia por anexo (hoja nueva) + detalle en hoja nueva; columna 'Herramienta'
+(solo herramientas, sin perfil) en conexionado EL; tableros SE#3/#4 vienen montados (salvo los
+que ABB indique por transporte); instrumentos diferenciados por provisión (AESA vs proveedor).
+Salida: 'Pliego subcontrato E&I - Rev2 - 2026-06-30 (con Anexos).docx'
 """
 import os
 from docx import Document
 from docx.shared import Pt, RGBColor, Inches
-from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.enum.text import WD_ALIGN_PARAGRAPH, WD_BREAK
 
 BASE="/home/user/OWN-Daro-1/Constructibilidad"
 SRC=os.path.join(BASE,"Datos entrada","Pliego subcontrato E&I.docx")
-OUT=os.path.join(BASE,"Análisis generados","Pliego subcontrato E&I - Rev1 - 2026-06-30 (con Anexos E-I).docx")
-REV="1"; FECHA="30-06-2026"
+OUT=os.path.join(BASE,"Análisis generados","Pliego subcontrato E&I - Rev2 - 2026-06-30 (con Anexos).docx")
+REV="2"; FECHA="30-06-2026"
+NAVY=RGBColor(0x1F,0x3B,0x63)
 doc=Document(SRC)
-# estilo de tabla del propio documento (con fallback)
 TBL_STYLE='Tabla Cuadro'
 try: doc.styles[TBL_STYLE]
 except KeyError: TBL_STYLE='Table Grid'
 
 def h(txt,lvl=1): return doc.add_heading(txt,level=lvl)
 def para(txt,note=False):
-    p=doc.add_paragraph()
-    r=p.add_run(txt)
-    if note:
-        r.italic=True; r.font.size=Pt(9); r.font.color.rgb=RGBColor(0x55,0x55,0x55)
+    p=doc.add_paragraph(); r=p.add_run(txt)
+    if note: r.italic=True; r.font.size=Pt(9); r.font.color.rgb=RGBColor(0x55,0x55,0x55)
     return p
 def bullet(txt):
-    p=doc.add_paragraph(); p.paragraph_format.left_indent=Inches(0.3)
-    p.add_run("•  "+txt)
-    return p
-def table(headers,rows,bold_total=False,price=False):
+    p=doc.add_paragraph(); p.paragraph_format.left_indent=Inches(0.3); p.add_run("•  "+txt); return p
+def pagebreak():
+    doc.add_paragraph().add_run().add_break(WD_BREAK.PAGE)
+def cover(title,subtitle=None):
+    """Carátula del anexo en hoja propia (título = Heading 1, queda en el índice);
+    el detalle arranca en la hoja siguiente."""
+    pagebreak()
+    for _ in range(7): doc.add_paragraph()
+    hp=doc.add_heading(title,level=1); hp.alignment=WD_ALIGN_PARAGRAPH.CENTER
+    for r in hp.runs: r.font.size=Pt(28); r.font.color.rgb=NAVY
+    if subtitle:
+        ps=doc.add_paragraph(); ps.alignment=WD_ALIGN_PARAGRAPH.CENTER
+        rs=ps.add_run(subtitle); rs.font.size=Pt(13); rs.font.color.rgb=RGBColor(0x55,0x55,0x55)
+    pagebreak()   # el detalle empieza en hoja nueva
+def table(headers,rows,bold_total=False):
     t=doc.add_table(rows=1,cols=len(headers)); t.style=TBL_STYLE
     for j,htxt in enumerate(headers):
         cell=t.rows[0].cells[j]; cell.text=''
@@ -50,27 +55,26 @@ def table(headers,rows,bold_total=False,price=False):
             if j>0: cells[j].paragraphs[0].alignment=WD_ALIGN_PARAGRAPH.CENTER
     return t
 
-# ===== PORTADILLA DE ANEXOS (en continuidad) =====
-doc.add_page_break()
+# ===== PORTADILLA GENERAL DE ANEXOS =====
+pagebreak()
 h("ANEXOS TÉCNICOS POR ESPECIALIDAD — CANTIDADES REPRESENTATIVAS",1)
-para("Los presentes anexos forman parte integrante del presente Pliego y lo complementan, sin modificar su "
-     "cuerpo principal. Indican las cantidades representativas de la ingeniería vigente, por especialidad "
-     "(Electricidad e Instrumentación), como base para el dimensionamiento del personal especialista y las "
-     "herramientas a proveer por el Subcontratista para las tareas de montaje, instalación, conexionado, "
-     "precomisionado y comisionado, conforme a los perfiles definidos en este Pliego.")
-para("Revisión %s — %s. Fuentes: listas de instrumentos ACAL-00102/00670, análisis de cables eléctricos Rev.4 y "
-     "de cables de instrumentación Rev.0. Cantidades sujetas a revisión de ingeniería y a planos 'For Construction'."%(REV,FECHA),note=True)
+para("Los presentes anexos forman parte integrante del presente Pliego y lo complementan, sin modificar su cuerpo "
+     "principal. Indican las cantidades representativas de la ingeniería vigente, por especialidad (Electricidad e "
+     "Instrumentación), como base para el dimensionamiento del personal especialista y las herramientas a proveer por "
+     "el Subcontratista para las tareas de montaje, instalación, conexionado, precomisionado y comisionado, conforme a "
+     "los perfiles definidos en este Pliego.")
+para("Revisión %s — %s. Fuentes: listas de instrumentos ACAL-00102/00670, análisis de cables eléctricos Rev.4 y de "
+     "cables de instrumentación Rev.0. Cantidades sujetas a revisión de ingeniería y a planos 'For Construction'."%(REV,FECHA),note=True)
 
-# ===================== ANEXO E — ELECTRICIDAD =====================
-h("ANEXO E — ELECTRICIDAD",1)
+# ============================ ANEXO E ============================
+cover("ANEXO E","ELECTRICIDAD")
 para("Volumen global de Electricidad (CPF-2): 513 cables · 81.231 m · aproximadamente 5.178 puntas de conexión · "
-     "243 cargas (79 motores [76 BT + 3 MT] · 6 variadores · 52 instrumentos · 37 SS.AA. · 28 iluminación · "
-     "29 control · 12 calefacción/trazado).")
+     "243 cargas (79 motores [76 BT + 3 MT] · 6 variadores · 52 instrumentos · 37 SS.AA. · 28 iluminación · 29 control · 12 calefacción/trazado).")
 
 h("E.1  Tendido de cables — resumen por tipo y sección",2)
 table(["Tipo / sección","Cables","Metros","Observación"],
- [["Potencia MT (6,6 / 13,2 kV)","18","2.110","Terminaciones por técnico certificado"],
-  ["Potencia BT Grande (≥ 35 mm²)","104","17.470","3x240 · 3x150 · 3x95 · 3x50 — frente crítico"],
+ [["Potencia MT (6,6 / 13,2 kV)","18","2.110","Maniobras especiales MT; coordinación con ABB"],
+  ["Potencia BT Grande (≥ 35 mm²)","104","17.470","3x240 · 3x150 · 3x95 · 3x50 — tendido pesado en bandeja"],
   ["Potencia BT Mediana / Pequeña","198","33.125","3x16 a 3x4 · 4x4 · iluminación"],
   ["Control y Señales (multiconductor)","192","28.126","7x2,5+T · 2x2,5 · señales VFD / vibroswitches"],
   ["Fibra Óptica / Ethernet","1","400","Red PMS SE#3 ↔ SE#4"],
@@ -96,24 +100,29 @@ EL_FORM=[["7x2,5+T","Control","96","17.390"],["2x4","Potencia BT","105","10.905"
  ["2x2x0,5","Señal","6","0"],["TOTAL (incl. CPF-1)","—","633","85.881"]]
 table(["Formación","Tipo","Cables","Metros"],EL_FORM,bold_total=True)
 para("El total CPF-2 (alcance) es 513 cables / 81.231 m; la diferencia corresponde a cables CPF-1 de referencia. "
-     "Las secciones gobiernan la herramienta de terminación: lugs a compresión por sección y prensacables/glands por armadura.",note=True)
+     "Las secciones gobiernan la herramienta de terminación.",note=True)
 
 h("E.3  Conexionado — puntas / terminaciones por sección",2)
-table(["Terminación por sección","Cantidad","Unidad","Herramienta / perfil"],
- [["Terminales MT (6,6 / 13,2 kV)","36","extremos","Premoldeadas — técnico MT certificado"],
-  ["Terminales BT Grande (≥ 95 mm²)","208","extremos","Lugs a compresión + termocontraíble"],
-  ["Terminales BT Mediana / Pequeña","396","extremos","Lugs preaislados / a compresión"],
-  ["Cables de control (peinado + etiquetado + prueba)","192","cables","Ferrules de bornera"],
-  ["TOTAL puntas EL (conductores + glands)","~5.178","puntas","3.036 en salas · 1.717 en campo"]],bold_total=True)
+table(["Terminación por sección","Cantidad","Unidad","Herramienta"],
+ [["Terminales MT (6,6 / 13,2 kV)","36","extremos","Herramienta hidráulica de compresión MT, kit de terminación premoldeada, pistola de calor, torquímetro, megóhmetro 5 kV"],
+  ["Terminales BT Grande (≥ 95 mm²)","208","extremos","Prensa hidráulica de compresión con matrices, lugs, mangas termocontraíbles, soplete"],
+  ["Terminales BT Mediana / Pequeña","396","extremos","Pinza/tenaza de compresión, lugs preaislados, peladora de cable"],
+  ["Cables de control (peinado + etiquetado + prueba)","192","cables","Peladora, pinza de ferrules (crimp), rotuladora/identificador, multímetro de continuidad"],
+  ["TOTAL puntas EL (conductores + glands)","~5.178","puntas","—"]],bold_total=True)
 
 h("E.4  Montaje de tableros y equipos eléctricos",2)
+para("Las salas eléctricas SE#3 (BT) y SE#4 (MT) se reciben con su equipamiento (tableros BT/CCMs, celdas MT y "
+     "transformadores) MONTADO de fábrica por ABB. El alcance de campo del Subcontratista comprende el armado de los "
+     "módulos del shelter, la interconexión entre módulos/celdas y el montaje en campo ÚNICAMENTE de los tableros o "
+     "componentes que ABB indique a posteriori que se transportan desmontados por razones de transporte.")
 table(["Ítem","Cantidad","Observación"],
- [["Tableros BT / CCMs","37","Llegan en salas SE#3/SE#4 (ABB): alineación, anclaje, busbars"],
-  ["Celdas MT (TGMT / TRMT)","6","Izaje + nivelación + interconexión de barras"],
-  ["Transformadores","s/proyecto","Salas eléctricas"],
-  ["Variadores (VFD)","6","3 MT + 3 BT"],
-  ["Motores (montaje y alineación)","79","76 BT + 3 MT (>90 kW, 6,6 kV)"],
-  ["Armado de shelters en campo (salas)","2","SE#3 (21 d) + SE#4 (14 d) — módulos"]])
+ [["Armado de shelters en campo (salas en módulos)","2","SE#3 (21 d) + SE#4 (14 d): ensamble, fijación, interconexión interna"],
+  ["Tableros / componentes a montar en campo","A definir por ABB","Sólo los transportados desmontados por razones de transporte"],
+  ["Tableros BT / CCMs (referencia, vienen montados)","37","Montados de fábrica en las salas — verificación y reapriete"],
+  ["Celdas MT (TGMT / TRMT) (vienen montadas)","6","Montadas de fábrica — interconexión de barras, nivelación"],
+  ["Transformadores (vienen montados)","s/proyecto","En salas eléctricas"],
+  ["Motores (montaje y alineación en campo)","79","76 BT + 3 MT (>90 kW, 6,6 kV) — equipo de campo"],
+  ["Variadores (VFD)","6","3 MT + 3 BT (integrados en salas)"]])
 
 h("E.5  Personal especializado para precomisionado y comisionado — Electricidad",2)
 para("Provisión de personal especialista y herramientas para las pruebas y puesta en servicio eléctrica:")
@@ -125,12 +134,10 @@ for b in ["Pruebas de aislación (Megger) circuito por circuito — 513 cables (
  "Perfiles: electricistas de pruebas, técnicos MT certificados (ABB field service) e ingeniería de comisionado."]:
     bullet(b)
 
-# ===================== ANEXO I — INSTRUMENTACIÓN =====================
-doc.add_page_break()
-h("ANEXO I — INSTRUMENTACIÓN",1)
+# ============================ ANEXO I ============================
+cover("ANEXO I","INSTRUMENTACIÓN")
 para("Volumen global de Instrumentación (CPF-2): 885 cables · 65.315 m · 15.752 puntas de conexión · "
-     "2.798 instrumentos, de los cuales AESA monta aproximadamente 1.163 (897 provistos por AESA + 266 de "
-     "proveedor con 'montaje por EPC'). Sistemas involucrados: PCS · ESD/SIS · F&G · PSS · SCADA.")
+     "2.798 instrumentos. Sistemas involucrados: PCS · ESD/SIS · F&G · PSS · SCADA.")
 
 h("I.1  Tendido de cables de instrumentación — detalle completo por formación",2)
 IN_FORM=[["1P #16AWG Sh-A","Sh · Armado","409","13.980","3.272"],["24P #18AWG ShT-A","Sh T · Armado","27","5.035","2.700"],
@@ -155,10 +162,18 @@ table(["Concepto","Cantidad","Unidad","Observación"],
   ["Puntas de pantalla","1.612","puntas","Aterramiento de malla"],
   ["Puntas de armadura (glands)","1.764","puntas","Prensacables en cada extremo"],
   ["TOTAL puntas IN","15.752","puntas","≈ 1.974 horas-hombre de conexionado"]],bold_total=True)
-para("Recorrido típico: instrumento de campo → Junction Box (JB) → Shelter Sala INS → PCS / SIS. El conexionado "
-     "en salas eléctricas y Sala INS admite doble turno.",note=True)
 
-h("I.3  Montaje de instrumentos — por tipo y modalidad",2)
+h("I.3  Instrumentos por provisión — AESA vs proveedores",2)
+para("Diferenciación del total de instrumentos según quién los provee, para acotar el alcance de provisión y montaje:")
+table(["Provisión","Cantidad","Detalle"],
+ [["Provistos por AESA","897","Compra AESA. Montaje e instalación por el Subcontratista (cuenta AESA)"],
+  ["Provistos por proveedores (en equipos / skids)","1.894","Vendor (PROPAK, skids de gas/químicos, válvulas, bombas, etc.)"],
+  ["   — de ellos, 'montaje por EPC'","266","Provistos por vendor pero MONTADOS por AESA (alcance del Subcontratista)"],
+  ["   — premontados en skid por el vendor","1.628","Llegan montados; el Subcontratista realiza conexionado y loop check"],
+  ["Existentes (reutilizar / reemplazar)","7","A definir"],
+  ["TOTAL INSTRUMENTOS","2.798","Montaje a cargo de AESA: ~1.163 (897 + 266)"]],bold_total=True)
+
+h("I.4  Montaje de instrumentos — por tipo y modalidad",2)
 para("Total 2.798 instrumentos. Distribución por modalidad de montaje:")
 table(["Modalidad de montaje","Cantidad","Detalle"],
  [["EN LÍNEA — válvulas","485","Control · seguridad (PSV) · bloqueo (ESDV/SDV/BDV/XV) · regulación"],
@@ -172,27 +187,24 @@ table(["Modalidad de montaje","Cantidad","Detalle"],
 para("Por tipo (principales): Manómetro (PI) 269 · Termovaina (TW) 221 · Sensor temp. (TE) 178 · Válvula seguridad (PSV) 162 · "
      "Transmisor presión (PIT) 160 · Orificio restricción (RO) 127 · Indicador nivel magnético (LG) 126 · "
      "Transmisor temp. (TIT) 87 · Termómetro (TI) 76 · Transmisor nivel (LIT) 66 · fines de carrera, solenoides, etc.")
-para("Alcance de montaje del Subcontratista por cuenta AESA: ~1.163 instrumentos (897 provistos por AESA + 266 de "
-     "proveedor con 'montaje por EPC'). Los premontados en skids de vendor (~1.635) los instala el vendor, pero el "
-     "conexionado y el loop check son alcance del subcontrato.",note=True)
 
-h("I.4  Montaje de tableros en Sala de Instrumentación",2)
+h("I.5  Montaje de tableros en Sala de Instrumentación",2)
 table(["Ítem","Cantidad","Observación"],
  [["PCS — remotas 7A + 7B (Inauco)","2","Tableros de control en Sala INS (Sala 7)"],
   ["Tablero marshalling ESD / F&G / PSS (HIMA)","1","Hardware de seguridad — interconexión a SIS"],
   ["Gabinetes / racks de Sala INS","s/proyecto","Montaje, fijación e interconexión interna"]])
 
-h("I.5  Montaje de instrumentos en línea vs montaje específico",2)
+h("I.6  Montaje de instrumentos en línea vs montaje específico",2)
 bullet("Instrumentos EN LÍNEA (sobre cañería, parte del spool): 920 — válvulas 485 + elementos 435. Se instalan con la cañería.")
 bullet("Instrumentos de MONTAJE ESPECÍFICO (según típico de montaje): 1.878 — sobre soporte/stand, equipo, válvula o estructura.")
 bullet("Cada modalidad define el típico de montaje, la soportería y la herramienta correspondiente.")
 
-h("I.6  Montaje de cajas de conexión (Junction Boxes)",2)
-para("Montaje, fijación y rotulado de cajas de conexión (JB) de campo (DCS y SIS) en los recorridos "
-     "instrumento → JB → Sala INS. La cantidad no está indicada en la ingeniería disponible; se computará por "
-     "relevamiento de los planos de montaje y la disposición de JB por área.")
+h("I.7  Montaje de cajas de conexión (Junction Boxes)",2)
+para("Montaje, fijación y rotulado de cajas de conexión (JB) de campo (DCS y SIS) en los recorridos instrumento → JB "
+     "→ Sala INS. La cantidad no está indicada en la ingeniería disponible; se computará por relevamiento de los "
+     "planos de montaje y la disposición de JB por área.")
 
-h("I.7  Personal especializado para precomisionado y comisionado — Instrumentación",2)
+h("I.8  Personal especializado para precomisionado y comisionado — Instrumentación",2)
 para("Provisión de personal especialista y herramientas para las pruebas y puesta en servicio de instrumentación:")
 for b in ["Calibración en banco de instrumentos (previa al montaje), con patrones y banco de pruebas.",
  "Prueba punta a punta (continuidad) e identificación de cada cable y punta.",
@@ -202,44 +214,29 @@ for b in ["Calibración en banco de instrumentos (previa al montaje), con patron
  "Perfiles: técnicos instrumentistas, especialistas en calibración e ingeniería de lazos y comisionado."]:
     bullet(b)
 
-# ===================== ANEXO C — PLANILLA DE CÓMPUTO =====================
-doc.add_page_break()
-h("ANEXO C — PLANILLA DE CÓMPUTO Y PRECIOS UNITARIOS",1)
-para("El Oferente deberá completar los precios unitarios (columna P. Unitario) para cada ítem; el Subtotal y el "
-     "Total se obtienen por producto de cantidad × precio unitario. Las cantidades son las de la ingeniería "
-     "vigente y podrán ajustarse a planos 'For Construction'.")
+# ============================ ANEXO C ============================
+cover("ANEXO C","PLANILLA DE CÓMPUTO Y PRECIOS UNITARIOS")
+para("El Oferente deberá completar los precios unitarios (columna P. Unitario) para cada ítem; el Subtotal y el Total "
+     "se obtienen por producto de cantidad × precio unitario. Las cantidades son las de la ingeniería vigente y podrán "
+     "ajustarse a planos 'For Construction'.")
 h("C.1  Electricidad",2)
 table(["Ítem de obra","Unidad","Cantidad","P. Unitario","Subtotal"],
- [["Tendido cables Potencia MT","m","2.110","",""],
-  ["Tendido cables Potencia BT Grande (≥35 mm²)","m","17.470","",""],
-  ["Tendido cables Potencia BT Mediana / Pequeña","m","33.125","",""],
-  ["Tendido cables Control y Señales","m","28.126","",""],
-  ["Conexionado terminales MT","extremo","36","",""],
-  ["Conexionado terminales BT Grande","extremo","208","",""],
-  ["Conexionado terminales BT Mediana / Pequeña","extremo","396","",""],
-  ["Conexionado cables de control","cable","192","",""],
-  ["Montaje tableros BT / CCMs","u","37","",""],
-  ["Montaje celdas MT","u","6","",""],
-  ["Montaje y alineación de motores","u","79","",""],
-  ["Precomisionado y comisionado eléctrico","global","1","",""]])
+ [["Tendido cables Potencia MT","m","2.110","",""],["Tendido cables Potencia BT Grande (≥35 mm²)","m","17.470","",""],
+  ["Tendido cables Potencia BT Mediana / Pequeña","m","33.125","",""],["Tendido cables Control y Señales","m","28.126","",""],
+  ["Conexionado terminales MT","extremo","36","",""],["Conexionado terminales BT Grande","extremo","208","",""],
+  ["Conexionado terminales BT Mediana / Pequeña","extremo","396","",""],["Conexionado cables de control","cable","192","",""],
+  ["Armado de shelters en campo (salas)","u","2","",""],["Montaje en campo de tableros (los que ABB indique)","u","a definir","",""],
+  ["Montaje y alineación de motores","u","79","",""],["Precomisionado y comisionado eléctrico","global","1","",""]])
 h("C.2  Instrumentación",2)
 table(["Ítem de obra","Unidad","Cantidad","P. Unitario","Subtotal"],
- [["Tendido cables de instrumentación","m","65.315","",""],
-  ["Conexionado de puntas (instrumentación)","punta","15.752","",""],
-  ["Montaje de instrumentos en línea","u","920","",""],
-  ["Montaje de instrumentos de montaje específico","u","1.878","",""],
-  ["Montaje de tableros en Sala INS (PCS / marshalling)","u","3","",""],
-  ["Montaje de cajas de conexión (JB)","u","a relevar","",""],
-  ["Loop check / prueba de señales en campo","lazo","885","",""],
-  ["Precomisionado y comisionado de instrumentación","global","1","",""]])
-para("Nota: la planilla es indicativa para la cotización; el cómputo final para certificación se ajustará a "
-     "planos 'For Construction' y al relevamiento de obra.",note=True)
-
-# ===== Cierre =====
-para("",)  # espacio
-para("Documento: Pliego subcontrato E&I — Revisión %s — %s. Anexos E (Electricidad), I (Instrumentación) y C "
-     "(Planilla de cómputo) agregados como continuidad; cuerpo principal del Pliego sin modificaciones."%(REV,FECHA),note=True)
+ [["Tendido cables de instrumentación","m","65.315","",""],["Conexionado de puntas (instrumentación)","punta","15.752","",""],
+  ["Montaje de instrumentos en línea","u","920","",""],["Montaje de instrumentos de montaje específico","u","1.878","",""],
+  ["Montaje de tableros en Sala INS (PCS / marshalling)","u","3","",""],["Montaje de cajas de conexión (JB)","u","a relevar","",""],
+  ["Loop check / prueba de señales en campo","lazo","885","",""],["Precomisionado y comisionado de instrumentación","global","1","",""]])
+para("Nota: la planilla es indicativa para la cotización; el cómputo final para certificación se ajustará a planos "
+     "'For Construction' y al relevamiento de obra.",note=True)
+para("Documento: Pliego subcontrato E&I — Revisión %s — %s. Anexos E (Electricidad), I (Instrumentación) y C (Planilla "
+     "de cómputo) agregados como continuidad; cuerpo principal del Pliego sin modificaciones."%(REV,FECHA),note=True)
 
 doc.save(OUT)
-print("OK ->",OUT,"| estilo tabla:",TBL_STYLE)
-print("párrafos:",len(doc.paragraphs),"| tablas:",len(doc.tables))
+print("OK ->",OUT,"| estilo tabla:",TBL_STYLE,"| tablas:",len(doc.tables))
