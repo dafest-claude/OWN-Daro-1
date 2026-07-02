@@ -14,8 +14,8 @@ from docx.enum.text import WD_ALIGN_PARAGRAPH, WD_BREAK
 
 BASE="/home/user/OWN-Daro-1/Constructibilidad"
 SRC=os.path.join(BASE,"Datos entrada","Pliego subcontrato E&I.docx")
-OUT=os.path.join(BASE,"Análisis generados","Pliego subcontrato E&I - Rev3 - 2026-07-02 (con Anexos).docx")
-REV="3"; FECHA="02-07-2026"
+OUT=os.path.join(BASE,"Análisis generados","Pliego subcontrato E&I - Rev4 - 2026-07-02 (con Anexos).docx")
+REV="4"; FECHA="02-07-2026"
 NAVY=RGBColor(0x1F,0x3B,0x63)
 doc=Document(SRC)
 TBL_STYLE='Tabla Cuadro'
@@ -146,12 +146,16 @@ for b in ["Tendido de conductor de PAT de cobre desnudo en distintas secciones (
  "Conexión de la malla de PAT a estructuras, equipos, tableros, motores, bandejas portacables y sistema de mallado.",
  "Provisión de herramientas de compresión hidráulica, moldes y cargas para soldadura exotérmica y consumibles."]:
     bullet(b)
-table(["Actividad / material principal (según LM-E-0017)","Unidad","Cantidad"],
- [["Conductor de PAT — cobre desnudo (por sección)","m","según LM-E-0017"],
-  ["Terminales de compresión en frío (cable-cable / cable-jabalina)","u","según LM-E-0017"],
-  ["Soldaduras exotérmicas (cadweld)","u","según LM-E-0017"],
-  ["Jabalinas / electrodos de PAT","u","según LM-E-0017"],
-  ["Cámaras de inspección de PAT","u","según LM-E-0017"]])
+table(["Material principal (según LM-E-0017)","Unidad","Cantidad"],
+ [["Conductor de PAT — cobre desnudo 95 mm² (IRAM 2004)","m","7.200"],
+  ["Conductor de PAT — cobre desnudo 35 mm² (IRAM 2004)","m","1.184"],
+  ["Cable unipolar 450/750 V (PAT)","m","≈ 500"],
+  ["Subtotal conductor de PAT","m","≈ 8.884"],
+  ["Terminales / cable lugs de compresión (varias secciones)","u","≈ 272"],
+  ["Jabalinas / electrodos de PAT","u","≈ 366"],
+  ["Soldaduras exotérmicas (cadweld) y cámaras de inspección","u","según LM-E-0017"]],bold_total=False)
+para("Cantidades principales relevadas del LM-E-0017 (Rev.0); el detalle por área y los accesorios menores "
+     "(hardware, arandelas, conduit) se computan según el listado completo.",note=True)
 
 h("E.7  Protección contra descargas atmosféricas (SPCDA)",2)
 para("Actividades para completar el sistema de protección contra descargas atmosféricas, según ACAL-102-LM-E-0017:")
@@ -173,11 +177,14 @@ for b in ["Montaje de artefactos de iluminación (luminarias) interiores y exter
  "Montaje de cajas de conexión de iluminación / tomas.",
  "Provisión y montaje de cañería / bandeja, tendido y conexionado de los circuitos de iluminación y tomas."]:
     bullet(b)
-table(["Actividad / material principal (según LM-E-0020)","Unidad","Cantidad"],
- [["Artefactos de iluminación (luminarias)","u","según LM-E-0020"],
-  ["Tomacorrientes","u","según LM-E-0020"],
-  ["Cajas de conexión de iluminación / tomas","u","según LM-E-0020"],
-  ["Cañería / bandeja + tendido y conexionado de circuitos","m / gl","según LM-E-0020"]])
+table(["Material principal (según LM-E-0020)","Unidad","Cantidad"],
+ [["Torres de iluminación general (12 m, c/plataforma y escalera)","u","24"],
+  ["Artefactos LED — proyector industrial orientable, exterior, 220 VCA","u","144"],
+  ["Cajas de conexión de iluminación — inferior (área clasificada Z1/Z2)","u","24"],
+  ["Cajas de conexión de iluminación — superior (para proyectores)","u","24"],
+  ["Tomacorrientes / cañería / bandeja y conexionado de circuitos","u / m","según LM-E-0020"]])
+para("Iluminación exterior: 144 proyectores LED distribuidos en 24 torres de iluminación de 12 m, con 48 cajas de "
+     "conexión (24 inferiores + 24 superiores). Los tomacorrientes y la cañería/bandeja se computan según LM-E-0020.",note=True)
 
 # ============================ ANEXO I ============================
 cover("ANEXO I","INSTRUMENTACIÓN")
@@ -331,11 +338,14 @@ table(["Ítem de obra","Unidad","Cantidad","P. Unitario","Subtotal"],
   ["Conexionado terminales BT Mediana / Pequeña","extremo","396","",""],["Conexionado cables de control","cable","192","",""],
   ["Armado de shelters en campo (salas)","u","2","",""],["Montaje en campo de tableros (los que ABB indique)","u","a definir","",""],
   ["Montaje y alineación de motores","u","79","",""],
-  ["Puesta a tierra — tendido de conductor Cu desnudo","m","s/LM-E-0017","",""],
-  ["Puesta a tierra — conexiones (compresión / exotérmica) y jabalinas","u","s/LM-E-0017","",""],
+  ["Puesta a tierra — tendido conductor Cu desnudo (95 + 35 mm²)","m","8.384","",""],
+  ["Puesta a tierra — terminales / cable lugs de compresión","u","272","",""],
+  ["Puesta a tierra — jabalinas / electrodos","u","366","",""],
   ["SPCDA — pararrayos/mástiles, bajadas y tomas de tierra","global","s/LM-E-0017","",""],
-  ["Iluminación — montaje de luminarias","u","s/LM-E-0020","",""],
-  ["Tomas — montaje de tomacorrientes y cajas","u","s/LM-E-0020","",""],
+  ["Iluminación — torres de iluminación (12 m)","u","24","",""],
+  ["Iluminación — artefactos LED (proyectores)","u","144","",""],
+  ["Iluminación — cajas de conexión de iluminación","u","48","",""],
+  ["Tomas — tomacorrientes y cañería","u / m","s/LM-E-0020","",""],
   ["Precomisionado, comisionado y puesta en marcha eléctrico","global","1","",""]])
 h("C.2  Instrumentación",2)
 table(["Ítem de obra","Unidad","Cantidad","P. Unitario","Subtotal"],
