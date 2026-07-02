@@ -14,8 +14,8 @@ from docx.enum.text import WD_ALIGN_PARAGRAPH, WD_BREAK
 
 BASE="/home/user/OWN-Daro-1/Constructibilidad"
 SRC=os.path.join(BASE,"Datos entrada","Pliego subcontrato E&I.docx")
-OUT=os.path.join(BASE,"Análisis generados","Pliego subcontrato E&I - Rev4 - 2026-07-02 (con Anexos).docx")
-REV="4"; FECHA="02-07-2026"
+OUT=os.path.join(BASE,"Análisis generados","Pliego subcontrato E&I - Rev5 - 2026-07-02 (con Anexos).docx")
+REV="5"; FECHA="02-07-2026"
 NAVY=RGBColor(0x1F,0x3B,0x63)
 doc=Document(SRC)
 TBL_STYLE='Tabla Cuadro'
@@ -164,10 +164,16 @@ for b in ["Montaje de terminales aéreos / pararrayos y mástiles.",
  "Ejecución de tomas de tierra dedicadas del SPCDA y sus conexiones (compresión / exotérmica).",
  "Interconexión del SPCDA con la malla de puesta a tierra."]:
     bullet(b)
-table(["Actividad / material principal (según LM-E-0017)","Unidad","Cantidad"],
- [["Terminales aéreos / pararrayos y mástiles","u","según LM-E-0017"],
-  ["Conductores de bajada","m","según LM-E-0017"],
-  ["Tomas de tierra dedicadas SPCDA + conexiones","u","según LM-E-0017"]])
+table(["Material principal (según LM-E-0017)","Unidad","Cantidad"],
+ [["Columna metálica para montaje de pararrayo (acero galvanizado)","u","1"],
+  ["Sujetacables de bajada con aislador cerámico","u","200"],
+  ["Compuesto sellador mástic (3M 7662, en frío)","kg","85"],
+  ["Aisladores BT resina epoxi (ASE-0) / descargadores (vía de chispas)","u","según LM-E-0017"],
+  ["Conductor de bajada + tomas de tierra dedicadas","m / u","según LM-E-0017 (incl. en conductor Cu)"]])
+para("El LM-E-0017 corresponde al alcance UNDERGROUND: incluye la bajada (200 sujetacables con aislador), el sellado "
+     "(85 kg de mástic), 1 columna/mástil de pararrayo y las tomas de tierra dedicadas. El sistema captor aéreo "
+     "(puntas/terminales) y su cantidad se complementan con la ingeniería de SPCDA correspondiente y/o se integran a "
+     "las 24 torres de iluminación.",note=True)
 
 h("E.8  Iluminación y tomas",2)
 para("Actividades para completar la instalación de iluminación y tomacorrientes según el listado de materiales "
@@ -341,7 +347,9 @@ table(["Ítem de obra","Unidad","Cantidad","P. Unitario","Subtotal"],
   ["Puesta a tierra — tendido conductor Cu desnudo (95 + 35 mm²)","m","8.384","",""],
   ["Puesta a tierra — terminales / cable lugs de compresión","u","272","",""],
   ["Puesta a tierra — jabalinas / electrodos","u","366","",""],
-  ["SPCDA — pararrayos/mástiles, bajadas y tomas de tierra","global","s/LM-E-0017","",""],
+  ["SPCDA — columna/mástil de pararrayo","u","1","",""],
+  ["SPCDA — sujetacables de bajada c/aislador","u","200","",""],
+  ["SPCDA — sellado mástic + aisladores/descargadores + tomas de tierra","global","s/LM-E-0017","",""],
   ["Iluminación — torres de iluminación (12 m)","u","24","",""],
   ["Iluminación — artefactos LED (proyectores)","u","144","",""],
   ["Iluminación — cajas de conexión de iluminación","u","48","",""],
