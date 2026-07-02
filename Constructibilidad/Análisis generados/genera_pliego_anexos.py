@@ -14,8 +14,8 @@ from docx.enum.text import WD_ALIGN_PARAGRAPH, WD_BREAK
 
 BASE="/home/user/OWN-Daro-1/Constructibilidad"
 SRC=os.path.join(BASE,"Datos entrada","Pliego subcontrato E&I.docx")
-OUT=os.path.join(BASE,"Análisis generados","Pliego subcontrato E&I - Rev2 - 2026-06-30 (con Anexos).docx")
-REV="2"; FECHA="30-06-2026"
+OUT=os.path.join(BASE,"Análisis generados","Pliego subcontrato E&I - Rev3 - 2026-07-02 (con Anexos).docx")
+REV="3"; FECHA="02-07-2026"
 NAVY=RGBColor(0x1F,0x3B,0x63)
 doc=Document(SRC)
 TBL_STYLE='Tabla Cuadro'
@@ -134,6 +134,51 @@ for b in ["Pruebas de aislación (Megger) circuito por circuito — 513 cables (
  "Perfiles: electricistas de pruebas, técnicos MT certificados (ABB field service) e ingeniería de comisionado."]:
     bullet(b)
 
+h("E.6  Puesta a tierra (PAT)",2)
+para("Actividades para completar la puesta a tierra según el listado de materiales ACAL-102-LM-E-0017 "
+     "(Puesta a Tierra y SPCDA — Underground). Comprende el tendido de conductores, sus conexiones y el montaje "
+     "de los electrodos y accesorios:")
+for b in ["Tendido de conductor de PAT de cobre desnudo en distintas secciones (p. ej. 70 / 50 / 35 mm²) en zanja, "
+          "bandeja y sobre estructura.",
+ "Armado y ejecución de conexiones por terminal de compresión en frío cable-cable y cable-jabalina "
+ "(según IRAM 2349 / IEEE 837) y/o soldadura exotérmica (tipo cadweld) donde corresponda.",
+ "Montaje de jabalinas / electrodos de puesta a tierra y cámaras de inspección.",
+ "Conexión de la malla de PAT a estructuras, equipos, tableros, motores, bandejas portacables y sistema de mallado.",
+ "Provisión de herramientas de compresión hidráulica, moldes y cargas para soldadura exotérmica y consumibles."]:
+    bullet(b)
+table(["Actividad / material principal (según LM-E-0017)","Unidad","Cantidad"],
+ [["Conductor de PAT — cobre desnudo (por sección)","m","según LM-E-0017"],
+  ["Terminales de compresión en frío (cable-cable / cable-jabalina)","u","según LM-E-0017"],
+  ["Soldaduras exotérmicas (cadweld)","u","según LM-E-0017"],
+  ["Jabalinas / electrodos de PAT","u","según LM-E-0017"],
+  ["Cámaras de inspección de PAT","u","según LM-E-0017"]])
+
+h("E.7  Protección contra descargas atmosféricas (SPCDA)",2)
+para("Actividades para completar el sistema de protección contra descargas atmosféricas, según ACAL-102-LM-E-0017:")
+for b in ["Montaje de terminales aéreos / pararrayos y mástiles.",
+ "Tendido de conductores de bajada y su fijación.",
+ "Ejecución de tomas de tierra dedicadas del SPCDA y sus conexiones (compresión / exotérmica).",
+ "Interconexión del SPCDA con la malla de puesta a tierra."]:
+    bullet(b)
+table(["Actividad / material principal (según LM-E-0017)","Unidad","Cantidad"],
+ [["Terminales aéreos / pararrayos y mástiles","u","según LM-E-0017"],
+  ["Conductores de bajada","m","según LM-E-0017"],
+  ["Tomas de tierra dedicadas SPCDA + conexiones","u","según LM-E-0017"]])
+
+h("E.8  Iluminación y tomas",2)
+para("Actividades para completar la instalación de iluminación y tomacorrientes según el listado de materiales "
+     "ACAL-102-LM-E-0020 (Iluminación y Tomas):")
+for b in ["Montaje de artefactos de iluminación (luminarias) interiores y exteriores, incluida iluminación de emergencia.",
+ "Montaje de tomacorrientes y sus cajas.",
+ "Montaje de cajas de conexión de iluminación / tomas.",
+ "Provisión y montaje de cañería / bandeja, tendido y conexionado de los circuitos de iluminación y tomas."]:
+    bullet(b)
+table(["Actividad / material principal (según LM-E-0020)","Unidad","Cantidad"],
+ [["Artefactos de iluminación (luminarias)","u","según LM-E-0020"],
+  ["Tomacorrientes","u","según LM-E-0020"],
+  ["Cajas de conexión de iluminación / tomas","u","según LM-E-0020"],
+  ["Cañería / bandeja + tendido y conexionado de circuitos","m / gl","según LM-E-0020"]])
+
 # ============================ ANEXO I ============================
 cover("ANEXO I","INSTRUMENTACIÓN")
 para("Volumen global de Instrumentación (CPF-2): 885 cables · 65.315 m · 15.752 puntas de conexión · "
@@ -200,9 +245,27 @@ bullet("Instrumentos de MONTAJE ESPECÍFICO (según típico de montaje): 1.878 �
 bullet("Cada modalidad define el típico de montaje, la soportería y la herramienta correspondiente.")
 
 h("I.7  Montaje de cajas de conexión (Junction Boxes)",2)
-para("Montaje, fijación y rotulado de cajas de conexión (JB) de campo (DCS y SIS) en los recorridos instrumento → JB "
-     "→ Sala INS. La cantidad no está indicada en la ingeniería disponible; se computará por relevamiento de los "
-     "planos de montaje y la disposición de JB por área.")
+para("Montaje, fijación y rotulado de las cajas de conexión (JB) de campo en los recorridos instrumento → JB → Sala INS, "
+     "según ACAL-00102-LM-K-0002 (montaje eléctrico de instrumentos) y las hojas de datos ACAL-00102-HD-K-0022 / "
+     "ACAL-00670-HD-K-0011. Las JB son de fundición de aluminio (IP66), con borneras de 28 / 40 / 80 bornes (y 40 para "
+     "ternas), típicamente 350 × 300 × 200 mm, segregadas por sistema (PCS, ESD, PSS, USS, F&G).")
+table(["Sistema","JB (cantidad)","Referencia de tag"],
+ [["PCS (JBA / JBD)","20","JBA-… / JBD-…"],
+  ["PSS (JBPA / JBPD)","32","JBPA-… / JBPD-…"],
+  ["F&G (JBFA / JBFD)","22","JBFA-… / JBFD-… (ajustar a requerimientos HIMA)"],
+  ["ESD (JBED)","4","JBED-…"],
+  ["USS / otras (JBUD / JBSD)","2","JBUD-… / JBSD-…"],
+  ["TOTAL (relevado en la documentación disponible)","~80","—"]],bold_total=True)
+para("Actividad a computar como INSTRUMENTACIÓN, adicional al conexionado:")
+for b in ["Montaje y fijación de la caja de conexión + rotulado / identificación.",
+ "Colocación de los prensacables (glands) que correspondan según la cantidad y sección de los cables que ingresan y "
+ "egresan de cada caja, con sus tapones ciegos en las entradas no utilizadas.",
+ "Conexión de borneras y puentes de puesta a tierra internos de la caja.",
+ "Nota: las puntas de conexión ya están computadas en el conteo de cables IN (I.2), dado que incluyen los tramos de "
+ "cable; el MONTAJE de la caja y la colocación de prensacables se computan aparte como actividad propia."]:
+    bullet(b)
+para("El cómputo de JB podrá ampliarse: el LM-K-0002 indica que a la fecha incluye solamente canalizaciones troncales; "
+     "el resto de los materiales se incorporará en próximas revisiones.",note=True)
 
 h("I.8  Personal especializado para precomisionado y comisionado — Instrumentación",2)
 para("Provisión de personal especialista y herramientas para las pruebas y puesta en servicio de instrumentación:")
@@ -213,6 +276,47 @@ for b in ["Calibración en banco de instrumentos (previa al montaje), con patron
  "Comisionado integrado con PCS (Inauco), SIS (HIMA) y SCADA: pruebas funcionales y de seguridad.",
  "Perfiles: técnicos instrumentistas, especialistas en calibración e ingeniería de lazos y comisionado."]:
     bullet(b)
+
+# ============================ ANEXO P ============================
+cover("ANEXO P","PRECOMISIONADO · COMISIONADO · PUESTA EN MARCHA")
+para("Alcance transversal de precomisionado, comisionado y puesta en marcha (PEM) para ambas especialidades. El "
+     "Subcontratista proveerá el personal especialista y TODO el instrumental de prueba, calibración y medición "
+     "necesario, en cantidad y con certificados de calibración vigentes, para completar las pruebas, la liberación "
+     "y la entrega de los sistemas.")
+
+h("P.1  Secuencia y alcance",2)
+for b in ["Precomisionado: pruebas estáticas y de subsistema (megger, continuidad, calibración en banco, loop check, "
+          "medición de PAT, ajuste de protecciones) previas a la energización/puesta en tensión.",
+ "Comisionado: pruebas funcionales dinámicas por sistema y su integración (EL + PMS + PCS + SIS + F&G + SCADA).",
+ "Puesta en marcha (PEM): arranque asistido, verificación en condiciones de proceso y acompañamiento hasta la "
+ "estabilización, con el personal especialista requerido.",
+ "Las pruebas y aceptación de equipos (FAT / iFAT) deben incluir equipos de precomisionado para asegurar la "
+ "liberación y entrega."]:
+    bullet(b)
+
+h("P.2  Instrumental de prueba — Electricidad",2)
+for b in ["Telurímetro (medición de resistencia de puesta a tierra) y micro-ohmímetro (continuidad de mallado).",
+ "Megóhmetro (aislación) BT y MT (5 kV), con registro conforme ITP.",
+ "Equipo de inyección primaria/secundaria para ensayo y ajuste de relés de protección; maletín de pruebas.",
+ "Secuencímetro, pinza amperométrica, multímetros, analizador de red / calidad de energía.",
+ "Cámara termográfica para inspección de conexiones bajo carga."]:
+    bullet(b)
+
+h("P.3  Instrumental de prueba — Instrumentación",2)
+for b in ["Calibrador / generador de lazo 4-20 mA y comunicador HART; fuente de lazo.",
+ "Patrones de presión (bomba/comparador y patrón), de temperatura (baño/horno seco y patrón) y de caudal según aplique.",
+ "Banco de calibración para prueba de instrumentos previa al montaje.",
+ "Generador de señales (RTD/TC/mV) y equipo para prueba de lazos (loop check) y matriz de causa-efecto (MCE).",
+ "Detector portátil de gas para verificación de sensores de F&G."]:
+    bullet(b)
+
+h("P.4  Herramientas y materiales misceláneos (general)",2)
+para("El Subcontratista proveerá todas las herramientas de montaje (manuales, eléctricas, hidráulicas y de izaje menor) "
+     "y los materiales misceláneos y consumibles necesarios para completar los trabajos de montaje, conexionado, "
+     "precomisionado, comisionado y puesta en marcha, entre ellos: elementos de fijación y soportería menor, "
+     "prensacables y tapones, terminales y ferrules, precintos e identificadores/rótulos, mangas termocontraíbles, "
+     "cintas, selladores, y todo elemento menor requerido para la correcta terminación de las tareas, esté o no "
+     "detallado explícitamente en los listados de materiales.")
 
 # ============================ ANEXO C ============================
 cover("ANEXO C","PLANILLA DE CÓMPUTO Y PRECIOS UNITARIOS")
@@ -226,13 +330,22 @@ table(["Ítem de obra","Unidad","Cantidad","P. Unitario","Subtotal"],
   ["Conexionado terminales MT","extremo","36","",""],["Conexionado terminales BT Grande","extremo","208","",""],
   ["Conexionado terminales BT Mediana / Pequeña","extremo","396","",""],["Conexionado cables de control","cable","192","",""],
   ["Armado de shelters en campo (salas)","u","2","",""],["Montaje en campo de tableros (los que ABB indique)","u","a definir","",""],
-  ["Montaje y alineación de motores","u","79","",""],["Precomisionado y comisionado eléctrico","global","1","",""]])
+  ["Montaje y alineación de motores","u","79","",""],
+  ["Puesta a tierra — tendido de conductor Cu desnudo","m","s/LM-E-0017","",""],
+  ["Puesta a tierra — conexiones (compresión / exotérmica) y jabalinas","u","s/LM-E-0017","",""],
+  ["SPCDA — pararrayos/mástiles, bajadas y tomas de tierra","global","s/LM-E-0017","",""],
+  ["Iluminación — montaje de luminarias","u","s/LM-E-0020","",""],
+  ["Tomas — montaje de tomacorrientes y cajas","u","s/LM-E-0020","",""],
+  ["Precomisionado, comisionado y puesta en marcha eléctrico","global","1","",""]])
 h("C.2  Instrumentación",2)
 table(["Ítem de obra","Unidad","Cantidad","P. Unitario","Subtotal"],
  [["Tendido cables de instrumentación","m","65.315","",""],["Conexionado de puntas (instrumentación)","punta","15.752","",""],
   ["Montaje de instrumentos en línea","u","920","",""],["Montaje de instrumentos de montaje específico","u","1.878","",""],
-  ["Montaje de tableros en Sala INS (PCS / marshalling)","u","3","",""],["Montaje de cajas de conexión (JB)","u","a relevar","",""],
-  ["Loop check / prueba de señales en campo","lazo","885","",""],["Precomisionado y comisionado de instrumentación","global","1","",""]])
+  ["Montaje de tableros en Sala INS (PCS / marshalling)","u","3","",""],
+  ["Montaje de cajas de conexión (JB)","u","~80","",""],
+  ["Colocación de prensacables (glands) en JB","u","s/cables por JB","",""],
+  ["Loop check / prueba de señales en campo","lazo","885","",""],
+  ["Precomisionado, comisionado y puesta en marcha de instrumentación","global","1","",""]])
 para("Nota: la planilla es indicativa para la cotización; el cómputo final para certificación se ajustará a planos "
      "'For Construction' y al relevamiento de obra.",note=True)
 para("Documento: Pliego subcontrato E&I — Revisión %s — %s. Anexos E (Electricidad), I (Instrumentación) y C (Planilla "
