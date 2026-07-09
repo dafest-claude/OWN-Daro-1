@@ -252,3 +252,52 @@ armamos la próxima jugada concreta.
 **No es momento de cambiar la estrategia**. El mes 1 rindió 
 proporcionalmente al plan. El arranque del mes 2 tuvo un evento
 puntual en GD30 que hay que investigar. Con eso resuelto, seguimos.
+
+---
+
+## ACTUALIZACIÓN 09/07 — datos confirmados por el usuario
+
+### Confirmaciones
+1. **Aporte del 30/06**: 150.000 (confirmado).
+2. **GD30 pagó cupón**: SÍ. Cash del cupón + amortización pendiente/en cuenta.
+
+### Diagnóstico corregido de GD30
+
+La caída del −11.9% en cotización **se explica por el pago
+del cupón + amortización semestral del 09/07**. Es cosmética, no real.
+
+Cálculo estimado:
+- Interés semestral (step-up 0.75%): ~0.35 USD × 93 VN
+- Amortización 8% del capital: ~7.44 USD × 93 VN
+- **Total ~7.75 USD ≈ ARS 8.000–12.000**
+
+Pérdida real GD30 después del cupón: **~−1.000 a −3.000 ARS** (casi
+flat en USD).
+
+### Performance real ajustada
+
+| Concepto | ARS |
+|----------|-----|
+| Aportes acumulados | 700.000 |
+| Valor cartera visible | 671.846 |
+| Cash cupón pendiente (est.) | +10.000 |
+| **Valor total estimado** | **~682.000** |
+| **Ganancia neta** | **−18.000** |
+| **% sobre aportes** | **~−2.6%** |
+
+### Meta 31/07 ajustada
+
+Meta anterior: +8 a +10% sobre aportes.
+**Realista para julio**: cerrar en **+3 a +6%** — 22 días restantes.
+
+### Destino del cash del cupón
+
+**Opción elegida**: 100% a PRCPPEB (sube liquidez a ~18%).
+
+### Próximos pasos concretos
+
+1. Verificar monto exacto del cupón en *Movimientos*.
+2. Suscribir ese cash a PRCPPEB.
+3. Configurar 4 alertas MSFT + AAPL.
+4. Actualizar 6 alertas BMA + GGAL + TGSU2 con nuevos PMC.
+5. Esperar cierre de mes 31/07.
