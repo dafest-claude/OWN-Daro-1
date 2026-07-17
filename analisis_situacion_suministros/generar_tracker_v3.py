@@ -18,13 +18,20 @@ from datetime import date, datetime
 # ── Rutas ───────────────────────────────────────────────────────────────────
 SCRIPT_DIR  = os.path.dirname(os.path.abspath(__file__))
 PLAN_FILE     = os.path.join(SCRIPT_DIR, '..', 'info_suministros',
-                              '2026.04.06 - Plan de Suministros - La Calera II (250626).xlsx')
+                              '2026.04.06 - Plan de Suministros - La Calera II (170726).xlsx')
 PLAN_FILE_OLD = os.path.join(SCRIPT_DIR, '..', 'info_suministros',
-                              '2026.04.06 - Plan de Suministros - La Calera II (180626).xlsx')
-OUT_XLSX      = os.path.join(SCRIPT_DIR, 'Tracker_Suministros_IN_EL_LaCalera_II_v8_260626.xlsx')
-TODAY         = date(2026, 6, 26)
+                              '2026.04.06 - Plan de Suministros - La Calera II (250626).xlsx')
+# Cortes intermedios para la evolución de 3 semanas (26/06 → 03/07 → 10/07 → 17/07)
+PLAN_TREND    = [
+    ('26/06', '2026.04.06 - Plan de Suministros - La Calera II (250626).xlsx'),
+    ('03/07', '2026.04.06 - Plan de Suministros - La Calera II (030726).xlsx'),
+    ('10/07', '2026.04.06 - Plan de Suministros - La Calera II (100726).xlsx'),
+    ('17/07', '2026.04.06 - Plan de Suministros - La Calera II (170726).xlsx'),
+]
+OUT_XLSX      = os.path.join(SCRIPT_DIR, 'Tracker_Suministros_IN_EL_LaCalera_II_Rev6_170726.xlsx')
+TODAY         = date(2026, 7, 17)
 RFSU          = date(2027, 2, 3)
-VERSION       = 'v8_260626'
+VERSION       = 'Rev6_170726'
 
 # ── Paleta ──────────────────────────────────────────────────────────────────
 C = {
@@ -920,60 +927,70 @@ def write_data_row(ws, row_n, seq, item, sc_item, ri_num, hdr_color, is_alt, cro
     ws.row_dimensions[row_n].height = 32
 
 
-def _build_pipeline_compare(ws, cuadro_old, cuadro_new, start_row=3):
-    """Renderiza la comparación del pipeline agregado (Cuadro resumen) por especialidad,
-    respondiendo: cuántas SOLPED, cuántas OCs nuevas y cuántas ofertas en gestión.
-    Devuelve la siguiente fila libre."""
+def _build_pipeline_compare(ws, trend, start_row=3):
+    """Renderiza la EVOLUCIÓN de 3 semanas del pipeline agregado (Cuadro resumen) por
+    especialidad y etapa, respondiendo: SOLPED, OCs nuevas y ofertas en gestión.
+    `trend` = lista de (label, cuadro_dict) ordenada por fecha. Devuelve la sig. fila libre."""
+    labels = [t[0] for t in trend]
+    cuadros = [t[1] for t in trend]
+    cold, cnew = cuadros[0], cuadros[-1]
+    ncols = len(labels)
+
     r = start_row
     ws.merge_cells(start_row=r, start_column=1, end_row=r, end_column=7)
-    th = ws.cell(r, 1, 'PIPELINE AGREGADO POR ESPECIALIDAD (Cuadro resumen)  ·  180626 → 250626')
+    th = ws.cell(r, 1, f'EVOLUCIÓN 3 SEMANAS – PIPELINE POR ESPECIALIDAD (Cuadro resumen)  ·  {labels[0]} → {labels[-1]}')
     th.fill = F(C['subtitulo']); th.font = ft(True, 'FFFFFF', 11)
     th.alignment = al('center', 'center'); ws.row_dimensions[r].height = 20
     r += 1
 
-    hdrs = ['Especialidad', 'En SOLPED', 'En Petición\nOfertas', 'En AT', 'Con OC', 'En Gestión\n(emitidas)', '']
-    for ci, h in enumerate(hdrs[:6], start=1):
+    # Encabezado: Etapa | corte1..corteN | Δ
+    hdrs = ['Especialidad · Etapa'] + labels + ['Δ 3 sem']
+    for ci, h in enumerate(hdrs, start=1):
         c = ws.cell(r, ci, h); c.fill = F(C['hdr_grp']); c.font = ft(True, 'FFFFFF', 9)
         c.alignment = al('center', 'center', wrap=True); c.border = bd()
-    ws.cell(r, 7, '').border = bd(); ws.cell(r, 7).fill = F(C['hdr_grp'])
-    ws.row_dimensions[r].height = 26
+    ws.row_dimensions[r].height = 22
     r += 1
 
     ESP_NOMBRE = {'EL': 'ELECTRICIDAD', 'IN': 'INSTRUMENTACIÓN'}
     ESP_COLOR  = {'EL': C['hdr_el'], 'IN': C['hdr_in']}
-    campos = ['solped', 'ofertas', 'at', 'oc', 'emitidas']
+    ETAPAS = [('solped', 'En SOLPED'), ('ofertas', 'En Petición Ofertas'),
+              ('at', 'En AT'), ('oc', 'Con OC'), ('emitidas', 'En gestión (emitidas)')]
     for esp in ['EL', 'IN']:
-        n = cuadro_new.get(esp, {}); o = cuadro_old.get(esp, {})
+        ws.merge_cells(start_row=r, start_column=1, end_row=r, end_column=1+ncols+1)
         ce = ws.cell(r, 1, ESP_NOMBRE[esp]); ce.fill = F(ESP_COLOR[esp])
         ce.font = ft(True, 'FFFFFF', 9); ce.alignment = al('left', 'center'); ce.border = bd()
-        for ci, campo in enumerate(campos, start=2):
-            vn = n.get(campo, 0); vo = o.get(campo, 0); d = vn - vo
-            c = ws.cell(r, ci); c.alignment = al('center'); c.border = bd()
-            if d > 0:
-                c.value = f'{vo} → {vn}  (+{d})'; c.fill = F('C6EFCE'); c.font = ft(True, '375623', 9)
-            elif d < 0:
-                c.value = f'{vo} → {vn}  ({d})'; c.fill = F('DDEEFF'); c.font = ft(False, '1F3864', 9)
-            else:
-                c.value = f'{vn}  (=)'; c.fill = F(C['row_norm']); c.font = ft(False, sz=9)
-        ws.cell(r, 7, '').border = bd(); ws.cell(r, 7).fill = F(C['row_norm'])
-        ws.row_dimensions[r].height = 20
-        r += 1
+        ws.row_dimensions[r].height = 16; r += 1
+        for campo, label in ETAPAS:
+            lc = ws.cell(r, 1, label); lc.fill = F(C['row_norm']); lc.font = ft(False, sz=9)
+            lc.alignment = al('left', 'center'); lc.border = bd()
+            serie = [c.get(esp, {}).get(campo, 0) for c in cuadros]
+            for ci, val in enumerate(serie, start=2):
+                cc = ws.cell(r, ci, val); cc.fill = F(C['row_norm']); cc.font = ft(False, sz=9)
+                cc.alignment = al('center'); cc.border = bd()
+            d = serie[-1] - serie[0]
+            dc = ws.cell(r, 2+ncols); dc.alignment = al('center'); dc.border = bd()
+            if d > 0:   dc.value = f'+{d}'; dc.fill = F('C6EFCE'); dc.font = ft(True, '375623', 10)
+            elif d < 0: dc.value = f'{d}';  dc.fill = F('DDEEFF'); dc.font = ft(True, '1F3864', 10)
+            else:       dc.value = '=';     dc.fill = F(C['row_norm']); dc.font = ft(False, sz=10)
+            ws.row_dimensions[r].height = 15; r += 1
 
-    # Resumen de las 3 preguntas clave (IN+EL)
+    # Resumen de las 3 preguntas clave (IN+EL) sobre las 3 semanas
     def tot(cuadro, campo): return cuadro.get('EL', {}).get(campo, 0) + cuadro.get('IN', {}).get(campo, 0)
+    d_oc = tot(cnew,'oc') - tot(cold,'oc')
+    d_at = tot(cnew,'at') - tot(cold,'at')
     preguntas = [
-        ('SOLPED en proceso (IN+EL)',
-         f'{tot(cuadro_old,"solped")} → {tot(cuadro_new,"solped")} SOLPED en proceso. '
-         f'+1 RI EL emitida (emitidas {tot(cuadro_old,"emitidas")}→{tot(cuadro_new,"emitidas")}) ingresada al circuito.'),
+        ('SOLPED en las 3 semanas (IN+EL)',
+         f'{tot(cold,"solped")} → {tot(cnew,"solped")} SOLPED en proceso: las {tot(cold,"solped")} iniciales se '
+         f'liberaron/avanzaron. Cables EL con 2 SOLPED liberadas (apertura 20/07).'),
         ('OCs nuevas (IN+EL)',
-         f'{tot(cuadro_old,"oc")} → {tot(cuadro_new,"oc")} OCs colocadas. '
-         f'+1 OC nueva en Instrumentación (IN {cuadro_old.get("IN",{}).get("oc",0)}→{cuadro_new.get("IN",{}).get("oc",0)}); '
-         f'Electricidad estable en {cuadro_new.get("EL",{}).get("oc",0)}.'),
+         f'{tot(cold,"oc")} → {tot(cnew,"oc")} OCs colocadas (+{d_oc} en 3 semanas): '
+         f'IN {cold.get("IN",{}).get("oc",0)}→{cnew.get("IN",{}).get("oc",0)}, '
+         f'EL {cold.get("EL",{}).get("oc",0)}→{cnew.get("EL",{}).get("oc",0)}. '
+         f'Destacada: SIS OC 4509010341 (crítico resuelto).'),
         ('Ofertas para seguir la compra',
-         f'En petición de ofertas (en mercado): EL {cuadro_new.get("EL",{}).get("ofertas",0)} · '
-         f'IN {cuadro_new.get("IN",{}).get("ofertas",0)} = {tot(cuadro_new,"ofertas")} ítems. '
-         f'Avanzaron a AT por ofertas recibidas: EL +{cuadro_new.get("EL",{}).get("at",0)-cuadro_old.get("EL",{}).get("at",0)}, '
-         f'IN +{cuadro_new.get("IN",{}).get("at",0)-cuadro_old.get("IN",{}).get("at",0)}.'),
+         f'En petición de ofertas: EL {cnew.get("EL",{}).get("ofertas",0)} · IN {cnew.get("IN",{}).get("ofertas",0)} '
+         f'= {tot(cnew,"ofertas")} ítems. Ofertas recibidas Cables IN (23/06); próxima apertura Cables EL 20/07. '
+         f'En AT: {tot(cold,"at")} → {tot(cnew,"at")} (+{d_at}).'),
     ]
     for titulo, texto in preguntas:
         ws.merge_cells(start_row=r, start_column=1, end_row=r, end_column=2)
@@ -989,12 +1006,12 @@ def _build_pipeline_compare(ws, cuadro_old, cuadro_new, start_row=3):
     return r + 1
 
 
-def build_cambios_semana(wb, sc_old, sc_new, cuadro_old=None, cuadro_new=None):
+def build_cambios_semana(wb, sc_old, sc_new, trend=None):
     """
-    Hoja de comparación semana a semana: plan 180626 vs plan 250626.
-    Incluye (1) comparación del pipeline agregado por especialidad (Cuadro resumen):
-    SOLPED generadas, OCs nuevas y ofertas en gestión; y (2) los campos que cambiaron
-    por ítem de Suministros Críticos.
+    Hoja de comparación: evolución de 3 semanas plan 250626 → 170726.
+    Incluye (1) evolución del pipeline agregado por especialidad (Cuadro resumen):
+    SOLPED, OCs nuevas y ofertas en gestión a lo largo de 4 cortes; y (2) los campos que
+    cambiaron por ítem de Suministros Críticos (extremos del período).
     """
     def norm(s): return re.sub(r'\s+', ' ', s.strip().lower())
     def fmtv(v):
@@ -1055,25 +1072,25 @@ def build_cambios_semana(wb, sc_old, sc_new, cuadro_old=None, cuadro_new=None):
 
     ws.merge_cells('A1:G1')
     t = ws['A1']
-    t.value = 'COMPARACIÓN SEMANAL: Plan 18/06/2026 → Plan 25/06/2026 | CAMBIOS Y AVANCES'
+    t.value = 'EVOLUCIÓN 3 SEMANAS: Plan 26/06 → 03/07 → 10/07 → 17/07/2026 | CAMBIOS Y AVANCES'
     t.fill = F(C['titulo']); t.font = ft(True, 'FFFFFF', 13)
     t.alignment = al('center', 'center'); ws.row_dimensions[1].height = 26
 
     ws.merge_cells('A2:G2')
     s2 = ws['A2']
     s2.value = ('Especialidades: IN (Instrumentación & Control)  |  EL (Electricidad)  |  '
-                'Proyecto: La Calera II CPF2  |  Corte comparación: 26/06/2026')
+                'Proyecto: La Calera II CPF2  |  Corte actual: 17/07/2026 (Rev6)')
     s2.fill = F(C['subtitulo']); s2.font = ft(False, 'FFFFFF', 10)
     s2.alignment = al('center', 'center'); ws.row_dimensions[2].height = 18
 
-    # ── Bloque 1: Comparación pipeline agregado (Cuadro resumen) ──────────────
+    # ── Bloque 1: Evolución pipeline agregado 3 semanas (Cuadro resumen) ───────
     base = 3
-    if cuadro_old and cuadro_new:
-        base = _build_pipeline_compare(ws, cuadro_old, cuadro_new, start_row=3)
+    if trend:
+        base = _build_pipeline_compare(ws, trend, start_row=3)
 
     # ── Bloque 2: Cambios por ítem de Suministros Críticos ────────────────────
     ws.merge_cells(start_row=base, start_column=1, end_row=base, end_column=7)
-    sub = ws.cell(base, 1, 'DETALLE DE CAMBIOS POR ÍTEM – SUMINISTROS CRÍTICOS IN / EL')
+    sub = ws.cell(base, 1, 'DETALLE DE CAMBIOS POR ÍTEM – SUMINISTROS CRÍTICOS IN / EL (26/06 → 17/07)')
     sub.fill = F(C['subtitulo']); sub.font = ft(True, 'FFFFFF', 11)
     sub.alignment = al('center', 'center'); ws.row_dimensions[base].height = 20
     base += 1
@@ -1098,7 +1115,7 @@ def build_cambios_semana(wb, sc_old, sc_new, cuadro_old=None, cuadro_new=None):
     base += 1
 
     r = base
-    hdrs = ['N°', 'Esp', 'Suministro / Ítem', 'Campo', 'Plan 180626 (anterior)', 'Plan 250626 (nuevo)', 'Tipo de cambio']
+    hdrs = ['N°', 'Esp', 'Suministro / Ítem', 'Campo', 'Plan 250626 (hace 3 sem)', 'Plan 170726 (actual)', 'Tipo de cambio']
     for ci, h in enumerate(hdrs, start=1):
         c = ws.cell(r, ci, h)
         c.fill = F(C['hdr_grp']); c.font = ft(True, 'FFFFFF', 9)
@@ -1352,7 +1369,7 @@ def build_portada(wb):
     data = [
         ('Proyecto',           'La Calera II – CPF2'),
         ('Especialidades',     'Instrumentación & Control (IN) | Electricidad (EL)'),
-        ('Fuente plan',        '2026.04.06 – Plan de Suministros – La Calera II (250626).xlsx'),
+        ('Fuente plan',        '2026.04.06 – Plan de Suministros – La Calera II (170726).xlsx · Rev6'),
         ('Versión tracker',    VERSION),
         ('Fecha generación',   TODAY.strftime('%d/%m/%Y')),
         ('RFSU objetivo',      RFSU.strftime('%d/%m/%Y')),
@@ -1480,7 +1497,15 @@ def build_cambios(wb):
          'ofertas en gestión (petición): EL 2 · IN 4. '
          'CRÍTICO: SIS NecOC 21/06 VENCIDA al 26/06 (AT cerrado 05/06, 143 d sin OC). '
          'Nueva sección "Pipeline agregado" en hoja CAMBIOS SEMANA.'),
-        ('18', 'Revisión nombre',
+        ('18', 'REVISIÓN 6 (170726) – Evolución 3 semanas',
+         'Rev6: Plan 170726 (17/07/2026). Evaluación de avances de 3 semanas: cortes '
+         '26/06 → 03/07 → 10/07 → 17/07. Hoja CAMBIOS SEMANA convertida a TENDENCIA de 4 cortes. '
+         'BALANCE: +4 OCs IN+EL (11→15: IN 5→7, EL 6→8); SOLPED 5→0 (liberadas); AT 36→38. '
+         'RESUELTO: SIS OC EMITIDA 4509010341 (crítico NecOC 21/06 de la Rev5). '
+         'PCS: OC materiales en proceso, servicios en discusión con PP. '
+         'Shelters SE#3/SE#4: en fabricación (Certif. n°1 emitido). Cables EL: apertura ofertas 20/07. '
+         'ESTANCADO: Válvulas de Control – sin avance en 3 semanas, 85 d sin OC, NecOC 26/07 (riesgo alto).'),
+        ('19', 'Revisión nombre',
          f'Archivo: Tracker_Suministros_IN_EL_LaCalera_II_{VERSION}.xlsx'),
     ]
 
@@ -1502,19 +1527,21 @@ def build_cambios(wb):
 
 # ── MAIN ────────────────────────────────────────────────────────────────────
 def main():
-    print(f'[1/7] Leyendo Plan 250626 (nuevo): {os.path.basename(PLAN_FILE)}')
+    print(f'[1/7] Leyendo Plan 170726 (actual, Rev6): {os.path.basename(PLAN_FILE)}')
     sc_in, sc_el, in_items, el_items, crono_items = load_plan()
     print(f'      IN Preliminar: {len(in_items)} items | EL Preliminar: {len(el_items)} items')
     print(f'      IN Suministros Críticos: {len(sc_in)} | EL: {len(sc_el)}')
     print(f'      Crono 4.11 paquetes: {len(crono_items)} (IN+EL)')
 
-    print(f'[2/7] Leyendo Plan 180626 (anterior, para comparación): {os.path.basename(PLAN_FILE_OLD)}')
+    print(f'[2/7] Leyendo Plan 250626 (hace 3 semanas, para comparación): {os.path.basename(PLAN_FILE_OLD)}')
     sc_old = load_sc_from_file(PLAN_FILE_OLD)
-    cuadro_new = load_cuadro(PLAN_FILE)
-    cuadro_old = load_cuadro(PLAN_FILE_OLD)
     print(f'      SC plan anterior: {len(sc_old)} ítems')
-    print(f'      Pipeline (Cuadro resumen) EL nuevo: {cuadro_new.get("EL")} ')
-    print(f'      Pipeline (Cuadro resumen) IN nuevo: {cuadro_new.get("IN")} ')
+    print(f'[2b/7] Leyendo evolución 3 semanas (Cuadro resumen)...')
+    trend = []
+    for lbl, fname in PLAN_TREND:
+        fpath = os.path.join(SCRIPT_DIR, '..', 'info_suministros', fname)
+        trend.append((lbl, load_cuadro(fpath)))
+        print(f'      {lbl}: EL={trend[-1][1].get("EL")} IN={trend[-1][1].get("IN")}')
 
     matched_in = sum(1 for i in in_items if find_crono_item(i['desc'], 'IN', crono_items))
     matched_el = sum(1 for i in el_items if find_crono_item(i['desc'], 'EL', crono_items))
@@ -1524,9 +1551,9 @@ def main():
     wb = openpyxl.Workbook()
     wb.remove(wb.active)
 
-    print('[4/7] Generando hoja CAMBIOS SEMANA (comparación 180626 → 250626)...')
+    print('[4/7] Generando hoja CAMBIOS SEMANA (evolución 3 semanas 250626 → 170726)...')
     sc_new_all = sc_in + sc_el
-    build_cambios_semana(wb, sc_old, sc_new_all, cuadro_old, cuadro_new)
+    build_cambios_semana(wb, sc_old, sc_new_all, trend)
 
     print('[5/7] Generando hoja CAMBIOS v3 (historial de versiones)...')
     build_cambios(wb)
