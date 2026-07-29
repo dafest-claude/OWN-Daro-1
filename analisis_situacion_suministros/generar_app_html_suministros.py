@@ -24,8 +24,8 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 PLANS_DIR  = os.path.join(SCRIPT_DIR, '..', 'info_suministros')
 
 # ── Revisión de la APP (nombre + fecha) ──────────────────────────────────────
-APP_REV   = 'Rev1'
-GEN_DATE  = date(2026, 7, 17)          # fecha de generación de esta revisión
+APP_REV   = 'Rev2'
+GEN_DATE  = date(2026, 7, 24)          # fecha de generación de esta revisión
 OUT_HTML  = os.path.join(SCRIPT_DIR,
             f'App_Suministros_IN_EL_LaCalera_II_{APP_REV}_{GEN_DATE.strftime("%d%m%y")}.html')
 
@@ -109,7 +109,7 @@ def read_criticos(wb, cut_date):
             'at': dmy(at_c), 'necoc': dmy(necoc),
             'oc_eff': dmy(oc_eff), 'oc_n': oc_n if has_oc else '',
             'prov': prov, 'dias': dias, 'estado': estado,
-            'status': status[:240],
+            'status': status[:600],
         })
     # orden: OC primero por estado luego por esp
     return items
@@ -249,6 +249,19 @@ TEMPLATE = r"""<!doctype html>
   .diffbox{border:1px solid var(--borde);border-radius:8px;padding:8px 10px;margin:6px 0;font-size:12px}
   .diffbox b{color:var(--azul)}
   @media (prefers-color-scheme: dark){ .diffbox b{color:var(--azulcl)} }
+  mark{background:var(--warncl);color:inherit;padding:0 3px;border-radius:3px;font-weight:700}
+  .cmt{border:1px solid var(--borde);border-radius:9px;padding:10px 12px;margin:8px 0;background:var(--card)}
+  .cmt.changed{border-left:4px solid var(--azulm);background:var(--azulcl)}
+  .cmt .hd{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:5px}
+  .cmt .hd b{font-size:13px}
+  .cmt .txt{font-size:12.5px;line-height:1.5}
+  .cmt .prev{font-size:11px;color:var(--mut);margin-top:6px;border-top:1px dashed var(--borde);padding-top:5px}
+  .mov{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:6px 0}
+  .movcard{border:1px solid var(--borde);border-radius:9px;padding:10px 12px;background:var(--griscl)}
+  .movcard .big{font-size:22px;font-weight:800;color:var(--azul)}
+  @media (prefers-color-scheme: dark){ .movcard .big{color:var(--azulcl)} }
+  .movcard .lbl{font-size:11px;color:var(--mut);font-weight:700}
+  .flag{display:inline-block;background:var(--critcl);color:var(--crit);border-radius:6px;padding:2px 8px;font-size:11px;font-weight:800;margin:3px 4px 3px 0}
   @media(max-width:720px){ .kpis{grid-template-columns:repeat(2,1fr)} .cmp{grid-template-columns:1fr} }
 </style>
 </head>
@@ -260,6 +273,7 @@ TEMPLATE = r"""<!doctype html>
 <div class="wrap">
   <div class="tabs">
     <div class="tab active" data-tab="vista">Vista por corte</div>
+    <div class="tab" data-tab="cambios">Cambios &amp; comentarios</div>
     <div class="tab" data-tab="comparar">Comparar cortes</div>
     <div class="tab" data-tab="tendencia">Tendencia</div>
     <div class="tab" data-tab="criticos">Críticos (historial)</div>
@@ -284,6 +298,19 @@ TEMPLATE = r"""<!doctype html>
     <div class="status-note">RI→OC: días desde la RI a la OC (adjudicados) o días transcurridos al corte (en gestión). Pasá el mouse por el estado para ver el comentario del plan.</div>
     <h3 class="sec">Lectura del corte</h3>
     <div id="vistaFind"></div>
+  </div>
+
+  <!-- ── CAMBIOS & COMENTARIOS ── -->
+  <div class="panel" id="p-cambios" style="display:none">
+    <div class="row">
+      <div><label class="fld">Corte del plan</label><select id="selCambios"></select></div>
+      <div class="mini" id="cambiosSub"></div>
+    </div>
+    <h3 class="sec">Movimientos del período (vs corte anterior)</h3>
+    <div id="cambiosMov"></div>
+    <h3 class="sec">Comentarios relevantes — ítems críticos</h3>
+    <div id="cambiosComents"></div>
+    <div class="status-note">Se resaltan montos, fechas límite y palabras clave (aprobación, vencida, urgente, riesgo, NecOC, OCA…). El sello <span class="badge b-recof" style="padding:1px 6px">ACTUALIZADO</span> marca los comentarios que cambiaron respecto del corte anterior.</div>
   </div>
 
   <!-- ── COMPARAR ── -->
@@ -360,7 +387,7 @@ $('#foot').textContent = 'Fuente: Planes de Suministros La Calera II · hoja Cua
 document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
   document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
   t.classList.add('active');
-  ['vista','comparar','tendencia','criticos'].forEach(n=>{
+  ['vista','cambios','comparar','tendencia','criticos'].forEach(n=>{
     $('#p-'+n).style.display = (n===t.dataset.tab)?'block':'none';
   });
 });
@@ -554,8 +581,84 @@ function renderCritHist(){
   $('#critHist').innerHTML=h;
 }
 
+// ── CAMBIOS & COMENTARIOS ────────────────────────────────────────────────
+// resalta montos, fechas límite y palabras clave dentro del comentario
+function highlight(txt){
+  let s = escapeHtml(txt);
+  const pats = [
+    /USD\s?[\d.,]+\s?k?/gi, /\bantes del \d{1,2}\/\d{1,2}(?:\/\d{2,4})?\b/gi,
+    /\bNecOC[^.,;]*/gi,
+    /\b(aprobaci[oó]n|aprobar|vencid[ao]|vence|urgente|riesgo|cr[ií]tic[ao]s?|\bOCA\b|impacto|escalar|demora|estancad[ao])\b/gi
+  ];
+  pats.forEach(p=> s = s.replace(p, m=>`<mark>${m}</mark>`));
+  return s;
+}
+// detecta ítems con contenido "relevante" (decisiones, deadlines, riesgos)
+function esRelevante(txt){
+  return /(USD|aprobaci|aprobar|antes del|vencid|urgente|riesgo|cr[ií]tic|OCA|NecOC|impacto|escalar|estancad)/i.test(txt||'');
+}
+function fillCambiosSelect(){
+  DATA.forEach((c,i)=>{
+    const o=el('option',null,(c.is_first?'Inicial (base)':c.label)+'  ·  '+c.tag);
+    o.value=i; $('#selCambios').appendChild(o);
+  });
+  $('#selCambios').value=lastIdx;
+}
+function renderCambios(){
+  const i=+$('#selCambios').value, c=DATA[i], prev=i>0?DATA[i-1]:null;
+  $('#cambiosSub').textContent = prev
+     ? ('Comparando '+ (c.is_first?'Inicial':c.label) +' vs corte anterior '+ (prev.is_first?'Inicial':prev.label))
+     : 'Primer corte cargado (sin corte anterior para comparar).';
+
+  // ── Movimientos del período ──
+  const k=c.kpis, pk=prev?prev.kpis:null;
+  let mov='<div class="mov">';
+  const card=(n,l)=>`<div class="movcard"><div class="big">${n}</div><div class="lbl">${l}</div></div>`;
+  if(pk){
+    const doc=k.oc-pk.oc, dat=k.at-pk.at, dsol=k.solped-pk.solped, dof=k.ofertas-pk.ofertas;
+    mov+=card((doc>=0?'+':'')+doc, 'OCs nuevas (total '+k.oc+')');
+    mov+=card((dat>=0?'+':'')+dat, 'Δ en AT (total '+k.at+')');
+    mov+=card((dof>=0?'+':'')+dof, 'Δ en petición (total '+k.ofertas+')');
+    mov+=card((dsol>=0?'+':'')+dsol, 'Δ SOLPED (total '+k.solped+')');
+  } else { mov+='<div class="mini">Sin corte anterior.</div>'; }
+  mov+='</div>';
+  // banderas de atención automáticas
+  let flags=[];
+  c.criticos.forEach(it=>{
+    if(esRelevante(it.status) && (!prev || (prev.criticos.find(x=>x.desc===it.desc)||{}).status!==it.status))
+      flags.push(it.desc);
+  });
+  if(flags.length) mov+='<div style="margin-top:8px"><span class="flag">Atención</span> '+
+     'Comentarios relevantes nuevos en: '+flags.map(escapeHtml).join(' · ')+'</div>';
+  $('#cambiosMov').innerHTML=mov;
+
+  // ── Comentarios relevantes ──
+  // orden: cambiados primero, luego relevantes, luego resto
+  const its=[...c.criticos].map(it=>{
+    const p=prev?prev.criticos.find(x=>x.desc===it.desc):null;
+    const changed = p ? (p.status!==it.status || p.oc_n!==it.oc_n || p.estado!==it.estado) : false;
+    return {it, p, changed, rel:esRelevante(it.status)};
+  }).sort((a,b)=> (b.changed-a.changed) || (b.rel-a.rel));
+  let h='';
+  its.forEach(({it,p,changed})=>{
+    const es=ESTADO[it.estado]||ESTADO['PENDIENTE'];
+    const d = it.dias==null?'':` · <b>${it.dias}${it.estado==='OC'?' d RI→OC':' d*'}</b>`;
+    h+=`<div class="cmt ${changed?'changed':''}">
+      <div class="hd"><span class="badge ${es.c}">${es.t}</span>
+        <b>${it.esp} · ${escapeHtml(it.desc)}</b>
+        ${it.oc_n?`<span class="mini">OC ${it.oc_n}</span>`:''}
+        ${changed?'<span class="badge b-recof">ACTUALIZADO</span>':''}
+        <span class="mini">${d}</span></div>
+      <div class="txt">${highlight(it.status||'—')}</div>
+      ${(changed&&p&&p.status&&p.status!==it.status)?`<div class="prev"><b>Antes (${prev.is_first?'Inicial':prev.label}):</b> ${escapeHtml(p.status)}</div>`:''}
+    </div>`;
+  });
+  $('#cambiosComents').innerHTML=h;
+}
+
 // ── eventos ──────────────────────────────────────────────────────────────
 $('#selVista').onchange=renderVista;
+$('#selCambios').onchange=renderCambios;
 $('#selA').onchange=renderCompare; $('#selB').onchange=renderCompare;
 $('#selCrit').onchange=renderCritHist;
 document.querySelectorAll('[data-metric]').forEach(b=>b.onclick=()=>{
@@ -568,7 +671,8 @@ document.querySelectorAll('[data-serie]').forEach(b=>b.onclick=()=>{
 });
 
 // init
-renderVista(); renderCompare(); renderTrend(); fillCritSelect(); renderCritHist();
+fillCambiosSelect();
+renderVista(); renderCambios(); renderCompare(); renderTrend(); fillCritSelect(); renderCritHist();
 </script>
 </body>
 </html>

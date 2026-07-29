@@ -12,7 +12,7 @@ from matplotlib.patches import FancyBboxPatch, Rectangle
 import matplotlib.font_manager as fm
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-OUT_PNG = os.path.join(SCRIPT_DIR, 'Infografico_RI_OC_IN_EL_LaCalera_II_Rev6_170726.png')
+OUT_PNG = os.path.join(SCRIPT_DIR, 'Infografico_RI_OC_IN_EL_LaCalera_II_Rev7_240726.png')
 
 # Paleta
 AZUL='#1F3864'; AZUL_M='#2F5496'; VERDE='#2E6B2E'; NARANJA='#9C4500'
@@ -31,14 +31,14 @@ axT.add_patch(Rectangle((0,0),1,1, transform=axT.transAxes, color=AZUL))
 axT.text(0.015, 0.62, 'ANÁLISIS DE TIEMPOS  RI → ORDEN DE COMPRA',
          color='white', fontsize=23, fontweight='bold', va='center')
 axT.text(0.015, 0.22, 'La Calera II CPF2  ·  Instrumentación (IN) y Electricidad (EL)  ·  '
-                      'Plan 170726 (Rev6)  ·  corte 17/07/2026  ·  evolución 3 semanas (26/06→17/07)',
+                      'Plan 240726 (Rev7)  ·  corte 24/07/2026  ·  evolución 26/06→24/07',
          color='#D6E4F0', fontsize=11, va='center')
 
 # ── KPIs ─────────────────────────────────────────────────────────────────────
 kpis = [('67','RIs TOTALES\nIN + EL', AZUL, ''),
-        ('15','OCs\nCOLOCADAS', VERDE, '+4'),
-        ('59','EN GESTIÓN\nDE COMPRA', NARANJA, '+1'),
-        ('8','RIs SIN\nEMITIR', '#7030A0', '-2')]
+        ('18','OCs\nCOLOCADAS', VERDE, '+3'),
+        ('59','EN GESTIÓN\nDE COMPRA', NARANJA, '='),
+        ('8','RIs SIN\nEMITIR', '#7030A0', '=')]
 for i,(num,lbl,col,delta) in enumerate(kpis):
     ax = fig.add_subplot(gs[11:24, i*25+1:i*25+23]); ax.axis('off')
     box = FancyBboxPatch((0.02,0.05),0.96,0.9, boxstyle='round,pad=0.02,rounding_size=0.06',
@@ -52,18 +52,18 @@ for i,(num,lbl,col,delta) in enumerate(kpis):
         ax.text(0.93,0.90,delta, transform=ax.transAxes, color='white', fontsize=12,
                 fontweight='bold', ha='right', va='center')
 
-# ── Novedades: evolución 3 semanas ───────────────────────────────────────────
+# ── Novedades: semana 17/07 → 24/07 ──────────────────────────────────────────
 axN = fig.add_subplot(gs[24:28, 1:99]); axN.axis('off')
-axN.text(0.0,0.5,'3 SEMANAS (26/06→17/07):', fontsize=10.5, fontweight='bold', color=AZUL,
+axN.text(0.0,0.5,'SEMANA 17/07→24/07:', fontsize=10.5, fontweight='bold', color=AZUL,
          transform=axN.transAxes, va='center')
-axN.text(0.185,0.5,'+4 OCs (11→15: IN 5→7, EL 6→8)   ·   SIS OC EMITIDA (crítico resuelto)   ·   '
-                   'SOLPED 5→0 (liberadas)   ·   AT 36→38   ·   Válvulas SIN avance (riesgo)',
+axN.text(0.155,0.5,'+3 OCs IN (7→10, total IN+EL 15→18)   ·   Cables EL → ofertas a AT (22/07)   ·   '
+                   'DECISIÓN 27/07: OCA Shelter SE#3 USD 125k   ·   Válvulas NecOC 26/07 (2 d) sin OC',
          fontsize=10, color=GRIS, transform=axN.transAxes, va='center')
 
 # ── Embudo pipeline por especialidad ─────────────────────────────────────────
 axP = fig.add_subplot(gs[29:62, 1:48])
 etapas = ['En\nSOLPED','Petición\nOfertas','Análisis\nTécnico','Con OC']
-el = [0,2,5,8]; inn = [0,4,33,7]
+el = [0,3,4,8]; inn = [0,4,30,10]
 x = range(len(etapas)); w=0.38
 b1=axP.bar([i-w/2 for i in x], el, w, label='ELECTRICIDAD (19 RIs)', color=VERDE)
 b2=axP.bar([i+w/2 for i in x], inn, w, label='INSTRUMENTACIÓN (48 RIs)', color=NARANJA)
@@ -77,10 +77,10 @@ for bars in (b1,b2):
         if h > 0:
             axP.text(b.get_x()+b.get_width()/2, h+0.3, str(int(h)), ha='center', fontsize=9, fontweight='bold')
 # resaltar cuello de botella AT en IN
-axP.annotate('CUELLO DE BOTELLA', xy=(2.19,33), xytext=(1.3,36),
+axP.annotate('CUELLO DE BOTELLA', xy=(2.19,30), xytext=(1.3,34),
              fontsize=10, fontweight='bold', color=ROJO,
              arrowprops=dict(arrowstyle='->', color=ROJO, lw=2))
-axP.set_ylim(0,42); axP.spines['top'].set_visible(False); axP.spines['right'].set_visible(False)
+axP.set_ylim(0,40); axP.spines['top'].set_visible(False); axP.spines['right'].set_visible(False)
 
 # ── Descomposición de la demora (segmentos) ──────────────────────────────────
 axS = fig.add_subplot(gs[29:62, 53:99])
@@ -110,10 +110,10 @@ items = [
     ('EL','Shelter SE#4 / SE#3 (ABB)','09/01','18/05 (OC)','129 d','OC · FABRICAND.', VERDE_OK),
     ('EL','Sistema PMS (ABB)','09/01','22/05 (OC)','133 d','OC COLOCADA', VERDE_OK),
     ('IN','Sistema Seguridad SIS','03/02','03/07 (OC)','150 d','OC EMITIDA', VERDE_OK),
-    ('IN','Sistema Control PCS','03/02','OC mat. en proc.','164 d*','AT CERRADO', AMBAR),
-    ('IN','Válvulas Control','23/04','— (en AT)','85 d*','EN AT · STOP', ROJO),
-    ('IN','Cables Instrumentación','15/05','ofertas 23/06','63 d*','EN AT', AZUL_M),
-    ('EL','Cables Eléctricos','11/06','apertura 20/07','36 d*','EN OFERTAS', GRIS),
+    ('IN','Sistema Control PCS','03/02','OC mat. en proc.','171 d*','AT CERRADO', AMBAR),
+    ('IN','Válvulas Control','23/04','NecOC 26/07','92 d*','EN AT · STOP', ROJO),
+    ('IN','Cables Instrumentación','15/05','AT esta sem.','70 d*','EN AT', AZUL_M),
+    ('EL','Cables Eléctricos','11/06','ofertas AT 22/07','43 d*','EN AT', AZUL_M),
 ]
 cols_x = [0.0, 0.07, 0.42, 0.55, 0.71, 0.81, 0.99]
 hdrs = ['Esp','Suministro','RI','OC efectiva','RI→OC','Estado']
@@ -138,7 +138,7 @@ for r,(esp,desc,ri,oc,d,est,ecol) in enumerate(items):
                   facecolor=ecol, edgecolor='none'))
     axI.text(cols_x[5]+0.079, yy, est, fontsize=8.5, fontweight='bold', color='white',
              ha='center', transform=axI.transAxes, va='center')
-axI.text(0.0,-0.04,'(*) dias transcurridos desde la RI al corte 17/07/26 (sin OC). SIS: OC EMITIDA 03/07 (crítico resuelto). PCS: OC materiales en proceso. Válvulas: sin avance 3 sem (riesgo).  '
+axI.text(0.0,-0.04,'(*) dias transcurridos desde la RI al corte 24/07/26 (sin OC). Válvulas: NecOC 26/07 (2 d) sin OC – RIESGO ALTO. Shelter SE#3: OCA USD 125k, aprobar antes 27/07.  '
                    'OC efectiva = KOM/emisión en adjudicados.',
          fontsize=8.5, style='italic', color=GRIS, transform=axI.transAxes)
 
