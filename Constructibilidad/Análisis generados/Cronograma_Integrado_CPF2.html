@@ -82,7 +82,7 @@ textarea{width:100%;resize:vertical;min-height:38px}
 <header>
   <h1>Cronograma Integrado — CPF-2 La Calera II <span style="color:var(--muted);font-weight:400;font-size:15px">(Vaca Muerta)</span></h1>
   <div class="sub">Provisiones: <b>PCS</b> (Inauco) · <b>PSS/SIS</b> (HIMA) · <b>Salas Eléctricas + PMS</b> (ABB, Rev4 optimizado) &nbsp;|&nbsp;
-    Inauco inicio 01-AGO-2026 · Tablero HIMA 25 sem → 23-ENE-2027 · RFSU 31-ENE-2028</div>
+    Inauco 01-AGO · Tablero HIMA 26 sem → 30-ENE + recableado interno 45 d → FAT SIS / <b>FIN FAT integral 06-ABR-2027</b> · RFSU 31-ENE-2028</div>
 </header>
 <div class="wrap">
 
@@ -92,6 +92,7 @@ textarea{width:100%;resize:vertical;min-height:38px}
 
   <div class="tabs">
     <div class="tab active" data-p="gantt">📊 Gantt</div>
+    <div class="tab" data-p="flujo">🌊 Flujo temporal</div>
     <div class="tab" data-p="tabla">📋 Tabla &amp; estado</div>
     <div class="tab" data-p="eval">✅ Evaluación</div>
   </div>
@@ -99,6 +100,12 @@ textarea{width:100%;resize:vertical;min-height:38px}
   <div class="panel active" id="p-gantt">
     <div class="gwrap"><div class="gantt" id="gantt"></div></div>
     <div class="legend">◆/★ = hito. Líneas de las provisiones filtradas se ocultan. Fechas de referencia (sujetas a OC y freezing points).</div>
+  </div>
+
+  <div class="panel" id="p-flujo">
+    <div class="gwrap" style="padding:6px 0"><div id="flow"></div></div>
+    <div class="legend">Vista de <b>fases por provisión</b> a escala temporal: cuándo ocurre cada bloque y dónde confluyen. Rojo = ruta crítica.
+      Banda gris = <b>período FAT</b> (FAT PCS 27-FEB → FIN FAT integral 06-ABR). Banda verde = <b>iFAT</b>. Líneas punteadas = convergencia hacia iFAT → RFSU.</div>
   </div>
 
   <div class="panel" id="p-tabla">
@@ -156,14 +163,16 @@ const T=[
  ["INA","◆ Aprobación AESA Ingeniería Rev0","2026-12-10",null,"◆"],
  ["INA","Construcción tableros PCS (Remota 7A/7B)","2026-12-11","2027-02-26"],
  ["INA","Configuración PLC / SCADA","2026-09-01","2027-02-26"],
- ["INA","FAT PCS + Comunicaciones (Neuquén, 18 d)","2027-02-27","2027-03-22"],
- ["INA","Integración PCS↔PMS ABB (Bs.As., 5 d)","2027-03-27","2027-04-02"],
+ ["INA","FAT PCS + Comunicaciones (18 d) — confluye en FAT SIS","2027-02-27","2027-03-22"],
+ ["INA","Integración PCS↔PMS ABB (5 d, dentro del período FAT)","2027-03-24","2027-03-30"],
+ ["INA","★ FIN FAT integral (todos los sistemas — el más tardío)","2027-04-06",null,"★"],
  ["INA","SAT + Comisionado PCS — campo (55 d)","2027-04-17","2027-07-02"],
  ["INA","SAT + Comisionado SCADA SIS — campo (100 d)","2027-04-17","2027-09-03"],
  ["INA","Prueba MCE + CAO (as-built)","2027-09-04","2027-10-22"],
- ["HIMA","Fabricación tablero SIS (25 sem desde AGO)","2026-08-01","2027-01-23"],
- ["HIMA","★ Recepción tablero HIMA en Inauco","2027-01-23",null,"★"],
- ["HIMA","FAT SIS (HIMA + Inauco, 20 d)","2027-02-27","2027-03-26"],
+ ["HIMA","Fabricación tablero SIS (26 sem desde AGO)","2026-08-01","2027-01-30"],
+ ["HIMA","★ Recepción tablero HIMA en Inauco (30-ENE)","2027-01-30",null,"★"],
+ ["HIMA","Recableado interno HIMA (45 d) — habilita FAT SIS","2027-01-30","2027-03-16"],
+ ["HIMA","FAT SIS (conjunto PCS + SIS, 20 d)","2027-03-17","2027-04-06"],
  ["HIMA","Soporte HIMA en campo (SAT/PEM SCADA SIS)","2027-04-17","2027-09-03"],
  ["EPC","Precomisionado / montaje de campo","2027-05-03","2028-01-13"],
  ["EPC","iFAT — Integración Shelters + PMS + INAUCO + HIMA","2027-06-25","2027-07-14"],
@@ -175,6 +184,7 @@ const D0=new Date("2026-05-01"), D1=new Date("2028-02-29");
 const SPAN=(D1-D0);
 const pct=d=>100*((new Date(d))-D0)/SPAN;
 const MES=["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 const KEY="cpf2_eval_v1";
 let store=JSON.parse(localStorage.getItem(KEY)||"{}");
 const save=()=>localStorage.setItem(KEY,JSON.stringify(store));
@@ -182,8 +192,9 @@ let hidden=new Set();
 
 // KPIs
 document.getElementById("kpis").innerHTML=[
- ["Tablero HIMA","23-ENE-2027","var(--hima)"],
- ["DataBook PMS","31-MAR-2027","var(--abbp)"],
+ ["Tablero HIMA (26 sem)","30-ENE-2027","var(--hima)"],
+ ["Recableado 45 d","→ 16-MAR-2027","var(--hima)"],
+ ["FIN FAT integral","06-ABR-2027","var(--epc)"],
  ["Entrega S#3 (crítica)","14-MAY-2027","var(--abbs)"],
  ["iFAT integración","25-JUN→14-JUL-27","var(--epc)"],
  ["RFSU","31-ENE-2028","var(--epc)"],
@@ -250,7 +261,90 @@ function render(){
   });
   document.querySelector("#tabla tbody").innerHTML=rows;
 
+  buildFlow();
   renderEval();
+}
+
+// ================= FLUJO TEMPORAL (SVG) =================
+const PH=[
+ ["ABBS","Ingeniería→Fabricación→FAT (Brasil)","2026-05-22","2026-11-23",0],
+ ["ABBS","Acopio + Montaje Shelters","2026-12-07","2027-03-26",0],
+ ["ABBS","FAT Salas + Despacho","2027-03-08","2027-05-14",1],
+ ["ABBS","★ Entrega S#3","2027-05-14",null,1,"s3"],
+ ["ABBP","Ingeniería + Procura","2026-05-22","2026-11-05",0],
+ ["ABBP","Armado + Software + FAT PMS","2026-09-11","2027-01-29",0],
+ ["ABBP","Shelter Mendoza","2027-02-04","2027-03-31",0],
+ ["ABBP","★ DataBook PMS","2027-03-31",null,0,"pms"],
+ ["INA","Inicio + Ingeniería + Config","2026-08-01","2027-02-26",0],
+ ["INA","Construcción + FAT PCS/Comms","2026-12-11","2027-03-22",1],
+ ["INA","PCS↔PMS","2027-03-24","2027-03-30",0],
+ ["INA","Campo: SAT/Comisionado","2027-04-17","2027-10-22",0],
+ ["HIMA","Fabricación tablero (26 sem)","2026-08-01","2027-01-30",1],
+ ["HIMA","◆ Recepción 30-ENE","2027-01-30",null,1],
+ ["HIMA","Recableado interno 45 d","2027-01-30","2027-03-16",1],
+ ["HIMA","FAT SIS (conjunto)","2027-03-17","2027-04-06",1],
+ ["HIMA","Soporte campo","2027-04-17","2027-09-03",0],
+ ["EPC","★ FIN FAT integral","2027-04-06",null,1,"fat"],
+ ["EPC","iFAT — Integración total","2027-06-25","2027-07-14",1,"ifat"],
+ ["EPC","Precom + Comisionado","2027-05-03","2028-01-31",0],
+ ["EPC","★ RFSU","2028-01-31",null,1,"rfsu"],
+];
+const ORDER=["ABBS","ABBP","INA","HIMA","EPC"];
+function buildFlow(){
+  const VW=1180,LW=150,PX=VW-LW-16,AX=56,ROW=22,LPAD=8;
+  const x=d=>LW+PX*((new Date(d))-D0)/SPAN;
+  let lanes=[],y=AX+8,anchors={};
+  ORDER.forEach(k=>{
+    if(hidden.has(k))return;
+    const items=PH.filter(r=>r[0]===k);
+    let sub=[];
+    const placed=items.map(r=>{
+      const s=new Date(r[2]), e=r[3]?new Date(r[3]):new Date(new Date(r[2]).getTime()+10*864e5);
+      let row=sub.findIndex(en=>s>=en);
+      if(row<0){row=sub.length;sub.push(e);}else sub[row]=e;
+      return{r,row};
+    });
+    const h=Math.max(1,sub.length)*ROW+LPAD;
+    lanes.push({k,y,h,placed}); y+=h+6;
+  });
+  const VH=y+30;
+  let s=`<svg viewBox="0 0 ${VW} ${VH}" width="100%" style="min-width:1000px;font-family:inherit">`;
+  s+=`<defs><marker id="ah" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#C62828"/></marker></defs>`;
+  const band=(a,b,col,op,lab)=>{const xa=x(a);let t=`<rect x="${xa}" y="${AX}" width="${x(b)-xa}" height="${VH-AX-6}" fill="${col}" opacity="${op}"/>`;
+    if(lab)t+=`<text x="${xa+3}" y="${AX+10}" font-size="8.5" font-weight="700" fill="${col}">${lab}</text>`;return t;};
+  s+=band("2027-02-27","2027-04-06","#607080",.15,"período FAT");
+  s+=band("2027-06-25","2027-07-14","#2E7D32",.14,"iFAT");
+  let cur=new Date(D0),first={};
+  while(cur<=D1){const yy=cur.getFullYear(),m=cur.getMonth(),xx=x(new Date(yy,m,1));
+    s+=`<line x1="${xx}" y1="${AX}" x2="${xx}" y2="${VH-6}" stroke="var(--line)" stroke-width="1"/>`;
+    s+=`<text x="${xx+2}" y="${AX-3}" font-size="8.5" fill="var(--muted)">${MES[m]}</text>`;
+    if(!first[yy]){first[yy]=1;s+=`<text x="${xx+2}" y="${AX-16}" font-size="10.5" font-weight="700" fill="var(--ink)">${yy}</text>`;}
+    cur=new Date(yy,m+1,1);}
+  lanes.forEach(L=>{
+    const p=PROV[L.k];
+    s+=`<rect x="6" y="${L.y}" width="${LW-14}" height="${L.h}" rx="6" fill="${p.hex}" opacity=".93"/>`;
+    s+=`<text x="${6+(LW-14)/2}" y="${L.y+L.h/2+3}" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">${esc(p.n)}</text>`;
+    L.placed.forEach(({r,row})=>{
+      const yy=L.y+LPAD/2+row*ROW+2, ch=ROW-6, isHito=r[3]==null, tag=r[5];
+      if(isHito){
+        const cx=x(r[2]),cy=yy+ch/2;
+        s+=`<path d="M ${cx} ${cy-7} L ${cx+7} ${cy} L ${cx} ${cy+7} L ${cx-7} ${cy} Z" fill="${p.hex}" stroke="${r[4]?'#C62828':'#fff'}" stroke-width="1.5"/>`;
+        s+=`<text x="${cx+11}" y="${cy+3}" font-size="8.8" fill="var(--ink)">${esc(r[1])}</text>`;
+        if(tag)anchors[tag]={x:cx,y:cy};
+      }else{
+        const bx=x(r[2]),bw=Math.max(x(r[3])-bx,4);
+        s+=`<rect x="${bx}" y="${yy}" width="${bw}" height="${ch}" rx="4" fill="${p.hex}" opacity=".9" stroke="${r[4]?'#C62828':'none'}" stroke-width="${r[4]?2:0}"/>`;
+        if(bw>96)s+=`<text x="${bx+bw/2}" y="${yy+ch/2+3}" text-anchor="middle" font-size="8.3" fill="#fff">${esc(r[1])}</text>`;
+        else s+=`<text x="${bx+bw+4}" y="${yy+ch/2+3}" font-size="8.3" fill="var(--ink)">${esc(r[1])}</text>`;
+        if(tag)anchors[tag]={x:bx,y:yy+ch/2,x2:bx+bw};
+      }
+    });
+  });
+  const arr=(a,b)=>(!a||!b)?"":`<line x1="${a.x2||a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="#C62828" stroke-width="1.3" stroke-dasharray="4 3" marker-end="url(#ah)"/>`;
+  ["s3","pms","fat"].forEach(t=>s+=arr(anchors[t],anchors.ifat));
+  s+=arr(anchors.ifat,anchors.rfsu);
+  s+=`</svg>`;
+  document.getElementById("flow").innerHTML=s;
 }
 function fmt(d){const x=new Date(d);return String(x.getDate()).padStart(2,"0")+"-"+MES[x.getMonth()]+"-"+String(x.getFullYear()).slice(2);}
 function opt(v,arr){return arr.map(o=>`<option ${o===v?'selected':''} value="${o}">${o||'—'}</option>`).join("");}

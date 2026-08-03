@@ -57,15 +57,17 @@ TASKS=[
  (None,"◆ Aprobación AESA Ingeniería Rev0 (10-DIC-2026)",D(2026,12,10),None,C_INA),
  (None,"Construcción tableros PCS (Remota 7A/7B)",D(2026,12,11),D(2027,2,26),C_INA),
  (None,"Configuración PLC / SCADA",D(2026,9,1),D(2027,2,26),C_INA),
- (None,"FAT PCS + Comunicaciones (Neuquén, 18 d)",D(2027,2,27),D(2027,3,22),C_INA),
- (None,"Integración PCS↔PMS ABB (Bs.As., 5 d)",D(2027,3,27),D(2027,4,2),C_INA),
+ (None,"FAT PCS + Comunicaciones (18 d) — confluye en FAT SIS",D(2027,2,27),D(2027,3,22),C_INA),
+ (None,"Integración PCS↔PMS ABB (5 d, dentro del período FAT)",D(2027,3,24),D(2027,3,30),C_INA),
+ (None,"★ FIN FAT integral (todos los sistemas — el más tardío)",D(2027,4,6),None,C_INA),
  (None,"SAT + Comisionado PCS — campo (55 d)",D(2027,4,17),D(2027,7,2),C_INA),
  (None,"SAT + Comisionado SCADA SIS — campo (100 d)",D(2027,4,17),D(2027,9,3),C_INA),
  (None,"Prueba MCE + CAO (as-built)",D(2027,9,4),D(2027,10,22),C_INA),
  # ---- HIMA — PSS/SIS ----
- ("HIMA — PSS / SIS (ESD · F&G)","Fabricación tablero SIS (25 sem desde AGO)",D(2026,8,1),D(2027,1,23),C_HIMA),
- (None,"★ Recepción tablero HIMA en Inauco (23-ENE-2027)",D(2027,1,23),None,C_HIMA),
- (None,"FAT SIS (HIMA + Inauco, 20 d)",D(2027,2,27),D(2027,3,26),C_HIMA),
+ ("HIMA — PSS / SIS (ESD · F&G)","Fabricación tablero SIS (26 sem desde AGO)",D(2026,8,1),D(2027,1,30),C_HIMA),
+ (None,"★ Recepción tablero HIMA en Inauco (30-ENE-2027)",D(2027,1,30),None,C_HIMA),
+ (None,"Recableado interno HIMA (45 d) — habilita FAT SIS",D(2027,1,30),D(2027,3,16),C_HIMA),
+ (None,"FAT SIS (conjunto PCS + SIS, 20 d)",D(2027,3,17),D(2027,4,6),C_HIMA),
  (None,"Soporte HIMA en campo (SAT/PEM SCADA SIS)",D(2027,4,17),D(2027,9,3),C_HIMA),
  # ---- INTEGRACIÓN EPC (AESA) ----
  ("Integración EPC (AESA)","Precomisionado / montaje de campo",D(2027,5,3),D(2028,1,13),C_EPC),
@@ -77,8 +79,9 @@ TASKS=[
 
 # hitos verticales de referencia (fecha, etiqueta, color)
 VLINES=[
- (D(2027,1,23),"Tablero HIMA",C_HIMA),
- (D(2027,3,31),"DataBook PMS",C_ABBP),
+ (D(2027,1,30),"Tablero HIMA",C_HIMA),
+ (D(2027,3,16),"Recableado HIMA",C_HIMA),
+ (D(2027,4,6),"FIN FAT integral",C_EPC),
  (D(2027,5,14),"Entrega S#3",C_ABB),
  (D(2027,7,14),"iFAT",C_EPC),
  (D(2028,1,31),"RFSU",C_EPC),
@@ -112,7 +115,7 @@ def build_gantt():
     c.drawString(24,H-34,"CRONOGRAMA INTEGRADO — CPF-2 La Calera II (Vaca Muerta)")
     c.setFont("Helvetica",9.5); c.setFillColor(GREY)
     c.drawString(24,H-50,"Provisiones: PCS (Inauco) · PSS/SIS (HIMA) · Salas Eléctricas y PMS (ABB, Rev4 optimizado)   |   "
-                         "Inauco inicio 01-AGO-2026 · Tablero HIMA 25 sem (→23-ENE-2027) · RFSU 31-ENE-2028")
+                         "Inauco 01-AGO · Tablero HIMA 26 sem →30-ENE + recableado 45 d → FAT SIS/FAT integral 06-ABR-2027 · RFSU 31-ENE-2028")
     # grilla meses + años
     yr_row=top+20
     c.setFont("Helvetica-Bold",8)
@@ -172,7 +175,7 @@ def build_gantt():
         c.setFillColor(col); c.rect(lx,ly,10,7,fill=1,stroke=0)
         c.setFillColor(colors.black); c.drawString(lx+13,ly+1,lab); lx+=95
     c.setFont("Helvetica-Oblique",6.5); c.setFillColor(GREY)
-    c.drawRightString(x1,30,"Fuente: ABB Rev4 (27-JUL-2026) · Dashboard Inauco · plazo HIMA 25 sem. Fechas de referencia, sujetas a OC y freezing points.")
+    c.drawRightString(x1,30,"Fuente: ABB Rev4 (27-JUL-2026) · Dashboard Inauco · plazo HIMA 26 sem + recableado 45 d. Fechas de referencia, sujetas a OC y freezing points.")
     c.showPage(); c.save(); return path
 
 # ---------------- FLUJO ----------------
@@ -204,8 +207,8 @@ def build_flow():
     cols=[
      ("ABB — Salas Eléctricas",C_ABB,["Ingeniería IB→ID→IC","FP Constr. S#3: 31-AGO-26","Fabricación tableros (Brasil)","FAT Brasil → Acopio Arg.","Montaje Shelters (Mendoza)","FAT Salas → Despacho","★ Entrega S#3: 14-MAY-27"]),
      ("ABB — PMS",C_ABBP,["Ing. Básica (FP 21-AGO)","Procura AC800M/switches","FAT Maqueta (22-SEP)","Armado + Software 800XA","FAT PMS witness (25-ENE)","Montaje Shelter Mendoza","★ DataBook PMS: 31-MAR-27"]),
-     ("Inauco — PCS/SCADA",C_INA,["INICIO: 01-AGO-2026","Ing. detalle (Freezing 31-OCT)","Aprob. Rev0: 10-DIC-26","Construcción tableros PCS","Config PLC/SCADA","FAT PCS+Comms (27-FEB→22-MAR)","Integr. PCS↔PMS (Bs.As.)"]),
-     ("HIMA — PSS/SIS",C_HIMA,["Tablero SIS (ESD·F&G·PSS)","Plazo 25 sem desde AGO","★ Recepción: 23-ENE-2027","FAT SIS con Inauco","(27-FEB → 26-MAR-2027)","Soporte SAT/PEM en campo","→ hasta 03-SEP-2027"]),
+     ("Inauco — PCS/SCADA",C_INA,["INICIO: 01-AGO-2026","Ing. detalle (Freezing 31-OCT)","Aprob. Rev0: 10-DIC-26","Construcción tableros PCS","Config PLC/SCADA","FAT PCS+Comms → confluye FAT SIS","Integr PCS↔PMS (dentro de FAT)"]),
+     ("HIMA — PSS/SIS",C_HIMA,["Tablero SIS (ESD·F&G·PSS)","Plazo 26 sem → 30-ENE-27","Recableado interno 45 d","(30-ENE → 16-MAR-2027)","FAT SIS: 17-MAR → 06-ABR","= FIN FAT (más tardío)","Soporte campo → 03-SEP"]),
     ]
     for i,(t,col,lines) in enumerate(cols):
         box(xs[i],ytop-bh,colw,bh,t,lines,col)
@@ -214,7 +217,7 @@ def build_flow():
     for i in range(4):
         arrow(xs[i]+colw/2,ytop-bh,(W)/2,ifat_y+52)
     box(ifat_x,ifat_y,ifat_w,52,"iFAT — INTEGRACIÓN Shelters + PMS + INAUCO + HIMA",
-        ["25-JUN → 14-JUL-2027   (Neuquén / staging)"],C_EPC)
+        ["25-JUN → 14-JUL-2027   (tras FIN FAT integral 06-ABR)"],C_EPC)
     # -> campo
     camp_y=ifat_y-64
     arrow(W/2,ifat_y,W/2,camp_y+44)
@@ -228,8 +231,8 @@ def build_flow():
     c.drawCentredString(W/2,rfsu_y+15,"★ RFSU — 31-ENE-2028")
     # ruta crítica nota
     c.setFont("Helvetica-Oblique",7.5); c.setFillColor(GREY)
-    c.drawString(24,rfsu_y-24,"Ruta que gobierna la integración: Tablero HIMA (23-ENE) → FAT SIS (MAR) y Entrega Sala S#3 (14-MAY) → iFAT (JUL) → Comisionado → RFSU.")
-    c.drawString(24,rfsu_y-36,"Cambios respecto de la hipótesis previa: Inauco arranca 01-AGO (no 01-JUL) y el tablero HIMA corre 25 semanas desde agosto; los cronogramas ABB son la Rev4 optimizada.")
+    c.drawString(24,rfsu_y-24,"Ruta que gobierna la integración: Tablero HIMA (30-ENE) → Recableado 45 d (16-MAR) → FAT SIS / FIN FAT integral (06-ABR) y Entrega S#3 (14-MAY) → iFAT (JUL) → Comisionado → RFSU.")
+    c.drawString(24,rfsu_y-36,"Premisas: Inauco 01-AGO; tablero HIMA 26 sem; +45 d de recableado interno habilitan la FAT SIS; el FAT integral cierra con el sistema más tardío; la integración PCS↔PMS ocurre dentro del período FAT (no crítico).")
     c.showPage(); c.save(); return path
 
 # ---------------- XLSX ----------------
