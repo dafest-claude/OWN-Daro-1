@@ -1,0 +1,509 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Suministros La Calera II CPF2 — Tablero cronológico IN + EL</title>
+<style>
+  :root{
+    --azul:#1F3864; --azulm:#2F5496; --azulcl:#D6E4F0;
+    --el:#2E6B2E; --elcl:#D7E9D7; --in:#9C4500; --incl:#F5E0D0;
+    --gris:#404040; --griscl:#F2F2F2; --borde:#C9D2DE;
+    --ok:#2E7D32; --okcl:#C8E6C9; --warn:#B8860B; --warncl:#FFECB3;
+    --crit:#C00000; --critcl:#FFCDD2; --morado:#7030A0;
+    --bg:#eef1f5; --card:#ffffff; --tx:#20272e; --mut:#66707b;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#12161c; --card:#1b2129; --tx:#e6ebf1; --mut:#9aa6b2;
+           --borde:#2c3542; --griscl:#232b34; --azulcl:#1e2a3d; }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+       background:var(--bg);color:var(--tx);font-size:14px;line-height:1.4}
+  header{background:linear-gradient(100deg,var(--azul),var(--azulm));color:#fff;
+         padding:14px 22px;box-shadow:0 2px 10px rgba(0,0,0,.18)}
+  header h1{margin:0;font-size:19px;font-weight:800;letter-spacing:.2px}
+  header .sub{font-size:12px;color:#d6e4f0;margin-top:3px}
+  header .rev{display:inline-block;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.3);
+        border-radius:6px;padding:2px 9px;font-weight:700;font-size:12px;margin-right:8px}
+  .wrap{max-width:1180px;margin:0 auto;padding:16px}
+  .tabs{display:flex;gap:6px;margin:14px 0 6px;flex-wrap:wrap}
+  .tab{padding:8px 16px;border-radius:8px 8px 0 0;background:transparent;border:1px solid transparent;
+       cursor:pointer;font-weight:700;color:var(--mut);font-size:13px}
+  .tab.active{background:var(--card);color:var(--azul);border-color:var(--borde);border-bottom-color:var(--card)}
+  @media (prefers-color-scheme: dark){ .tab.active{color:var(--azulcl)} }
+  .panel{background:var(--card);border:1px solid var(--borde);border-radius:0 10px 10px 10px;
+         padding:18px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+  .row{display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+  label.fld{font-size:12px;color:var(--mut);font-weight:700;margin-right:6px}
+  select{font-size:14px;padding:7px 10px;border-radius:8px;border:1px solid var(--borde);
+          background:var(--card);color:var(--tx);font-weight:600}
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:16px 0}
+  .kpi{border-radius:12px;padding:14px 12px;color:#fff;text-align:center}
+  .kpi .n{font-size:34px;font-weight:800;line-height:1}
+  .kpi .l{font-size:11px;margin-top:6px;opacity:.95;font-weight:600}
+  .kpi .d{font-size:12px;font-weight:800;margin-top:4px}
+  .k1{background:var(--azul)} .k2{background:var(--el)} .k3{background:var(--in)} .k4{background:var(--morado)}
+  h3.sec{font-size:14px;color:var(--azul);margin:20px 0 8px;border-bottom:2px solid var(--azulcl);padding-bottom:4px}
+  @media (prefers-color-scheme: dark){ h3.sec{color:var(--azulcl)} }
+  .funnel{display:grid;grid-template-columns:120px 1fr;gap:6px 10px;align-items:center;margin:8px 0}
+  .fstage{font-size:12px;font-weight:700;color:var(--mut);text-align:right}
+  .fbars{display:flex;flex-direction:column;gap:3px}
+  .fbar{height:16px;border-radius:4px;display:flex;align-items:center;min-width:2px;transition:width .3s}
+  .fbar span{font-size:11px;font-weight:800;color:#fff;padding:0 6px;white-space:nowrap}
+  .legend{display:flex;gap:16px;font-size:12px;margin:4px 0 0}
+  .legend b{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+  table{border-collapse:collapse;width:100%;font-size:12.5px;margin-top:6px}
+  th{background:var(--gris);color:#fff;padding:7px 8px;text-align:left;font-size:11px;position:sticky;top:0}
+  td{padding:6px 8px;border-bottom:1px solid var(--borde);vertical-align:middle}
+  tr.el td:first-child{border-left:4px solid var(--el)}
+  tr.in td:first-child{border-left:4px solid var(--in)}
+  .badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:800;color:#fff;white-space:nowrap}
+  .b-oc{background:var(--ok)} .b-at{background:var(--warn)} .b-recof{background:var(--azulm)}
+  .b-solped{background:#5B7FB8} .b-ri{background:#8894a3} .b-pend{background:#aeb6bf}
+  .dias{font-weight:800}
+  .d-ok{color:var(--ok)} .d-warn{color:var(--warn)} .d-crit{color:var(--crit)}
+  .tblwrap{overflow-x:auto;border:1px solid var(--borde);border-radius:8px}
+  .find{background:var(--griscl);border-left:4px solid var(--azulm);border-radius:6px;padding:9px 12px;margin:8px 0;font-size:12.5px}
+  .find.warn{border-left-color:var(--warn)} .find.crit{border-left-color:var(--crit)} .find.ok{border-left-color:var(--ok)}
+  .cmp{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .delta{font-weight:800;font-size:12px}
+  .up{color:var(--ok)} .down{color:var(--azulm)} .eq{color:var(--mut)}
+  .mini{font-size:11px;color:var(--mut)}
+  .ctrls{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:8px}
+  .pill{padding:5px 11px;border-radius:20px;border:1px solid var(--borde);background:transparent;
+        cursor:pointer;font-weight:700;font-size:12px;color:var(--mut)}
+  .pill.active{background:var(--azul);color:#fff;border-color:var(--azul)}
+  svg{max-width:100%}
+  .foot{font-size:11px;color:var(--mut);margin-top:14px;text-align:center}
+  .status-note{font-size:11px;color:var(--mut);font-style:italic}
+  .diffbox{border:1px solid var(--borde);border-radius:8px;padding:8px 10px;margin:6px 0;font-size:12px}
+  .diffbox b{color:var(--azul)}
+  @media (prefers-color-scheme: dark){ .diffbox b{color:var(--azulcl)} }
+  mark{background:var(--warncl);color:inherit;padding:0 3px;border-radius:3px;font-weight:700}
+  .cmt{border:1px solid var(--borde);border-radius:9px;padding:10px 12px;margin:8px 0;background:var(--card)}
+  .cmt.changed{border-left:4px solid var(--azulm);background:var(--azulcl)}
+  .cmt .hd{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:5px}
+  .cmt .hd b{font-size:13px}
+  .cmt .txt{font-size:12.5px;line-height:1.5}
+  .cmt .prev{font-size:11px;color:var(--mut);margin-top:6px;border-top:1px dashed var(--borde);padding-top:5px}
+  .mov{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:6px 0}
+  .movcard{border:1px solid var(--borde);border-radius:9px;padding:10px 12px;background:var(--griscl)}
+  .movcard .big{font-size:22px;font-weight:800;color:var(--azul)}
+  @media (prefers-color-scheme: dark){ .movcard .big{color:var(--azulcl)} }
+  .movcard .lbl{font-size:11px;color:var(--mut);font-weight:700}
+  .flag{display:inline-block;background:var(--critcl);color:var(--crit);border-radius:6px;padding:2px 8px;font-size:11px;font-weight:800;margin:3px 4px 3px 0}
+  @media(max-width:720px){ .kpis{grid-template-columns:repeat(2,1fr)} .cmp{grid-template-columns:1fr} }
+</style>
+</head>
+<body>
+<header>
+  <h1>Suministros La Calera II CPF2 — Tablero cronológico · Instrumentación (IN) + Electricidad (EL)</h1>
+  <div class="sub"><span class="rev" id="revlbl"></span><span id="metalbl"></span></div>
+</header>
+<div class="wrap">
+  <div class="tabs">
+    <div class="tab active" data-tab="vista">Vista por corte</div>
+    <div class="tab" data-tab="cambios">Cambios &amp; comentarios</div>
+    <div class="tab" data-tab="comparar">Comparar cortes</div>
+    <div class="tab" data-tab="tendencia">Tendencia</div>
+    <div class="tab" data-tab="criticos">Críticos (historial)</div>
+  </div>
+
+  <!-- ── VISTA POR CORTE ── -->
+  <div class="panel" id="p-vista">
+    <div class="row">
+      <div><label class="fld">Fecha / corte del plan</label>
+        <select id="selVista"></select></div>
+      <div class="mini" id="vistaFile"></div>
+    </div>
+    <div class="kpis" id="vistaKpis"></div>
+    <h3 class="sec">Embudo de gestión de compra por especialidad</h3>
+    <div class="legend">
+      <span><b style="background:var(--el)"></b>ELECTRICIDAD</span>
+      <span><b style="background:var(--in)"></b>INSTRUMENTACIÓN</span>
+    </div>
+    <div id="vistaFunnel"></div>
+    <h3 class="sec">Ítems críticos — cadena RI → OC</h3>
+    <div class="tblwrap"><table id="vistaCrit"></table></div>
+    <div class="status-note">RI→OC: días desde la RI a la OC (adjudicados) o días transcurridos al corte (en gestión). Pasá el mouse por el estado para ver el comentario del plan.</div>
+    <h3 class="sec">Lectura del corte</h3>
+    <div id="vistaFind"></div>
+  </div>
+
+  <!-- ── CAMBIOS & COMENTARIOS ── -->
+  <div class="panel" id="p-cambios" style="display:none">
+    <div class="row">
+      <div><label class="fld">Corte del plan</label><select id="selCambios"></select></div>
+      <div class="mini" id="cambiosSub"></div>
+    </div>
+    <h3 class="sec">Movimientos del período (vs corte anterior)</h3>
+    <div id="cambiosMov"></div>
+    <h3 class="sec">Comentarios relevantes — ítems críticos</h3>
+    <div id="cambiosComents"></div>
+    <div class="status-note">Se resaltan montos, fechas límite y palabras clave (aprobación, vencida, urgente, riesgo, NecOC, OCA…). El sello <span class="badge b-recof" style="padding:1px 6px">ACTUALIZADO</span> marca los comentarios que cambiaron respecto del corte anterior.</div>
+  </div>
+
+  <!-- ── COMPARAR ── -->
+  <div class="panel" id="p-comparar" style="display:none">
+    <div class="row">
+      <div><label class="fld">Corte A (base)</label><select id="selA"></select></div>
+      <div><label class="fld">Corte B (comparado)</label><select id="selB"></select></div>
+    </div>
+    <div class="kpis" id="cmpKpis"></div>
+    <h3 class="sec">Pipeline por etapa — variación A → B</h3>
+    <div class="tblwrap"><table id="cmpPipe"></table></div>
+    <h3 class="sec">Cambios en ítems críticos (estado / OC / fechas)</h3>
+    <div id="cmpCrit"></div>
+  </div>
+
+  <!-- ── TENDENCIA ── -->
+  <div class="panel" id="p-tendencia" style="display:none">
+    <div class="ctrls">
+      <span class="mini">Métrica:</span>
+      <button class="pill active" data-metric="oc">Con OC</button>
+      <button class="pill" data-metric="at">En AT</button>
+      <button class="pill" data-metric="ofertas">En petición</button>
+      <button class="pill" data-metric="solped">En SOLPED</button>
+      <button class="pill" data-metric="emitidas">Emitidas</button>
+    </div>
+    <div class="ctrls">
+      <span class="mini">Series:</span>
+      <button class="pill active" data-serie="TOTAL">IN+EL</button>
+      <button class="pill" data-serie="IN">Instrumentación</button>
+      <button class="pill" data-serie="EL">Electricidad</button>
+    </div>
+    <div id="trendChart"></div>
+    <div class="tblwrap" style="margin-top:12px"><table id="trendTbl"></table></div>
+  </div>
+
+  <!-- ── CRÍTICOS HISTORIAL ── -->
+  <div class="panel" id="p-criticos" style="display:none">
+    <div class="row">
+      <div><label class="fld">Ítem crítico</label><select id="selCrit"></select></div>
+    </div>
+    <div class="tblwrap" style="margin-top:10px"><table id="critHist"></table></div>
+    <div class="status-note">Evolución del ítem a lo largo de todos los cortes cargados.</div>
+  </div>
+
+  <div class="foot" id="foot"></div>
+</div>
+
+<script>
+const DATA = [{"tag": "first", "date": "2026-05-14", "label": "Inicial", "file": "2026.04.06 - Plan de Suministros - La Calera II (first).xlsx", "is_first": true, "pipeline": {"EL": {"cant_ri": 20, "emitidas": 11, "solped": 2, "ofertas": 1, "at": 2, "oc": 6}, "IN": {"cant_ri": 48, "emitidas": 28, "solped": 4, "ofertas": 13, "at": 11, "oc": 0}}, "kpis": {"ri_total": 68, "oc": 6, "en_gestion": 39, "sin_emitir": 29, "solped": 6, "ofertas": 14, "at": 13}, "criticos": [{"esp": "EL", "crit": "HITO 2", "desc": "SHELTER ELECTRICO SE#4 CON EQUIPAMIENTO", "ri": "09/01/26", "solped": "21/01/26", "recof": "09/02/26", "at": "", "necoc": "20/05/26", "oc_eff": "18/05/26", "oc_n": "4508944971", "prov": "ABB", "dias": 129, "estado": "OC", "status": "Proveedor nominado ABB. Proveedor adjudicado. KOM 18/5"}, {"esp": "EL", "crit": "HITO 2", "desc": "SHELTER ELECTRICO SE#3 CON EQUIPAMIENTO", "ri": "09/01/26", "solped": "21/01/26", "recof": "09/02/26", "at": "", "necoc": "20/05/26", "oc_eff": "18/05/26", "oc_n": "4508944973", "prov": "ABB", "dias": 129, "estado": "OC", "status": "Proveedor nominado ABB. Proveedor adjudicado. KOM 18/5"}, {"esp": "EL", "crit": "LLI", "desc": "SISTEMA PMS", "ri": "09/01/26", "solped": "21/01/26", "recof": "09/02/26", "at": "", "necoc": "29/05/26", "oc_eff": "", "oc_n": "", "prov": "ABB", "dias": 125, "estado": "EN AT", "status": "Proveedor nominado ABB. Proveedor adjudicado. KOM 18/5"}, {"esp": "IN", "crit": "LLI", "desc": "SISTEMA DE CONTROL PCS", "ri": "03/02/26", "solped": "19/02/26", "recof": "25/03/26", "at": "", "necoc": "19/08/26", "oc_eff": "", "oc_n": "", "prov": "", "dias": 100, "estado": "EN AT", "status": "23256882 solped liberada. Proveedor nominado Inauco. Se recibe nueva oferta técnica de Inauco. En análisis en conjunto con PP."}, {"esp": "IN", "crit": "LLI", "desc": "SISTEMA DE SEGURIDAD SIS", "ri": "03/02/26", "solped": "19/02/26", "recof": "11/03/26", "at": "", "necoc": "21/06/26", "oc_eff": "", "oc_n": "", "prov": "", "dias": 100, "estado": "EN AT", "status": "23256883 solped liberada. Proveedor nominado HIMA. El 13/3 se envió a AT. Se recibe nueva oferta técnica de HIMA. En análisis en conjunto con PP."}, {"esp": "IN", "crit": "LLI", "desc": "VÁLVULAS DE CONTROL Y AUTORREGULADORAS", "ri": "23/04/26", "solped": "", "recof": "", "at": "", "necoc": "26/07/26", "oc_eff": "", "oc_n": "", "prov": "", "dias": 21, "estado": "RI EMITIDA", "status": "Solpeds 23359919, 23359920, 23359922 liberadas. Apertura de ofertas 19/5."}, {"esp": "IN", "crit": "MONTO", "desc": "CABLES INSTRUMENTACIÓN", "ri": "14/05/26", "solped": "", "recof": "", "at": "", "necoc": "21/10/26", "oc_eff": "", "oc_n": "", "prov": "", "dias": 0, "estado": "RI EMITIDA", "status": ""}, {"esp": "EL", "crit": "MONTO", "desc": "CABLES ELÉCTRICOS", "ri": "11/06/26", "solped": "", "recof": "", "at": "", "necoc": "18/11/26", "oc_eff": "", "oc_n": "", "prov": "", "dias": null, "estado": "RI EMITIDA", "status": ""}]}, {"tag": "210526", "date": "2026-05-21", "label": "21/05/26", "file": "2026.04.06 - Plan de Suministros - La Calera II (210526).xlsx", "is_first": false, "pipeline": {"EL": {"cant_ri": 20, "emitidas": 12, "solped": 2, "ofertas": 2, "at": 2, "oc": 6}, "IN": {"cant_ri": 48, "emitidas": 36, "solped": 1, "ofertas": 13, "at": 21, "oc": 1}}, "kpis": {"ri_total": 68, "oc": 7, "en_gestion": 48, "sin_emitir": 20, "solped": 3, "ofertas": 15, "at": 23}, "criticos": [{"esp": "EL", "crit": "HITO 2", "desc": "SHELTER ELECTRICO SE#4 CON EQUIPAMIENTO", "ri": "09/01/26", "solped": "21/01/26", "recof": "09/02/26", "at": "", "necoc": "20/05/26", "oc_eff": "18/05/26", "oc_n": "4508944971", "prov": "ABB", "dias": 129, "estado": "OC", "status": "Proveedor nominado ABB. Proveedor adjudicado. KOM 18/5"}, {"esp": "EL", "crit": "HITO 2", "desc": "SHELTER ELECTRICO SE#3 CON EQUIPAMIENTO", "ri": "09/01/26", "solped": "21/01/26", "recof": "09/02/26", "at": "", "necoc": "20/05/26", "oc_eff": "18/05/26", "oc_n": "4508944973", "prov": "ABB", "dias": 129, "estado": "OC", "status": "Proveedor nominado ABB. Proveedor adjudicado. KOM 18/5"}, {"esp": "EL", "crit": "LLI", "desc": "SISTEMA PMS", "ri": "09/01/26", "solped": "21/01/26", "recof": "09/02/26", "at": "", "necoc": "29/05/26", "oc_eff": "22/05/26", "oc_n": "4508945953", "prov": "ABB", "dias": 133, "estado": "OC", "status": "Proveedor nominado ABB. Proveedor adjudicado. KOM 22/5"}, {"esp": "IN", "crit": "LLI", "desc": "SISTEMA DE CONTROL PCS", "ri": "03/02/26", "solped": "19/02/26", "recof": "25/03/26", "at": "", "necoc": "19/08/26", "oc_eff": "", "oc_n": "", "prov": "", "dias": 107, "estado": "EN AT", "status": "23256882 solped liberada. Proveedor nominado Inauco. Se espera nueva oferta de Inauco para próxima semana. Con esta oferta, previo OK de ING, se avanzará con la adjudicación."}, {"esp": "IN", "crit": "LLI", "desc": "SISTEMA DE SEGURIDAD SIS", "ri": "03/02/26", "solped": "19/02/26", "recof": "11/03/26", "at": "", "necoc": "21/06/26", "oc_eff": "", "oc_n": "", "prov": "", "dias": 107, "estado": "EN AT", "status": "23256883 solped liberada. Proveedor nominado HIMA. El 13/3 se envió a AT. Se espera oferta final de HIMA para cerrar la gestión. Se hará validación técnica para avanzar. En paralelo, se solicita oferta budgetaria por los servicios a adjudicar en 2da instancia."}, {"esp": "IN", "crit": "LLI", "desc": "VÁLVULAS DE CONTROL Y AUTORREGULADORAS", "ri": "23/04/26", "solped": "", "recof": "", "at": "", "necoc": "26/07/26", "oc_eff": "", "oc_n": "", "prov": "", "dias": 28, "estado": "RI EMITIDA", "status": "Solpeds 23359919, 23359920, 23359922 liberadas. Apertura de ofertas 21/5."}, {"esp": "IN", "crit": "MONTO", "desc": "CABLES INSTRUMENTACIÓN", "ri": "15/05/26", "solped": "", "recof": "", "at": "", "necoc": "21/10/26", "oc_eff": "", "oc_n": "", "prov": "", "dias": 6, "estado": "RI EMITIDA", "status": "Proyecto solicita que los cables estén en obra para diciembre-26. Solpeds 23392215/23392216/23392213 en liberación."}, {"esp": "EL", "crit": "MONTO", "desc": "CABLES ELÉCTRICOS", "ri": "11/06/26", "solped": "", "recof": "", "at": "", "necoc": "18/11/26", "oc_eff": "", "oc_n": "", "prov": "", "dias": null, "estado": "RI EMITIDA", "status": "Proyecto solicita que los cables estén en obra para diciembre-26"}]}, {"tag": "290526", "date": "2026-05-29", "label": "29/05/26", "file": "2026.04.06 - Plan de Suministros - La Calera II (290526).xlsx", "is_first": false, "pipeline": {"EL": {"cant_ri": 20, "emitidas": 12, "solped": 2, "ofertas": 2, "at": 2, "oc": 6}, "IN": {"cant_ri": 48, "emitidas": 40, "solped": 4, "ofertas": 14, "at": 21, "oc": 1}}, "kpis": {"ri_total": 68, "oc": 7, "en_gestion": 52, "sin_emitir": 16, "solped": 6, "ofertas": 16, "at": 23}, "criticos": [{"esp": "EL", "crit": "HITO 2", "desc": "SHELTER ELECTRICO SE#4 CON EQUIPAMIENTO", "ri": "09/01/26", "solped": "21/01/26", "recof": "09/02/26", "at": "13/03/26", "necoc": "20/05/26", "oc_eff": "18/05/26", "oc_n": "4508944971", "prov": "ABB", "dias": 129, "estado": "OC", "status": "Proveedor nominado ABB. Proveedor adjudicado. KOM 18/5"}, {"esp": "EL", "crit": "HITO 2", "desc": "SHELTER ELECTRICO SE#3 CON EQUIPAMIENTO", "ri": "09/01/26", "solped": "21/01/26", "recof": "09/02/26", "at": "13/03/26", "necoc": "20/05/26", "oc_eff": "18/05/26", "oc_n": "4508944973", "prov": "ABB", "dias": 129, "estado": "OC", "status": "Proveedor nominado ABB. Proveedor adjudicado. KOM 18/5"}, {"esp": "EL", "crit": "LLI", "desc": "SISTEMA PMS", "ri": "09/01/26", "solped": "21/01/26", "recof": "09/02/26", "at": "13/03/26", "necoc": "29/05/26", "oc_eff": "22/05/26", "oc_n": "4508945953", "prov": "ABB", "dias": 133, "estado": "OC", "status": "Proveedor nominado ABB. Proveedor adjudicado. KOM 22/5"}, {"esp": "IN", "crit": "LLI", "desc": "SISTEMA DE CONTROL PCS", "ri": "03/02/26", "solped": "19/02/26", "recof": "25/03/26", "at": "", "necoc": "19/08/26", "oc_eff": "", "oc_n": "", "prov": "", "dias": 115, "estado": "EN AT", "status": "23256882 solped liberada. Proveedor nominado Inauco. Se recibe nueva oferta de Inauco. Se está terminando de validar técnicamente para avanzar con adjudicación."}, {"esp": "IN", "crit": "LLI", "desc": "SISTEMA DE SEGURIDAD SIS", "ri": "03/02/26", "solped": "19/02/26", "recof": "11/03/26", "at": "", "necoc": "21/06/26", "oc_eff": "", "oc_n": "", "prov": "", "dias": 115, "estado": "EN AT", "status": "23256883 solped liberada. Proveedor nominado HIMA. El 13/3 se envió a AT. Se recibe nueva oferta por los \"fierros\", se está validando técnicamente para avanzar. Pendiente recibir oferta budgetaria por servicios a adjudicar a HIMA-Argentina."}, {"esp": "IN", "crit": "LLI", "desc": "VÁLVULAS DE CONTROL Y AUTORREGULADORAS", "ri": "23/04/26", "solped": "05/05/26", "recof": "21/05/26", "at": "", "necoc": "26/07/26", "oc_eff": "", "oc_n": "", "prov": "", "dias": 36, "estado": "EN AT", "status": "Solpeds 23359919, 23359920, 23359922 liberadas. Se enviaron a AT el 22/5."}, {"esp": "IN", "crit": "MONTO", "desc": "CABLES INSTRUMENTACIÓN", "ri": "15/05/26", "solped": "", "recof": "", "at": "", "necoc": "21/10/26", "oc_eff": "", "oc_n": "", "prov": "", "dias": 14, "estado": "RI EMITIDA", "status": "Proyecto solicita que los cables estén en obra para diciembre-26. Solpeds 23392215/23392216/23392213. Se aguarda liberación para licitar."}, {"esp": "EL", "crit": "MONTO", "desc": "CABLES ELÉCTRICOS", "ri": "11/06/26", "solped": "", "recof": "", "at": "", "necoc": "18/11/26", "oc_eff": "", "oc_n": "", "prov": "", "dias": null, "estado": "RI EMITIDA", "status": "Proyecto solicita que los cables estén en obra para diciembre-26"}]}, {"tag": "040626", "date": "2026-06-04", "label": "04/06/26", "file": "2026.04.06 - Plan de Suministros - La Calera II (040626).xlsx", "is_first": false, "pipeline": {"EL": {"cant_ri": 20, "emitidas": 12, "solped": 0, "ofertas": 4, "at": 2, "oc": 6}, "IN": {"cant_ri": 48, "emitidas": 40, "solped": 0, "ofertas": 18, "at": 21, "oc": 1}}, "kpis": {"ri_total": 68, "oc": 7, "en_gestion": 52, "sin_emitir": 16, "solped": 0, "ofertas": 22, "at": 23}, "criticos": [{"esp": "EL", "crit": "HITO 2", "desc": "SHELTER ELECTRICO SE#4 CON EQUIPAMIENTO", "ri": "09/01/26", "solped": "21/01/26", "recof": "09/02/26", "at": "13/03/26", "necoc": "20/05/26", "oc_eff": "18/05/26", "oc_n": "4508944971", "prov": "ABB", "dias": 129, "estado": "OC", "status": "Proveedor nominado ABB. Proveedor adjudicado. KOM 18/5. Se comienzan a instrumentar reuniones semanales de seguimiento"}, {"esp": "EL", "crit": "HITO 2", "desc": "SHELTER ELECTRICO SE#3 CON EQUIPAMIENTO", "ri": "09/01/26", "solped": "21/01/26", "recof": "09/02/26", "at": "13/03/26", "necoc": "20/05/26", "oc_eff": "18/05/26", "oc_n": "4508944973", "prov": "ABB", "dias": 129, "estado": "OC", "status": "Proveedor nominado ABB. Proveedor adjudicado. KOM 18/5. Se comienzan a instrumentar reuniones semanales de seguimiento"}, {"esp": "EL", "crit": "LLI", "desc": "SISTEMA PMS", "ri": "09/01/26", "solped": "21/01/26", "recof": "09/02/26", "at": "13/03/26", "necoc": "29/05/26", "oc_eff": "22/05/26", "oc_n": "4508945953", "prov": "ABB", "dias": 133, "estado": "OC", "status": "Proveedor nominado ABB. Proveedor adjudicado. KOM 22/5. Se comienzan a instrumentar reuniones semanales de seguimiento"}, {"esp": "IN", "crit": "LLI", "desc": "SISTEMA DE CONTROL PCS", "ri": "03/02/26", "solped": "19/02/26", "recof": "25/03/26", "at": "", "necoc": "19/08/26", "oc_eff": "", "oc_n": "", "prov": "", "dias": 121, "estado": "EN AT", "status": "23256882 solped liberada. Proveedor nominado Inauco. Se recibe nueva oferta de Inauco. Se está terminando de validar técnicamente para avanzar con adjudicación."}, {"esp": "IN", "crit": "LLI", "desc": "SISTEMA DE SEGURIDAD SIS", "ri": "03/02/26", "solped": "19/02/26", "recof": "11/03/26", "at": "", "necoc": "21/06/26", "oc_eff": "", "oc_n": "", "prov": "", "dias": 121, "estado": "EN AT", "status": "23256883 solped liberada. Proveedor nominado HIMA. El 13/3 se envió a AT. Se recibe nueva oferta por los \"fierros\", se está validando técnicamente para avanzar. Pendiente recibir oferta budgetaria por servicios a adjudicar a HIMA-Argentina."}, {"esp": "IN", "crit": "LLI", "desc": "VÁLVULAS DE CONTROL Y AUTORREGULADORAS", "ri": "23/04/26", "solped": "05/05/26", "recof": "21/05/26", "at": "", "necoc": "26/07/26", "oc_eff": "", "oc_n": "", "prov": "", "dias": 42, "estado": "EN AT", "status": "Solpeds 23359919, 23359920, 23359922 liberadas. Se enviaron a AT el 22/5. Se aguarda rta de ING para el 10/6"}, {"esp": "IN", "crit": "MONTO", "desc": "CABLES INSTRUMENTACIÓN", "ri": "15/05/26", "solped": "", "recof": "", "at": "", "necoc": "21/10/26", "oc_eff": "", "oc_n": "", "prov": "", "dias": 20, "estado": "RI EMITIDA", "status": "Proyecto solicita que los cables estén en obra para diciembre-26. Solpeds 23392215/23392216/23392213 liberadas."}, {"esp": "EL", "crit": "MONTO", "desc": "CABLES ELÉCTRICOS", "ri": "11/06/26", "solped": "", "recof": "", "at": "", "necoc": "18/11/26", "oc_eff": "", "oc_n": "", "prov": "", "dias": null, "estado": "RI EMITIDA", "status": "Proyecto solicita que los cables estén en obra para diciembre-26"}]}, {"tag": "120626", "date": "2026-06-12", "label": "12/06/26", "file": "2026.04.06 - Plan de Suministros - La Calera II (120626).xlsx", "is_first": false, "pipeline": {"EL": {"cant_ri": 20, "emitidas": 12, "solped": 0, "ofertas": 4, "at": 2, "oc": 6}, "IN": {"cant_ri": 48, "emitidas": 40, "solped": 0, "ofertas": 18, "at": 21, "oc": 1}}, "kpis": {"ri_total": 68, "oc": 7, "en_gestion": 52, "sin_emitir": 16, "solped": 0, "ofertas": 22, "at": 23}, "criticos": [{"esp": "EL", "crit": "HITO 2", "desc": "SHELTER ELECTRICO SE#4 CON EQUIPAMIENTO", "ri": "09/01/26", "solped": "21/01/26", "recof": "09/02/26", "at": "13/03/26", "necoc": "20/05/26", "oc_eff": "18/05/26", "oc_n": "4508944971", "prov": "ABB", "dias": 129, "estado": "OC", "status": "Proveedor nominado ABB. Proveedor adjudicado. KOM 18/5. Se comienzan a instrumentar reuniones semanales de seguimiento. Deberá ajustarse OC clarificando esquema de certificación"}, {"esp": "EL", "crit": "HITO 2", "desc": "SHELTER ELECTRICO SE#3 CON EQUIPAMIENTO", "ri": "09/01/26", "solped": "21/01/26", "recof": "09/02/26", "at": "13/03/26", "necoc": "20/05/26", "oc_eff": "18/05/26", "oc_n": "4508944973", "prov": "ABB", "dias": 129, "estado": "OC", "status": "Proveedor nominado ABB. Proveedor adjudicado. KOM 18/5. Se comienzan a instrumentar reuniones semanales de seguimiento. Deberá ajustarse OC clarificando esquema de certificación"}, {"esp": "EL", "crit": "LLI", "desc": "SISTEMA PMS", "ri": "09/01/26", "solped": "21/01/26", "recof": "09/02/26", "at": "13/03/26", "necoc": "29/05/26", "oc_eff": "22/05/26", "oc_n": "4508945953", "prov": "ABB", "dias": 133, "estado": "OC", "status": "Proveedor nominado ABB. Proveedor adjudicado. KOM 22/5. Se comienzan a instrumentar reuniones semanales de seguimiento. Deberá ajustarse OC clarificando esquema de certificación."}, {"esp": "IN", "crit": "LLI", "desc": "SISTEMA DE CONTROL PCS", "ri": "03/02/26", "solped": "19/02/26", "recof": "25/03/26", "at": "", "necoc": "19/08/26", "oc_eff": "", "oc_n": "", "prov": "", "dias": 129, "estado": "EN AT", "status": "23256882 solped liberada. Proveedor nominado Inauco. AT cerrado, se aguarda nueva oferta comercial atendiendo al AT realizado."}, {"esp": "IN", "crit": "LLI", "desc": "SISTEMA DE SEGURIDAD SIS", "ri": "03/02/26", "solped": "19/02/26", "recof": "11/03/26", "at": "", "necoc": "21/06/26", "oc_eff": "", "oc_n": "", "prov": "", "dias": 129, "estado": "EN AT", "status": "23256883 solped liberada. Proveedor nominado HIMA. El 13/3 se envió a AT. AT cerrado, en cierre comercial (ya se solicitó SBL). Pendiente recibir oferta budgetaria por servicios a adjudicar a HIMA-Argentina."}, {"esp": "IN", "crit": "LLI", "desc": "VÁLVULAS DE CONTROL Y AUTORREGULADORAS", "ri": "23/04/26", "solped": "05/05/26", "recof": "21/05/26", "at": "", "necoc": "26/07/26", "oc_eff": "", "oc_n": "", "prov": "", "dias": 50, "estado": "EN AT", "status": "Solpeds 23359919, 23359920, 23359922 liberadas. Se enviaron a AT el 22/5. Se aguarda rta de ING para el 10/6"}, {"esp": "IN", "crit": "MONTO", "desc": "CABLES INSTRUMENTACIÓN", "ri": "15/05/26", "solped": "", "recof": "", "at": "", "necoc": "21/10/26", "oc_eff": "", "oc_n": "", "prov": "", "dias": 28, "estado": "RI EMITIDA", "status": "Proyecto solicita que los cables estén en obra para diciembre-26. Solpeds 23392215/23392216/23392213 liberadas, hoy se envían ofertas para AT."}, {"esp": "EL", "crit": "MONTO", "desc": "CABLES ELÉCTRICOS", "ri": "11/06/26", "solped": "", "recof": "", "at": "", "necoc": "18/11/26", "oc_eff": "", "oc_n": "", "prov": "", "dias": 1, "estado": "RI EMITIDA", "status": "Proyecto solicita que los cables estén en obra para diciembre-26"}]}, {"tag": "180626", "date": "2026-06-18", "label": "18/06/26", "file": "2026.04.06 - Plan de Suministros - La Calera II (180626).xlsx", "is_first": false, "pipeline": {"EL": {"cant_ri": 20, "emitidas": 14, "solped": 2, "ofertas": 4, "at": 2, "oc": 6}, "IN": {"cant_ri": 48, "emitidas": 43, "solped": 3, "ofertas": 6, "at": 30, "oc": 4}}, "kpis": {"ri_total": 68, "oc": 10, "en_gestion": 57, "sin_emitir": 11, "solped": 5, "ofertas": 10, "at": 32}, "criticos": [{"esp": "EL", "crit": "HITO 2", "desc": "SHELTER ELECTRICO SE#4 CON EQUIPAMIENTO", "ri": "09/01/26", "solped": "21/01/26", "recof": "09/02/26", "at": "13/03/26", "necoc": "20/05/26", "oc_eff": "18/05/26", "oc_n": "4508944971", "prov": "ABB", "dias": 129, "estado": "OC", "status": "Proveedor nominado ABB. Proveedor adjudicado. KOM 18/5. Se comienzan a instrumentar reuniones semanales de seguimiento. Deberá ajustarse OC clarificando esquema de certificación"}, {"esp": "EL", "crit": "HITO 2", "desc": "SHELTER ELECTRICO SE#3 CON EQUIPAMIENTO", "ri": "09/01/26", "solped": "21/01/26", "recof": "09/02/26", "at": "13/03/26", "necoc": "20/05/26", "oc_eff": "18/05/26", "oc_n": "4508944973", "prov": "ABB", "dias": 129, "estado": "OC", "status": "Proveedor nominado ABB. Proveedor adjudicado. KOM 18/5. Se comienzan a instrumentar reuniones semanales de seguimiento. Deberá ajustarse OC clarificando esquema de certificación"}, {"esp": "EL", "crit": "LLI", "desc": "SISTEMA PMS", "ri": "09/01/26", "solped": "21/01/26", "recof": "09/02/26", "at": "13/03/26", "necoc": "29/05/26", "oc_eff": "22/05/26", "oc_n": "4508945953", "prov": "ABB", "dias": 133, "estado": "OC", "status": "Proveedor nominado ABB. Proveedor adjudicado. KOM 22/5. Se comienzan a instrumentar reuniones semanales de seguimiento. Deberá ajustarse OC clarificando esquema de certificación."}, {"esp": "IN", "crit": "LLI", "desc": "SISTEMA DE CONTROL PCS", "ri": "03/02/26", "solped": "19/02/26", "recof": "25/03/26", "at": "05/06/26", "necoc": "19/08/26", "oc_eff": "", "oc_n": "", "prov": "", "dias": 135, "estado": "AT CERR", "status": "23256882 solped liberada. Proveedor nominado Inauco. AT cerrado, en cierre comercial"}, {"esp": "IN", "crit": "LLI", "desc": "SISTEMA DE SEGURIDAD SIS", "ri": "03/02/26", "solped": "19/02/26", "recof": "11/03/26", "at": "05/06/26", "necoc": "21/06/26", "oc_eff": "", "oc_n": "", "prov": "", "dias": 135, "estado": "AT CERR", "status": "23256883 solped liberada. Proveedor nominado HIMA. El 13/3 se envió a AT. AT cerrado, en cierre comercial (ya se solicitó SBL). Pendiente recibir oferta budgetaria por servicios a adjudicar a HIMA-Argentina. Legajo aprobado por Pluspetrol"}, {"esp": "IN", "crit": "LLI", "desc": "VÁLVULAS DE CONTROL Y AUTORREGULADORAS", "ri": "23/04/26", "solped": "05/05/26", "recof": "21/05/26", "at": "", "necoc": "26/07/26", "oc_eff": "", "oc_n": "", "prov": "", "dias": 56, "estado": "EN AT", "status": "Solpeds 23359919, 23359920, 23359922 liberadas. Se enviaron a AT el 22/5. Se aguarda rta de ING para esta semana, se analizan impactos por cambios de procesos en especificaciones de válvulas. Se toma plan de acción sobre válvulas críticas para adjudicarlas primero."}, {"esp": "IN", "crit": "MONTO", "desc": "CABLES INSTRUMENTACIÓN", "ri": "15/05/26", "solped": "30/05/26", "recof": "", "at": "", "necoc": "21/10/26", "oc_eff": "", "oc_n": "", "prov": "", "dias": 34, "estado": "EN SOLPED", "status": "Proyecto solicita que los cables estén en obra para diciembre-26. Solpeds 23392215/23392216/23392213 liberadas, se prorroga apertura al 22/6"}, {"esp": "EL", "crit": "MONTO", "desc": "CABLES ELÉCTRICOS", "ri": "11/06/26", "solped": "", "recof": "", "at": "", "necoc": "18/11/26", "oc_eff": "", "oc_n": "", "prov": "", "dias": 7, "estado": "RI EMITIDA", "status": "Proyecto solicita que los cables estén en obra para diciembre-26. RI en proceso de solped."}]}, {"tag": "250626", "date": "2026-06-25", "label": "25/06/26", "file": "2026.04.06 - Plan de Suministros - La Calera II (250626).xlsx", "is_first": false, "pipeline": {"EL": {"cant_ri": 20, "emitidas": 15, "solped": 2, "ofertas": 2, "at": 5, "oc": 6}, "IN": {"cant_ri": 48, "emitidas": 43, "solped": 3, "ofertas": 4, "at": 31, "oc": 5}}, "kpis": {"ri_total": 68, "oc": 11, "en_gestion": 58, "sin_emitir": 10, "solped": 5, "ofertas": 6, "at": 36}, "criticos": [{"esp": "EL", "crit": "HITO 2", "desc": "SHELTER ELECTRICO SE#4 CON EQUIPAMIENTO", "ri": "09/01/26", "solped": "21/01/26", "recof": "09/02/26", "at": "13/03/26", "necoc": "20/05/26", "oc_eff": "18/05/26", "oc_n": "4508944971", "prov": "ABB", "dias": 129, "estado": "OC", "status": "Proveedor nominado ABB. Proveedor adjudicado. KOM 18/5. Se comienzan a instrumentar reuniones semanales de seguimiento. Deberá ajustarse OC clarificando esquema de certificación"}, {"esp": "EL", "crit": "HITO 2", "desc": "SHELTER ELECTRICO SE#3 CON EQUIPAMIENTO", "ri": "09/01/26", "solped": "21/01/26", "recof": "09/02/26", "at": "13/03/26", "necoc": "20/05/26", "oc_eff": "18/05/26", "oc_n": "4508944973", "prov": "ABB", "dias": 129, "estado": "OC", "status": "Proveedor nominado ABB. Proveedor adjudicado. KOM 18/5. Se comienzan a instrumentar reuniones semanales de seguimiento. Deberá ajustarse OC clarificando esquema de certificación"}, {"esp": "EL", "crit": "LLI", "desc": "SISTEMA PMS", "ri": "09/01/26", "solped": "21/01/26", "recof": "09/02/26", "at": "13/03/26", "necoc": "29/05/26", "oc_eff": "22/05/26", "oc_n": "4508945953", "prov": "ABB", "dias": 133, "estado": "OC", "status": "Proveedor nominado ABB. Proveedor adjudicado. KOM 22/5. Se comienzan a instrumentar reuniones semanales de seguimiento. Deberá ajustarse OC clarificando esquema de certificación."}, {"esp": "IN", "crit": "LLI", "desc": "SISTEMA DE CONTROL PCS", "ri": "03/02/26", "solped": "19/02/26", "recof": "25/03/26", "at": "05/06/26", "necoc": "19/08/26", "oc_eff": "", "oc_n": "", "prov": "", "dias": 142, "estado": "AT CERR", "status": "23256882 solped liberada. Proveedor nominado Inauco. Legajo en aprobación de PP (mientras se revisan los hitos de certificación)."}, {"esp": "IN", "crit": "LLI", "desc": "SISTEMA DE SEGURIDAD SIS", "ri": "03/02/26", "solped": "19/02/26", "recof": "11/03/26", "at": "05/06/26", "necoc": "21/06/26", "oc_eff": "", "oc_n": "", "prov": "", "dias": 142, "estado": "AT CERR", "status": "23256883 solped liberada. Proveedor nominado HIMA. El 13/3 se envió a AT.Legajo aprobado por PP. Se aguarda SBL para adjudicar."}, {"esp": "IN", "crit": "LLI", "desc": "VÁLVULAS DE CONTROL Y AUTORREGULADORAS", "ri": "23/04/26", "solped": "05/05/26", "recof": "21/05/26", "at": "", "necoc": "26/07/26", "oc_eff": "", "oc_n": "", "prov": "", "dias": 63, "estado": "EN AT", "status": "Solpeds 23359919, 23359920, 23359922 liberadas. Se enviaron a AT el 22/5. Se aguarda rta de ING para esta semana, se analizan impactos por cambios de procesos en especificaciones de válvulas. Se toma plan de acción sobre válvulas críticas para adjudicarlas primero."}, {"esp": "IN", "crit": "MONTO", "desc": "CABLES INSTRUMENTACIÓN", "ri": "15/05/26", "solped": "30/05/26", "recof": "", "at": "", "necoc": "21/10/26", "oc_eff": "", "oc_n": "", "prov": "", "dias": 41, "estado": "EN SOLPED", "status": "Proyecto solicita que los cables estén en obra para diciembre-26. Solpeds 23392215/23392216/23392213 liberadas, en AT."}, {"esp": "EL", "crit": "MONTO", "desc": "CABLES ELÉCTRICOS", "ri": "11/06/26", "solped": "", "recof": "", "at": "", "necoc": "18/11/26", "oc_eff": "", "oc_n": "", "prov": "", "dias": 14, "estado": "RI EMITIDA", "status": "Proyecto solicita que los cables estén en obra para diciembre-26. RI en proceso de solped."}]}, {"tag": "030726", "date": "2026-07-03", "label": "03/07/26", "file": "2026.04.06 - Plan de Suministros - La Calera II (030726).xlsx", "is_first": false, "pipeline": {"EL": {"cant_ri": 19, "emitidas": 15, "solped": 2, "ofertas": 2, "at": 5, "oc": 6}, "IN": {"cant_ri": 48, "emitidas": 43, "solped": 3, "ofertas": 4, "at": 31, "oc": 5}}, "kpis": {"ri_total": 67, "oc": 11, "en_gestion": 58, "sin_emitir": 9, "solped": 5, "ofertas": 6, "at": 36}, "criticos": [{"esp": "EL", "crit": "HITO 2", "desc": "SHELTER ELECTRICO SE#4 CON EQUIPAMIENTO", "ri": "09/01/26", "solped": "21/01/26", "recof": "09/02/26", "at": "13/03/26", "necoc": "20/05/26", "oc_eff": "18/05/26", "oc_n": "4508944971", "prov": "ABB", "dias": 129, "estado": "OC", "status": "Proveedor nominado ABB. Proveedor adjudicado. KOM 18/5. Se comienzan a instrumentar reuniones semanales de seguimiento. OC ajustada, en proceso de certificación hito 1."}, {"esp": "EL", "crit": "HITO 2", "desc": "SHELTER ELECTRICO SE#3 CON EQUIPAMIENTO", "ri": "09/01/26", "solped": "21/01/26", "recof": "09/02/26", "at": "13/03/26", "necoc": "20/05/26", "oc_eff": "18/05/26", "oc_n": "4508944973", "prov": "ABB", "dias": 129, "estado": "OC", "status": "Proveedor nominado ABB. Proveedor adjudicado. KOM 18/5. Se comienzan a instrumentar reuniones semanales de seguimiento. OC ajustada, en proceso de certificación hito 1."}, {"esp": "EL", "crit": "LLI", "desc": "SISTEMA PMS", "ri": "09/01/26", "solped": "21/01/26", "recof": "09/02/26", "at": "13/03/26", "necoc": "29/05/26", "oc_eff": "22/05/26", "oc_n": "4508945953", "prov": "ABB", "dias": 133, "estado": "OC", "status": "Proveedor nominado ABB. Proveedor adjudicado. KOM 22/5. Se comienzan a instrumentar reuniones semanales de seguimiento. OC ajustada."}, {"esp": "IN", "crit": "LLI", "desc": "SISTEMA DE CONTROL PCS", "ri": "03/02/26", "solped": "19/02/26", "recof": "25/03/26", "at": "05/06/26", "necoc": "19/08/26", "oc_eff": "", "oc_n": "", "prov": "", "dias": 150, "estado": "AT CERR", "status": "23256882 solped liberada. Proveedor nominado Inauco. Legajo en discusión con PP."}, {"esp": "IN", "crit": "LLI", "desc": "SISTEMA DE SEGURIDAD SIS", "ri": "03/02/26", "solped": "19/02/26", "recof": "11/03/26", "at": "05/06/26", "necoc": "21/06/26", "oc_eff": "", "oc_n": "", "prov": "", "dias": 150, "estado": "AT CERR", "status": "23256883 solped liberada. Proveedor nominado HIMA. El 13/3 se envió a AT.Legajo aprobado por PP. OC en proceso de emisión, mientras se gestiona la SBL."}, {"esp": "IN", "crit": "LLI", "desc": "VÁLVULAS DE CONTROL Y AUTORREGULADORAS", "ri": "23/04/26", "solped": "05/05/26", "recof": "21/05/26", "at": "", "necoc": "26/07/26", "oc_eff": "", "oc_n": "", "prov": "", "dias": 71, "estado": "EN AT", "status": "Solpeds 23359919, 23359920, 23359922 liberadas. Se enviaron a AT el 22/5. Se aguarda rta de ING para esta semana, se analizan impactos por cambios de procesos en especificaciones de válvulas. Se toma plan de acción sobre válvulas críticas para adjudicarlas primero."}, {"esp": "IN", "crit": "MONTO", "desc": "CABLES INSTRUMENTACIÓN", "ri": "15/05/26", "solped": "30/05/26", "recof": "", "at": "", "necoc": "21/10/26", "oc_eff": "", "oc_n": "", "prov": "", "dias": 49, "estado": "EN SOLPED", "status": "Proyecto solicita que los cables estén en obra para diciembre-26. Solpeds 23392215/23392216/23392213 liberadas, en AT."}, {"esp": "EL", "crit": "MONTO", "desc": "CABLES ELÉCTRICOS", "ri": "11/06/26", "solped": "", "recof": "", "at": "", "necoc": "18/11/26", "oc_eff": "", "oc_n": "", "prov": "", "dias": 22, "estado": "RI EMITIDA", "status": "Proyecto solicita que los cables estén en obra para diciembre-26. 2 Solped liberadas, otra en liberación por MB y Pando."}]}, {"tag": "100726", "date": "2026-07-10", "label": "10/07/26", "file": "2026.04.06 - Plan de Suministros - La Calera II (100726).xlsx", "is_first": false, "pipeline": {"EL": {"cant_ri": 19, "emitidas": 15, "solped": 0, "ofertas": 2, "at": 5, "oc": 8}, "IN": {"cant_ri": 48, "emitidas": 44, "solped": 0, "ofertas": 4, "at": 33, "oc": 7}}, "kpis": {"ri_total": 67, "oc": 15, "en_gestion": 59, "sin_emitir": 8, "solped": 0, "ofertas": 6, "at": 38}, "criticos": [{"esp": "EL", "crit": "HITO 2", "desc": "SHELTER ELECTRICO SE#4 CON EQUIPAMIENTO", "ri": "09/01/26", "solped": "21/01/26", "recof": "09/02/26", "at": "13/03/26", "necoc": "20/05/26", "oc_eff": "18/05/26", "oc_n": "4508944971", "prov": "ABB", "dias": 129, "estado": "OC", "status": "Proveedor nominado ABB. Proveedor adjudicado. KOM 18/5. Se comienzan a instrumentar reuniones semanales de seguimiento. OC ajustada. Certificado n°1 emitido"}, {"esp": "EL", "crit": "HITO 2", "desc": "SHELTER ELECTRICO SE#3 CON EQUIPAMIENTO", "ri": "09/01/26", "solped": "21/01/26", "recof": "09/02/26", "at": "13/03/26", "necoc": "20/05/26", "oc_eff": "18/05/26", "oc_n": "4508944973", "prov": "ABB", "dias": 129, "estado": "OC", "status": "Proveedor nominado ABB. Proveedor adjudicado. KOM 18/5. Se comienzan a instrumentar reuniones semanales de seguimiento. OC ajustada. Certificado n°1 emitido"}, {"esp": "EL", "crit": "LLI", "desc": "SISTEMA PMS", "ri": "09/01/26", "solped": "21/01/26", "recof": "09/02/26", "at": "13/03/26", "necoc": "29/05/26", "oc_eff": "22/05/26", "oc_n": "4508945953", "prov": "ABB", "dias": 133, "estado": "OC", "status": "Proveedor nominado ABB. Proveedor adjudicado. KOM 22/5. Se comienzan a instrumentar reuniones semanales de seguimiento. OC ajustada."}, {"esp": "IN", "crit": "LLI", "desc": "SISTEMA DE CONTROL PCS", "ri": "03/02/26", "solped": "19/02/26", "recof": "25/03/26", "at": "05/06/26", "necoc": "19/08/26", "oc_eff": "", "oc_n": "", "prov": "", "dias": 157, "estado": "AT CERR", "status": "23256882 solped liberada. Proveedor nominado Inauco. Legajo en discusión con PP. OC por materiales en proceso de emisión, mientras se continúa discutiendo por servicios de asistencia en campo."}, {"esp": "IN", "crit": "LLI", "desc": "SISTEMA DE SEGURIDAD SIS", "ri": "03/02/26", "solped": "19/02/26", "recof": "11/03/26", "at": "05/06/26", "necoc": "21/06/26", "oc_eff": "03/07/26", "oc_n": "4509010341", "prov": "", "dias": 150, "estado": "OC", "status": "23256883 solped liberada. Proveedor nominado HIMA. El 13/3 se envió a AT.Legajo aprobado por PP. OC emitida, mientras se gestiona la SBL. Se está coordinando la KOM."}, {"esp": "IN", "crit": "LLI", "desc": "VÁLVULAS DE CONTROL Y AUTORREGULADORAS", "ri": "23/04/26", "solped": "05/05/26", "recof": "21/05/26", "at": "", "necoc": "26/07/26", "oc_eff": "", "oc_n": "", "prov": "", "dias": 78, "estado": "EN AT", "status": "Solpeds 23359919, 23359920, 23359922 liberadas. Se enviaron a AT el 22/5. Se aguarda rta de ING para esta semana, se analizan impactos por cambios de procesos en especificaciones de válvulas. Se toma plan de acción sobre válvulas críticas para adjudicarlas primero."}, {"esp": "IN", "crit": "MONTO", "desc": "CABLES INSTRUMENTACIÓN", "ri": "15/05/26", "solped": "30/05/26", "recof": "23/06/26", "at": "", "necoc": "21/10/26", "oc_eff": "", "oc_n": "", "prov": "", "dias": 56, "estado": "EN AT", "status": "Proyecto solicita que los cables estén en obra para diciembre-26. Solpeds 23392215/23392216/23392213 liberadas, en AT."}, {"esp": "EL", "crit": "MONTO", "desc": "CABLES ELÉCTRICOS", "ri": "11/06/26", "solped": "06/07/26", "recof": "", "at": "", "necoc": "18/11/26", "oc_eff": "", "oc_n": "", "prov": "", "dias": 29, "estado": "EN SOLPED", "status": "Proyecto solicita que los cables estén en obra para diciembre-26. 2 Solped liberadas. Apertura 20/7"}]}, {"tag": "170726", "date": "2026-07-17", "label": "17/07/26", "file": "2026.04.06 - Plan de Suministros - La Calera II (170726).xlsx", "is_first": false, "pipeline": {"EL": {"cant_ri": 19, "emitidas": 15, "solped": 0, "ofertas": 2, "at": 5, "oc": 8}, "IN": {"cant_ri": 48, "emitidas": 44, "solped": 0, "ofertas": 4, "at": 33, "oc": 7}}, "kpis": {"ri_total": 67, "oc": 15, "en_gestion": 59, "sin_emitir": 8, "solped": 0, "ofertas": 6, "at": 38}, "criticos": [{"esp": "EL", "crit": "HITO 2", "desc": "SHELTER ELECTRICO SE#4 CON EQUIPAMIENTO", "ri": "09/01/26", "solped": "21/01/26", "recof": "09/02/26", "at": "13/03/26", "necoc": "20/05/26", "oc_eff": "18/05/26", "oc_n": "4508944971", "prov": "ABB", "dias": 129, "estado": "OC", "status": "Proveedor nominado ABB. Proveedor adjudicado. KOM 18/5. Se comienzan a instrumentar reuniones semanales de seguimiento. OC ajustada. Certificado n°1 emitido, Certif 2 en gestión."}, {"esp": "EL", "crit": "HITO 2", "desc": "SHELTER ELECTRICO SE#3 CON EQUIPAMIENTO", "ri": "09/01/26", "solped": "21/01/26", "recof": "09/02/26", "at": "13/03/26", "necoc": "20/05/26", "oc_eff": "18/05/26", "oc_n": "4508944973", "prov": "ABB", "dias": 129, "estado": "OC", "status": "Proveedor nominado ABB. Proveedor adjudicado. KOM 18/5. Se comienzan a instrumentar reuniones semanales de seguimiento. OC ajustada. Certificado n°1 emitido, Certif 2 en gestión. Proyecto inicia gestionar para intentar reducir el plazo de entrega de la sala."}, {"esp": "EL", "crit": "LLI", "desc": "SISTEMA PMS", "ri": "09/01/26", "solped": "21/01/26", "recof": "09/02/26", "at": "13/03/26", "necoc": "29/05/26", "oc_eff": "22/05/26", "oc_n": "4508945953", "prov": "ABB", "dias": 133, "estado": "OC", "status": "Proveedor nominado ABB. Proveedor adjudicado. KOM 22/5. Se comienzan a instrumentar reuniones semanales de seguimiento. OC ajustada."}, {"esp": "IN", "crit": "LLI", "desc": "SISTEMA DE CONTROL PCS", "ri": "03/02/26", "solped": "19/02/26", "recof": "25/03/26", "at": "05/06/26", "necoc": "19/08/26", "oc_eff": "", "oc_n": "", "prov": "", "dias": 164, "estado": "AT CERR", "status": "23256882 solped liberada. Proveedor nominado Inauco. Legajo en discusión con PP. OC por materiales en proceso de emisión, mientras se continúa discutiendo por servicios de asistencia en campo."}, {"esp": "IN", "crit": "LLI", "desc": "SISTEMA DE SEGURIDAD SIS", "ri": "03/02/26", "solped": "19/02/26", "recof": "11/03/26", "at": "05/06/26", "necoc": "21/06/26", "oc_eff": "03/07/26", "oc_n": "4509010341", "prov": "", "dias": 150, "estado": "OC", "status": "23256883 solped liberada. Proveedor nominado HIMA. El 13/3 se envió a AT.Legajo aprobado por PP. OC emitida, mientras se gestiona la SBL. Proveedor aún no aceptó la OC."}, {"esp": "IN", "crit": "LLI", "desc": "VÁLVULAS DE CONTROL Y AUTORREGULADORAS", "ri": "23/04/26", "solped": "05/05/26", "recof": "21/05/26", "at": "", "necoc": "26/07/26", "oc_eff": "", "oc_n": "", "prov": "", "dias": 85, "estado": "EN AT", "status": "Solpeds 23359919, 23359920, 23359922 liberadas. Se enviaron a AT el 22/5. Se aguarda rta de ING para esta semana, se analizan impactos por cambios de procesos en especificaciones de válvulas. Se toma plan de acción sobre válvulas críticas para adjudicarlas primero. Se hará reunión con Emerson y Baker Hughes para cerrar AT."}, {"esp": "IN", "crit": "MONTO", "desc": "CABLES INSTRUMENTACIÓN", "ri": "15/05/26", "solped": "30/05/26", "recof": "23/06/26", "at": "", "necoc": "21/10/26", "oc_eff": "", "oc_n": "", "prov": "", "dias": 63, "estado": "EN AT", "status": "Proyecto solicita que los cables estén en obra para diciembre-26. Solpeds 23392215/23392216/23392213 liberadas, en AT."}, {"esp": "EL", "crit": "MONTO", "desc": "CABLES ELÉCTRICOS", "ri": "11/06/26", "solped": "06/07/26", "recof": "", "at": "", "necoc": "18/11/26", "oc_eff": "", "oc_n": "", "prov": "", "dias": 36, "estado": "EN SOLPED", "status": "Proyecto solicita que los cables estén en obra para diciembre-26. 2 Solped liberadas. Apertura 20/7"}]}, {"tag": "240726", "date": "2026-07-24", "label": "24/07/26", "file": "22.07.2026 - Plan de Suministros - La Calera II (240726).xlsx", "is_first": false, "pipeline": {"EL": {"cant_ri": 19, "emitidas": 15, "solped": 0, "ofertas": 3, "at": 4, "oc": 8}, "IN": {"cant_ri": 48, "emitidas": 44, "solped": 0, "ofertas": 4, "at": 30, "oc": 10}}, "kpis": {"ri_total": 67, "oc": 18, "en_gestion": 59, "sin_emitir": 8, "solped": 0, "ofertas": 7, "at": 34}, "criticos": [{"esp": "EL", "crit": "HITO 2", "desc": "SHELTER ELECTRICO SE#4 CON EQUIPAMIENTO", "ri": "09/01/26", "solped": "21/01/26", "recof": "09/02/26", "at": "13/03/26", "necoc": "20/05/26", "oc_eff": "18/05/26", "oc_n": "4508944971", "prov": "ABB", "dias": 129, "estado": "OC", "status": "Proveedor nominado ABB. Proveedor adjudicado. KOM 18/5. Se comienzan a instrumentar reuniones semanales de seguimiento. OC ajustada. Certificado n°1 emitido, Certif 2 en gestión."}, {"esp": "EL", "crit": "HITO 2", "desc": "SHELTER ELECTRICO SE#3 CON EQUIPAMIENTO", "ri": "09/01/26", "solped": "21/01/26", "recof": "09/02/26", "at": "13/03/26", "necoc": "20/05/26", "oc_eff": "18/05/26", "oc_n": "4508944973", "prov": "ABB", "dias": 129, "estado": "OC", "status": "Proveedor nominado ABB. Proveedor adjudicado. KOM 18/5. Se comienzan a instrumentar reuniones semanales de seguimiento. OC ajustada. Certificado n°1 emitido, Certif 2 en gestión. Proyecto inicia gestiones para intentar reducir el plazo de entrega de la sala. Proveedor presenta OCA con impacto en USD 125k que requiere aprobación antes del 27/7 para no generar impactos en plazo."}, {"esp": "EL", "crit": "LLI", "desc": "SISTEMA PMS", "ri": "09/01/26", "solped": "21/01/26", "recof": "09/02/26", "at": "13/03/26", "necoc": "29/05/26", "oc_eff": "22/05/26", "oc_n": "4508945953", "prov": "ABB", "dias": 133, "estado": "OC", "status": "Proveedor nominado ABB. Proveedor adjudicado. KOM 22/5. Se comienzan a instrumentar reuniones semanales de seguimiento. OC ajustada."}, {"esp": "IN", "crit": "LLI", "desc": "SISTEMA DE CONTROL PCS", "ri": "03/02/26", "solped": "19/02/26", "recof": "25/03/26", "at": "05/06/26", "necoc": "19/08/26", "oc_eff": "", "oc_n": "", "prov": "", "dias": 171, "estado": "AT CERR", "status": "23256882 solped liberada. Proveedor nominado Inauco. Legajo en discusión con PP. OC por materiales en proceso de emisión, mientras se continúa discutiendo por servicios de asistencia en campo."}, {"esp": "IN", "crit": "LLI", "desc": "SISTEMA DE SEGURIDAD SIS", "ri": "03/02/26", "solped": "19/02/26", "recof": "11/03/26", "at": "05/06/26", "necoc": "21/06/26", "oc_eff": "03/07/26", "oc_n": "4509010341", "prov": "", "dias": 150, "estado": "OC", "status": "23256883 solped liberada. Proveedor nominado HIMA. El 13/3 se envió a AT.Legajo aprobado por PP. OC emitida, mientras se gestiona la SBL. Proveedor aún no aceptó la OC."}, {"esp": "IN", "crit": "LLI", "desc": "VÁLVULAS DE CONTROL Y AUTORREGULADORAS", "ri": "23/04/26", "solped": "05/05/26", "recof": "21/05/26", "at": "", "necoc": "26/07/26", "oc_eff": "", "oc_n": "", "prov": "", "dias": 92, "estado": "EN AT", "status": "Solpeds 23359919, 23359920, 23359922 liberadas. Se enviaron a AT el 22/5. Se aguarda rta de ING para esta semana, se analizan impactos por cambios de procesos en especificaciones de válvulas. Se toma plan de acción sobre válvulas críticas para adjudicarlas primero. Se realizan reuniones con Emerson y Baker Hughes, aunque se mite circular n°2. Se aguarda rta de proveedores para continuar análisis."}, {"esp": "IN", "crit": "MONTO", "desc": "CABLES INSTRUMENTACIÓN", "ri": "15/05/26", "solped": "30/05/26", "recof": "23/06/26", "at": "", "necoc": "21/10/26", "oc_eff": "", "oc_n": "", "prov": "", "dias": 70, "estado": "EN AT", "status": "Proyecto solicita que los cables estén en obra para diciembre-26. Solpeds 23392215/23392216/23392213 liberadas, en AT. Esta semana saldría el AT y revisión de la RI con ajuste de cantidades."}, {"esp": "EL", "crit": "MONTO", "desc": "CABLES ELÉCTRICOS", "ri": "11/06/26", "solped": "06/07/26", "recof": "", "at": "", "necoc": "18/11/26", "oc_eff": "", "oc_n": "", "prov": "", "dias": 43, "estado": "EN SOLPED", "status": "Proyecto solicita que los cables estén en obra para diciembre-26. 2 Solped liberadas. Apertura 20/7. El 22/7 se enviaron ofertas a AT."}]}, {"tag": "300726", "date": "2026-07-30", "label": "30/07/26", "file": "29.07.2026 - Plan de Suministros - La Calera II (300726).xlsx", "is_first": false, "pipeline": {"EL": {"cant_ri": 19, "emitidas": 15, "solped": 0, "ofertas": 3, "at": 4, "oc": 8}, "IN": {"cant_ri": 49, "emitidas": 45, "solped": 1, "ofertas": 4, "at": 30, "oc": 10}}, "kpis": {"ri_total": 68, "oc": 18, "en_gestion": 60, "sin_emitir": 8, "solped": 1, "ofertas": 7, "at": 34}, "criticos": [{"esp": "EL", "crit": "HITO 2", "desc": "SHELTER ELECTRICO SE#4 CON EQUIPAMIENTO", "ri": "09/01/26", "solped": "21/01/26", "recof": "09/02/26", "at": "13/03/26", "necoc": "20/05/26", "oc_eff": "18/05/26", "oc_n": "4508944971", "prov": "ABB", "dias": 129, "estado": "OC", "status": "Proveedor nominado ABB. Proveedor adjudicado. KOM 18/5. Se comienzan a instrumentar reuniones semanales de seguimiento. OC ajustada. Certificado n°1 emitido, Certif 2 en gestión."}, {"esp": "EL", "crit": "HITO 2", "desc": "SHELTER ELECTRICO SE#3 CON EQUIPAMIENTO", "ri": "09/01/26", "solped": "21/01/26", "recof": "09/02/26", "at": "13/03/26", "necoc": "20/05/26", "oc_eff": "18/05/26", "oc_n": "4508944973", "prov": "ABB", "dias": 129, "estado": "OC", "status": "Proveedor nominado ABB. Proveedor adjudicado. KOM 18/5. Se comienzan a instrumentar reuniones semanales de seguimiento. OC ajustada. Certificado n°1 emitido, Certif 2 en gestión. Proyecto inicia gestiones para intentar reducir el plazo de entrega de la sala. OCA presentada por el proveedor de USD 125k aprobada, pendiente de emisión de OC."}, {"esp": "EL", "crit": "LLI", "desc": "SISTEMA PMS", "ri": "09/01/26", "solped": "21/01/26", "recof": "09/02/26", "at": "13/03/26", "necoc": "29/05/26", "oc_eff": "22/05/26", "oc_n": "4508945953", "prov": "ABB", "dias": 133, "estado": "OC", "status": "Proveedor nominado ABB. Proveedor adjudicado. KOM 22/5. Se comienzan a instrumentar reuniones semanales de seguimiento. OC ajustada. Se encuentra en proceso de emisión la OC por el cambio de alcance incluyendo los estudios a realizar en la provisión."}, {"esp": "IN", "crit": "LLI", "desc": "SISTEMA DE CONTROL PCS", "ri": "03/02/26", "solped": "19/02/26", "recof": "25/03/26", "at": "05/06/26", "necoc": "19/08/26", "oc_eff": "", "oc_n": "", "prov": "", "dias": 177, "estado": "AT CERR", "status": "23256882 solped liberada. Proveedor nominado Inauco. Legajo en discusión con PP. OC por materiales en proceso de emisión, mientras se continúa discutiendo por servicios de asistencia en campo. KOM primer semana de agosto."}, {"esp": "IN", "crit": "LLI", "desc": "SISTEMA DE SEGURIDAD SIS", "ri": "03/02/26", "solped": "19/02/26", "recof": "11/03/26", "at": "05/06/26", "necoc": "21/06/26", "oc_eff": "03/07/26", "oc_n": "4509010341", "prov": "", "dias": 150, "estado": "OC", "status": "23256883 solped liberada. Proveedor nominado HIMA. El 13/3 se envió a AT.Legajo aprobado por PP. OC emitida, mientras se gestiona la SBL. Proveedor aún no aceptó la OC. Faltan cerrar puntos por el lado de PP, hoy a última hora debe dar respuesta."}, {"esp": "IN", "crit": "LLI", "desc": "VÁLVULAS DE CONTROL Y AUTORREGULADORAS", "ri": "23/04/26", "solped": "05/05/26", "recof": "21/05/26", "at": "", "necoc": "26/07/26", "oc_eff": "", "oc_n": "", "prov": "", "dias": 98, "estado": "EN AT", "status": "Solpeds 23359919, 23359920, 23359922 liberadas. Se enviaron a AT el 22/5. Se aguarda rta de ING para esta semana, se analizan impactos por cambios de procesos en especificaciones de válvulas. Se toma plan de acción sobre válvulas críticas para adjudicarlas primero. Se realizan reuniones con Emerson y Baker Hughes, aunque se mite circular n°2. Se aguarda rta de proveedores para continuar análisis. En Julio debe salir el AT con todas las válvulas aprobadas hasta el momento para adjudicar al menos un parcial."}, {"esp": "IN", "crit": "MONTO", "desc": "CABLES INSTRUMENTACIÓN", "ri": "15/05/26", "solped": "30/05/26", "recof": "23/06/26", "at": "", "necoc": "21/10/26", "oc_eff": "", "oc_n": "", "prov": "", "dias": 76, "estado": "EN AT", "status": "Proyecto solicita que los cables estén en obra para diciembre-26. Solpeds 23392215/23392216/23392213 liberadas, en AT. Esta semana saldría el AT y revisión de la RI con ajuste de cantidades."}, {"esp": "EL", "crit": "MONTO", "desc": "CABLES ELÉCTRICOS", "ri": "11/06/26", "solped": "06/07/26", "recof": "", "at": "", "necoc": "18/11/26", "oc_eff": "", "oc_n": "", "prov": "", "dias": 49, "estado": "EN SOLPED", "status": "Proyecto solicita que los cables estén en obra para diciembre-26. 2 Solped liberadas. Apertura 20/7. El 22/7 se enviaron ofertas a AT."}]}, {"tag": "070826", "date": "2026-08-07", "label": "07/08/26", "file": "29.07.2026 - Plan de Suministros - La Calera II (070826).xlsx", "is_first": false, "pipeline": {"EL": {"cant_ri": 19, "emitidas": 15, "solped": 0, "ofertas": 0, "at": 7, "oc": 8}, "IN": {"cant_ri": 49, "emitidas": 45, "solped": 0, "ofertas": 2, "at": 33, "oc": 10}}, "kpis": {"ri_total": 68, "oc": 18, "en_gestion": 60, "sin_emitir": 8, "solped": 0, "ofertas": 2, "at": 40}, "criticos": [{"esp": "EL", "crit": "HITO 2", "desc": "SHELTER ELECTRICO SE#4 CON EQUIPAMIENTO", "ri": "09/01/26", "solped": "21/01/26", "recof": "09/02/26", "at": "13/03/26", "necoc": "20/05/26", "oc_eff": "18/05/26", "oc_n": "4508944971", "prov": "ABB", "dias": 129, "estado": "OC", "status": "Proveedor nominado ABB. Proveedor adjudicado. KOM 18/5. Se comienzan a instrumentar reuniones semanales de seguimiento. OC ajustada. Certificado n°2 emitido."}, {"esp": "EL", "crit": "HITO 2", "desc": "SHELTER ELECTRICO SE#3 CON EQUIPAMIENTO", "ri": "09/01/26", "solped": "21/01/26", "recof": "09/02/26", "at": "13/03/26", "necoc": "20/05/26", "oc_eff": "18/05/26", "oc_n": "4508944973", "prov": "ABB", "dias": 129, "estado": "OC", "status": "Proveedor nominado ABB. Proveedor adjudicado. KOM 18/5. Se comienzan a instrumentar reuniones semanales de seguimiento. OC ajustada. Certificado n°2 emitido. Proyecto inicia gestiones para intentar reducir el plazo de entrega de la sala. OCA presentada por el proveedor de USD 125k aprobada, pendiente de emisión de OC."}, {"esp": "EL", "crit": "LLI", "desc": "SISTEMA PMS", "ri": "09/01/26", "solped": "21/01/26", "recof": "09/02/26", "at": "13/03/26", "necoc": "29/05/26", "oc_eff": "22/05/26", "oc_n": "4508945953", "prov": "ABB", "dias": 133, "estado": "OC", "status": "Proveedor nominado ABB. Proveedor adjudicado. KOM 22/5. Se comienzan a instrumentar reuniones semanales de seguimiento. Se encuentra en proceso de emisión la OC por el cambio de alcance incluyendo los estudios a realizar en la provisión."}, {"esp": "IN", "crit": "LLI", "desc": "SISTEMA DE CONTROL PCS", "ri": "03/02/26", "solped": "19/02/26", "recof": "25/03/26", "at": "05/06/26", "necoc": "19/08/26", "oc_eff": "23/07/26", "oc_n": "4509023773", "prov": "", "dias": 170, "estado": "OC", "status": "23256882 solped liberada. Proveedor nominado Inauco. KOM el 7/8. LD en proceso de confección"}, {"esp": "IN", "crit": "LLI", "desc": "SISTEMA DE SEGURIDAD SIS", "ri": "03/02/26", "solped": "19/02/26", "recof": "11/03/26", "at": "05/06/26", "necoc": "21/06/26", "oc_eff": "03/07/26", "oc_n": "4509010341", "prov": "", "dias": 150, "estado": "OC", "status": "23256883 solped liberada. Proveedor nominado HIMA. El 13/3 se envió a AT.Legajo aprobado por PP. OC emitida, mientras se gestiona la SBL. OC aceptada, se recibe proforma y se comienza a gestionar la SBL. KOM en coordinación para semana del 10/8, el proveedor sostiene la fecha de entrega de diciembre-26 en Argentina."}, {"esp": "IN", "crit": "LLI", "desc": "VÁLVULAS DE CONTROL Y AUTORREGULADORAS", "ri": "23/04/26", "solped": "05/05/26", "recof": "21/05/26", "at": "", "necoc": "26/07/26", "oc_eff": "", "oc_n": "", "prov": "", "dias": 106, "estado": "EN AT", "status": "Solpeds 23359919, 23359920, 23359922 liberadas. AT cerrado para válvulas de control, se avanza con cierre comercial. Válvulas autorreguladoras deberán recotizarse en función de una circular que está en proceso de emisión por ING."}, {"esp": "IN", "crit": "MONTO", "desc": "CABLES INSTRUMENTACIÓN", "ri": "15/05/26", "solped": "30/05/26", "recof": "23/06/26", "at": "", "necoc": "21/10/26", "oc_eff": "", "oc_n": "", "prov": "", "dias": 84, "estado": "EN AT", "status": "Proyecto solicita que los cables estén en obra para diciembre-26. Solpeds 23392215/23392216/23392213 liberadas, en AT. Esta semana saldría el AT y revisión de la RI con ajuste de cantidades."}, {"esp": "EL", "crit": "MONTO", "desc": "CABLES ELÉCTRICOS", "ri": "11/06/26", "solped": "06/07/26", "recof": "27/07/26", "at": "04/08/26", "necoc": "18/11/26", "oc_eff": "", "oc_n": "", "prov": "", "dias": 57, "estado": "AT CERR", "status": "Proyecto solicita que los cables estén en obra para diciembre-26. 2 Solped liberadas. AT cerrado, se reciben cantidades a aprovechar de los sobrantes de CPF 1.5. Se solicita revisionar RI por cables de 120mm2"}]}];
+const META = {"rev": "Rev4", "gen": "07/08/2026", "n": 13, "primero": "Inicial", "ultimo": "07/08/26"};
+
+// ── helpers ──────────────────────────────────────────────────────────────
+const $ = s => document.querySelector(s);
+const el = (t,c,h)=>{const e=document.createElement(t); if(c)e.className=c; if(h!=null)e.innerHTML=h; return e;};
+const ESTADO = {
+  'OC':{c:'b-oc',t:'OC COLOCADA'}, 'AT CERR':{c:'b-at',t:'AT CERRADO'},
+  'EN AT':{c:'b-recof',t:'EN AT'}, 'REC.OF':{c:'b-recof',t:'REC. OFERTAS'},
+  'EN SOLPED':{c:'b-solped',t:'EN SOLPED'},
+  'RI EMITIDA':{c:'b-ri',t:'RI EMITIDA'}, 'PENDIENTE':{c:'b-pend',t:'PENDIENTE'}
+};
+const diasClass = (d)=> d==null?'':(d<=90?'d-ok':(d<=140?'d-warn':'d-crit'));
+const STAGES = [['solped','En SOLPED'],['ofertas','Petición Ofertas'],['at','Análisis Técnico'],['oc','Con OC']];
+
+// índices "reales" (con fecha) para selects por defecto
+const lastIdx = DATA.length-1;
+
+// header
+$('#revlbl').textContent = 'App '+META.rev+' · Generado '+META.gen;
+$('#metalbl').textContent = META.n+' cortes de plan ('+META.primero+' → '+META.ultimo+')';
+$('#foot').textContent = 'Fuente: Planes de Suministros La Calera II · hoja Cuadro resumen + Suministros críticos · '
+   + META.n + ' cortes · App '+META.rev+' generada '+META.gen;
+
+// ── tabs ─────────────────────────────────────────────────────────────────
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  t.classList.add('active');
+  ['vista','cambios','comparar','tendencia','criticos'].forEach(n=>{
+    $('#p-'+n).style.display = (n===t.dataset.tab)?'block':'none';
+  });
+});
+
+// ── selects ──────────────────────────────────────────────────────────────
+function fillSelect(sel, selectedIdx){
+  DATA.forEach((c,i)=>{
+    const o=el('option',null,(c.is_first?'Inicial (base)':c.label)+'  ·  '+c.tag);
+    o.value=i; sel.appendChild(o);
+  });
+  sel.value = selectedIdx;
+}
+fillSelect($('#selVista'), lastIdx);
+fillSelect($('#selA'), Math.max(0,lastIdx-3));
+fillSelect($('#selB'), lastIdx);
+
+// ── VISTA ────────────────────────────────────────────────────────────────
+function kpiCard(n,l,cls,delta){
+  const d = delta==null?'':`<div class="d">${delta>0?'▲ +'+delta:(delta<0?'▼ '+delta:'=')}</div>`;
+  return `<div class="kpi ${cls}"><div class="n">${n}</div><div class="l">${l}</div>${d}</div>`;
+}
+function renderVista(){
+  const i=+$('#selVista').value, c=DATA[i], prev = i>0?DATA[i-1]:null;
+  $('#vistaFile').textContent = 'Archivo: '+c.file;
+  const k=c.kpis, pk=prev?prev.kpis:null;
+  const dd=(a,b)=> b==null?null:(a-b);
+  $('#vistaKpis').innerHTML =
+     kpiCard(k.ri_total,'RIs TOTALES IN+EL','k1',dd(k.ri_total,pk&&pk.ri_total))
+   + kpiCard(k.oc,'OCs COLOCADAS','k2',dd(k.oc,pk&&pk.oc))
+   + kpiCard(k.en_gestion,'EN GESTIÓN DE COMPRA','k3',dd(k.en_gestion,pk&&pk.en_gestion))
+   + kpiCard(k.sin_emitir,'RIs SIN EMITIR','k4',dd(k.sin_emitir,pk&&pk.sin_emitir));
+
+  // funnel
+  let maxv=1;
+  STAGES.forEach(([kk])=>['EL','IN'].forEach(e=>maxv=Math.max(maxv,(c.pipeline[e]||{})[kk]||0)));
+  let f='<div class="funnel">';
+  STAGES.forEach(([kk,lbl])=>{
+    const ve=(c.pipeline.EL||{})[kk]||0, vi=(c.pipeline.IN||{})[kk]||0;
+    const w=v=>Math.max(2,Math.round(v/maxv*100));
+    f+=`<div class="fstage">${lbl}</div><div class="fbars">
+      <div class="fbar" style="width:${w(ve)}%;background:var(--el)"><span>${ve}</span></div>
+      <div class="fbar" style="width:${w(vi)}%;background:var(--in)"><span>${vi}</span></div>
+    </div>`;
+  });
+  f+='</div>';
+  $('#vistaFunnel').innerHTML=f;
+
+  // criticos table
+  renderCritTable($('#vistaCrit'), c.criticos);
+  // findings
+  $('#vistaFind').innerHTML = findingsFor(i);
+}
+function renderCritTable(tbl, items){
+  const order={'OC':0,'AT CERR':1,'EN AT':2,'REC.OF':3,'EN SOLPED':4,'RI EMITIDA':5,'PENDIENTE':6};
+  const its=[...items].sort((a,b)=>(order[a.estado]-order[b.estado])||a.esp.localeCompare(b.esp));
+  let h='<tr><th>Esp</th><th>Suministro</th><th>RI</th><th>SOLPED</th><th>Rec.Of</th><th>AT cierre</th>'
+      +'<th>OC efect.</th><th>N° OC</th><th>RI→OC</th><th>Estado</th></tr>';
+  its.forEach(it=>{
+    const es=ESTADO[it.estado]||ESTADO['PENDIENTE'];
+    const d=it.dias==null?'—':(it.dias+(it.estado==='OC'?' d':' d*'));
+    h+=`<tr class="${it.esp.toLowerCase()}" title="${escapeHtml(it.status)}">
+      <td><b>${it.esp}</b></td><td>${escapeHtml(it.desc)}</td>
+      <td>${it.ri||'—'}</td><td>${it.solped||'—'}</td><td>${it.recof||'—'}</td>
+      <td>${it.at||'—'}</td><td>${it.oc_eff||'—'}</td><td>${it.oc_n||'—'}</td>
+      <td class="dias ${diasClass(it.dias)}">${d}</td>
+      <td><span class="badge ${es.c}">${es.t}</span></td></tr>`;
+  });
+  tbl.innerHTML=h;
+}
+function escapeHtml(s){return (s||'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));}
+
+// ── hallazgos automáticos ────────────────────────────────────────────────
+function findingsFor(i){
+  const c=DATA[i], prev=i>0?DATA[i-1]:null;
+  let out=[];
+  // OCs nuevas
+  if(prev){
+    const doc=c.kpis.oc-prev.kpis.oc;
+    if(doc>0) out.push(['ok',`+${doc} OC(s) colocada(s) respecto del corte anterior (${prev.label}). Total OCs IN+EL: ${c.kpis.oc}.`]);
+    const dsol=c.kpis.solped-prev.kpis.solped;
+    if(dsol<0) out.push(['',`SOLPED en proceso: ${prev.kpis.solped} → ${c.kpis.solped} (avanzaron ${Math.abs(dsol)}).`]);
+    const dat=c.kpis.at-prev.kpis.at;
+    if(dat>0) out.push(['',`+${dat} ítem(s) ingresaron a Análisis Técnico (AT ${prev.kpis.at} → ${c.kpis.at}).`]);
+  }
+  // criticos: OC recien emitidas, y estancados
+  c.criticos.forEach(it=>{
+    if(it.estado==='OC' && it.dias!=null)
+      { if(prev){ const p=prev.criticos.find(x=>x.desc===it.desc); if(p && p.estado!=='OC') out.push(['ok',`RESUELTO: ${it.desc} — OC ${it.oc_n} (${it.dias} d RI→OC).`]); } }
+    if((it.estado==='EN AT'||it.estado==='AT CERR') && it.dias!=null && it.dias>=80)
+      out.push(['crit',`RIESGO: ${it.desc} — ${it.dias} d sin OC (${ESTADO[it.estado].t}). ${it.necoc?('NecOC '+it.necoc):''}`]);
+  });
+  if(!out.length) out.push(['','Sin variaciones relevantes respecto del corte anterior.']);
+  return out.map(([cl,t])=>`<div class="find ${cl}">${escapeHtml(t)}</div>`).join('');
+}
+
+// ── COMPARAR ─────────────────────────────────────────────────────────────
+function deltaSpan(d){ if(d==null)return''; if(d>0)return `<span class="delta up">▲ +${d}</span>`; if(d<0)return `<span class="delta down">▼ ${d}</span>`; return `<span class="delta eq">=</span>`; }
+function renderCompare(){
+  const a=DATA[+$('#selA').value], b=DATA[+$('#selB').value];
+  const ka=a.kpis, kb=b.kpis;
+  $('#cmpKpis').innerHTML =
+     kpiCard(kb.oc,'OCs COLOCADAS','k2',kb.oc-ka.oc)
+   + kpiCard(kb.en_gestion,'EN GESTIÓN','k3',kb.en_gestion-ka.en_gestion)
+   + kpiCard(kb.at,'EN AT','k1',kb.at-ka.at)
+   + kpiCard(kb.sin_emitir,'SIN EMITIR','k4',kb.sin_emitir-ka.sin_emitir);
+  // pipeline table
+  let h=`<tr><th>Especialidad · Etapa</th><th>${a.label}</th><th>${b.label}</th><th>Δ</th></tr>`;
+  ['EL','IN'].forEach(e=>{
+    h+=`<tr class="${e.toLowerCase()}"><td colspan="4"><b>${e==='EL'?'ELECTRICIDAD':'INSTRUMENTACIÓN'}</b></td></tr>`;
+    [['solped','En SOLPED'],['ofertas','En Petición Ofertas'],['at','En AT'],['oc','Con OC'],['emitidas','Emitidas']].forEach(([k,l])=>{
+      const va=(a.pipeline[e]||{})[k]||0, vb=(b.pipeline[e]||{})[k]||0;
+      h+=`<tr><td style="padding-left:16px">${l}</td><td>${va}</td><td>${vb}</td><td>${deltaSpan(vb-va)}</td></tr>`;
+    });
+  });
+  $('#cmpPipe').innerHTML=h;
+  // criticos diff
+  let d='';
+  b.criticos.forEach(it=>{
+    const p=a.criticos.find(x=>x.desc===it.desc);
+    if(!p){ d+=`<div class="diffbox"><b>${escapeHtml(it.desc)}</b> — nuevo en ${b.label}</div>`; return; }
+    let ch=[];
+    if(p.estado!==it.estado) ch.push(`estado: ${ESTADO[p.estado].t} → <b>${ESTADO[it.estado].t}</b>`);
+    if(p.oc_n!==it.oc_n && it.oc_n) ch.push(`OC: — → <b>${it.oc_n}</b>`);
+    if(p.at!==it.at && it.at) ch.push(`AT cierre: ${p.at||'—'} → ${it.at}`);
+    if(p.recof!==it.recof && it.recof) ch.push(`Rec.Of: ${p.recof||'—'} → ${it.recof}`);
+    if(p.solped!==it.solped && it.solped) ch.push(`SOLPED: ${p.solped||'—'} → ${it.solped}`);
+    if(p.status!==it.status) ch.push(`<span class="mini">comentario actualizado</span>`);
+    if(ch.length) d+=`<div class="diffbox"><b>${it.esp} · ${escapeHtml(it.desc)}</b><br>${ch.join(' · ')}</div>`;
+  });
+  if(!d) d='<div class="mini">Sin cambios en ítems críticos entre ambos cortes.</div>';
+  $('#cmpCrit').innerHTML=d;
+}
+
+// ── TENDENCIA (SVG) ──────────────────────────────────────────────────────
+let trendMetric='oc', trendSerie='TOTAL';
+function serieVal(c,serie,metric){
+  if(serie==='TOTAL') return ((c.pipeline.EL||{})[metric]||0)+((c.pipeline.IN||{})[metric]||0);
+  return (c.pipeline[serie]||{})[metric]||0;
+}
+function renderTrend(){
+  const W=1040,H=300,pad=44, n=DATA.length;
+  const vals=DATA.map(c=>serieVal(c,trendSerie,trendMetric));
+  const maxv=Math.max(2,...vals);
+  const x=i=> pad + i*( (W-pad*1.4-pad)/(Math.max(1,n-1)) );
+  const y=v=> H-pad - v/maxv*(H-pad*1.8);
+  const col= trendSerie==='EL'?'var(--el)':(trendSerie==='IN'?'var(--in)':'var(--azulm)');
+  let g=`<svg viewBox="0 0 ${W} ${H}" width="100%">`;
+  // grid + y labels
+  for(let t=0;t<=4;t++){ const gy=pad+ t*(H-pad*1.8)/4; const gv=Math.round(maxv*(1-t/4));
+    g+=`<line x1="${pad}" y1="${gy}" x2="${W-pad*0.4}" y2="${gy}" stroke="var(--borde)" stroke-width="1"/>`;
+    g+=`<text x="${pad-8}" y="${gy+4}" font-size="11" fill="var(--mut)" text-anchor="end">${gv}</text>`;
+  }
+  // line
+  let pts=vals.map((v,i)=>`${x(i)},${y(v)}`).join(' ');
+  g+=`<polyline points="${pts}" fill="none" stroke="${col}" stroke-width="3"/>`;
+  vals.forEach((v,i)=>{
+    g+=`<circle cx="${x(i)}" cy="${y(v)}" r="4" fill="${col}"/>`;
+    g+=`<text x="${x(i)}" y="${y(v)-9}" font-size="11" font-weight="700" fill="var(--tx)" text-anchor="middle">${v}</text>`;
+    const lab=DATA[i].is_first?'ini':DATA[i].label.slice(0,5);
+    g+=`<text x="${x(i)}" y="${H-pad+16}" font-size="10" fill="var(--mut)" text-anchor="middle" transform="rotate(35 ${x(i)} ${H-pad+16})">${lab}</text>`;
+  });
+  g+=`</svg>`;
+  $('#trendChart').innerHTML=g;
+  // table
+  let h='<tr><th>Corte</th>'+DATA.map(c=>`<th>${c.is_first?'ini':c.label.slice(0,5)}</th>`).join('')+'</tr>';
+  [['oc','Con OC'],['at','En AT'],['ofertas','En petición'],['solped','En SOLPED'],['emitidas','Emitidas']].forEach(([k,l])=>{
+    h+=`<tr><td><b>${l}</b> (${trendSerie==='TOTAL'?'IN+EL':trendSerie})</td>`
+      + DATA.map(c=>`<td>${serieVal(c,trendSerie,k)}</td>`).join('')+'</tr>';
+  });
+  $('#trendTbl').innerHTML=h;
+}
+
+// ── CRÍTICOS HISTORIAL ───────────────────────────────────────────────────
+function fillCritSelect(){
+  const names=[...new Set(DATA[lastIdx].criticos.map(c=>c.desc))];
+  names.forEach(nm=>{const o=el('option',null,nm);o.value=nm;$('#selCrit').appendChild(o);});
+}
+function renderCritHist(){
+  const nm=$('#selCrit').value;
+  let h='<tr><th>Corte</th><th>Estado</th><th>RI</th><th>SOLPED</th><th>Rec.Of</th><th>AT</th><th>N° OC</th><th>RI→OC</th><th>Comentario</th></tr>';
+  DATA.forEach(c=>{
+    const it=c.criticos.find(x=>x.desc===nm); if(!it) return;
+    const es=ESTADO[it.estado]||ESTADO['PENDIENTE'];
+    const d=it.dias==null?'—':(it.dias+(it.estado==='OC'?' d':' d*'));
+    h+=`<tr class="${it.esp.toLowerCase()}"><td><b>${c.is_first?'Inicial':c.label}</b></td>
+      <td><span class="badge ${es.c}">${es.t}</span></td>
+      <td>${it.ri||'—'}</td><td>${it.solped||'—'}</td><td>${it.recof||'—'}</td><td>${it.at||'—'}</td>
+      <td>${it.oc_n||'—'}</td><td class="dias ${diasClass(it.dias)}">${d}</td>
+      <td class="mini">${escapeHtml(it.status)}</td></tr>`;
+  });
+  $('#critHist').innerHTML=h;
+}
+
+// ── CAMBIOS & COMENTARIOS ────────────────────────────────────────────────
+// resalta montos, fechas límite y palabras clave dentro del comentario
+function highlight(txt){
+  let s = escapeHtml(txt);
+  const pats = [
+    /USD\s?[\d.,]+\s?k?/gi, /\bantes del \d{1,2}\/\d{1,2}(?:\/\d{2,4})?\b/gi,
+    /\bNecOC[^.,;]*/gi,
+    /\b(aprobaci[oó]n|aprobar|vencid[ao]|vence|urgente|riesgo|cr[ií]tic[ao]s?|\bOCA\b|impacto|escalar|demora|estancad[ao])\b/gi
+  ];
+  pats.forEach(p=> s = s.replace(p, m=>`<mark>${m}</mark>`));
+  return s;
+}
+// detecta ítems con contenido "relevante" (decisiones, deadlines, riesgos)
+function esRelevante(txt){
+  return /(USD|aprobaci|aprobar|antes del|vencid|urgente|riesgo|cr[ií]tic|OCA|NecOC|impacto|escalar|estancad)/i.test(txt||'');
+}
+function fillCambiosSelect(){
+  DATA.forEach((c,i)=>{
+    const o=el('option',null,(c.is_first?'Inicial (base)':c.label)+'  ·  '+c.tag);
+    o.value=i; $('#selCambios').appendChild(o);
+  });
+  $('#selCambios').value=lastIdx;
+}
+function renderCambios(){
+  const i=+$('#selCambios').value, c=DATA[i], prev=i>0?DATA[i-1]:null;
+  $('#cambiosSub').textContent = prev
+     ? ('Comparando '+ (c.is_first?'Inicial':c.label) +' vs corte anterior '+ (prev.is_first?'Inicial':prev.label))
+     : 'Primer corte cargado (sin corte anterior para comparar).';
+
+  // ── Movimientos del período ──
+  const k=c.kpis, pk=prev?prev.kpis:null;
+  let mov='<div class="mov">';
+  const card=(n,l)=>`<div class="movcard"><div class="big">${n}</div><div class="lbl">${l}</div></div>`;
+  if(pk){
+    const doc=k.oc-pk.oc, dat=k.at-pk.at, dsol=k.solped-pk.solped, dof=k.ofertas-pk.ofertas;
+    mov+=card((doc>=0?'+':'')+doc, 'OCs nuevas (total '+k.oc+')');
+    mov+=card((dat>=0?'+':'')+dat, 'Δ en AT (total '+k.at+')');
+    mov+=card((dof>=0?'+':'')+dof, 'Δ en petición (total '+k.ofertas+')');
+    mov+=card((dsol>=0?'+':'')+dsol, 'Δ SOLPED (total '+k.solped+')');
+  } else { mov+='<div class="mini">Sin corte anterior.</div>'; }
+  mov+='</div>';
+  // banderas de atención automáticas
+  let flags=[];
+  c.criticos.forEach(it=>{
+    if(esRelevante(it.status) && (!prev || (prev.criticos.find(x=>x.desc===it.desc)||{}).status!==it.status))
+      flags.push(it.desc);
+  });
+  if(flags.length) mov+='<div style="margin-top:8px"><span class="flag">Atención</span> '+
+     'Comentarios relevantes nuevos en: '+flags.map(escapeHtml).join(' · ')+'</div>';
+  $('#cambiosMov').innerHTML=mov;
+
+  // ── Comentarios relevantes ──
+  // orden: cambiados primero, luego relevantes, luego resto
+  const its=[...c.criticos].map(it=>{
+    const p=prev?prev.criticos.find(x=>x.desc===it.desc):null;
+    const changed = p ? (p.status!==it.status || p.oc_n!==it.oc_n || p.estado!==it.estado) : false;
+    return {it, p, changed, rel:esRelevante(it.status)};
+  }).sort((a,b)=> (b.changed-a.changed) || (b.rel-a.rel));
+  let h='';
+  its.forEach(({it,p,changed})=>{
+    const es=ESTADO[it.estado]||ESTADO['PENDIENTE'];
+    const d = it.dias==null?'':` · <b>${it.dias}${it.estado==='OC'?' d RI→OC':' d*'}</b>`;
+    h+=`<div class="cmt ${changed?'changed':''}">
+      <div class="hd"><span class="badge ${es.c}">${es.t}</span>
+        <b>${it.esp} · ${escapeHtml(it.desc)}</b>
+        ${it.oc_n?`<span class="mini">OC ${it.oc_n}</span>`:''}
+        ${changed?'<span class="badge b-recof">ACTUALIZADO</span>':''}
+        <span class="mini">${d}</span></div>
+      <div class="txt">${highlight(it.status||'—')}</div>
+      ${(changed&&p&&p.status&&p.status!==it.status)?`<div class="prev"><b>Antes (${prev.is_first?'Inicial':prev.label}):</b> ${escapeHtml(p.status)}</div>`:''}
+    </div>`;
+  });
+  $('#cambiosComents').innerHTML=h;
+}
+
+// ── eventos ──────────────────────────────────────────────────────────────
+$('#selVista').onchange=renderVista;
+$('#selCambios').onchange=renderCambios;
+$('#selA').onchange=renderCompare; $('#selB').onchange=renderCompare;
+$('#selCrit').onchange=renderCritHist;
+document.querySelectorAll('[data-metric]').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('[data-metric]').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active'); trendMetric=b.dataset.metric; renderTrend();
+});
+document.querySelectorAll('[data-serie]').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('[data-serie]').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active'); trendSerie=b.dataset.serie; renderTrend();
+});
+
+// init
+fillCambiosSelect();
+renderVista(); renderCambios(); renderCompare(); renderTrend(); fillCritSelect(); renderCritHist();
+</script>
+</body>
+</html>
