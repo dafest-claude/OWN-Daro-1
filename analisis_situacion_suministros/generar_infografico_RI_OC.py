@@ -12,7 +12,7 @@ from matplotlib.patches import FancyBboxPatch, Rectangle
 import matplotlib.font_manager as fm
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-OUT_PNG = os.path.join(SCRIPT_DIR, 'Infografico_RI_OC_IN_EL_LaCalera_II_Rev9_070826.png')
+OUT_PNG = os.path.join(SCRIPT_DIR, 'Infografico_RI_OC_IN_EL_LaCalera_II_Rev10_140826.png')
 
 # Paleta
 AZUL='#1F3864'; AZUL_M='#2F5496'; VERDE='#2E6B2E'; NARANJA='#9C4500'
@@ -31,12 +31,12 @@ axT.add_patch(Rectangle((0,0),1,1, transform=axT.transAxes, color=AZUL))
 axT.text(0.015, 0.62, 'ANÁLISIS DE TIEMPOS  RI → ORDEN DE COMPRA',
          color='white', fontsize=23, fontweight='bold', va='center')
 axT.text(0.015, 0.22, 'La Calera II CPF2  ·  Instrumentación (IN) y Electricidad (EL)  ·  '
-                      'Plan 070826 (Rev9)  ·  corte 07/08/2026  ·  evolución 10/07→07/08',
+                      'Plan 140826 (Rev10)  ·  corte 14/08/2026  ·  evolución 17/07→14/08',
          color='#D6E4F0', fontsize=11, va='center')
 
 # ── KPIs ─────────────────────────────────────────────────────────────────────
 kpis = [('68','RIs TOTALES\nIN + EL', AZUL, '='),
-        ('18','OCs\nCOLOCADAS', VERDE, '='),
+        ('24','OCs\nCOLOCADAS', VERDE, '+6'),
         ('60','EN GESTIÓN\nDE COMPRA', NARANJA, '='),
         ('8','RIs SIN\nEMITIR', '#7030A0', '=')]
 for i,(num,lbl,col,delta) in enumerate(kpis):
@@ -54,16 +54,16 @@ for i,(num,lbl,col,delta) in enumerate(kpis):
 
 # ── Novedades: semana 17/07 → 24/07 ──────────────────────────────────────────
 axN = fig.add_subplot(gs[24:28, 1:99]); axN.axis('off')
-axN.text(0.0,0.5,'SEMANA 30/07→07/08:', fontsize=10.5, fontweight='bold', color=AZUL,
+axN.text(0.0,0.5,'SEMANA 07/08→14/08:', fontsize=10.5, fontweight='bold', color=AZUL,
          transform=axN.transAxes, va='center')
-axN.text(0.155,0.5,'PCS: OC materiales emitida (KOM 7/8)   ·   SIS: OC ACEPTADA (KOM 10/8)   ·   '
-                   'AT CERRADO: válvulas control + cables EL   ·   autorreguladoras a RECOTIZAR (circular ING)',
+axN.text(0.155,0.5,'+6 OCs IN (10→16, total IN+EL 18→24)   ·   Cables IN: AT CERRADO (rev. RI 12/08)   ·   '
+                   'SIS: KOM 14/8   ·   Válvulas: PP con comentarios sobre el AT (a discutir con ING)',
          fontsize=10, color=GRIS, transform=axN.transAxes, va='center')
 
 # ── Embudo pipeline por especialidad ─────────────────────────────────────────
 axP = fig.add_subplot(gs[29:62, 1:48])
 etapas = ['En\nSOLPED','Petición\nOfertas','Análisis\nTécnico','Con OC']
-el = [0,0,7,8]; inn = [0,2,33,10]
+el = [0,0,7,8]; inn = [0,1,28,16]
 x = range(len(etapas)); w=0.38
 b1=axP.bar([i-w/2 for i in x], el, w, label='ELECTRICIDAD (19 RIs)', color=VERDE)
 b2=axP.bar([i+w/2 for i in x], inn, w, label='INSTRUMENTACIÓN (48 RIs)', color=NARANJA)
@@ -77,7 +77,7 @@ for bars in (b1,b2):
         if h > 0:
             axP.text(b.get_x()+b.get_width()/2, h+0.3, str(int(h)), ha='center', fontsize=9, fontweight='bold')
 # resaltar cuello de botella AT en IN
-axP.annotate('CUELLO DE BOTELLA', xy=(2.19,30), xytext=(1.3,34),
+axP.annotate('CUELLO DE BOTELLA', xy=(2.19,28), xytext=(1.3,32),
              fontsize=10, fontweight='bold', color=ROJO,
              arrowprops=dict(arrowstyle='->', color=ROJO, lw=2))
 axP.set_ylim(0,40); axP.spines['top'].set_visible(False); axP.spines['right'].set_visible(False)
@@ -109,11 +109,11 @@ axI.text(0.0,1.02,'Ítems críticos – tiempo RI → OC', fontsize=13, fontweig
 items = [
     ('EL','Shelter SE#4 / SE#3 (ABB)','09/01','18/05 (OC)','129 d','OC · FABRICAND.', VERDE_OK),
     ('EL','Sistema PMS (ABB)','09/01','22/05 (OC)','133 d','OC COLOCADA', VERDE_OK),
-    ('IN','Sistema Seguridad SIS','03/02','03/07 (OC)','150 d','OC ACEPTADA', VERDE_OK),
+    ('IN','Sistema Seguridad SIS','03/02','03/07 (OC)','150 d','OC · KOM 14/8', VERDE_OK),
     ('IN','Sistema Control PCS','03/02','23/07 (OC mat.)','170 d','OC EMITIDA', VERDE_OK),
-    ('IN','Válvulas Control','23/04','AT cerrado ctrl','106 d*','AT CIERRE PARC', AMBAR),
-    ('IN','Cables Instrumentación','15/05','AT esta sem.','84 d*','EN AT', AZUL_M),
-    ('EL','Cables Eléctricos','11/06','AT cerrado 04/08','57 d*','AT CERRADO', AMBAR),
+    ('IN','Válvulas Control','23/04','AT c/coment. PP','113 d*','AT · REVISIÓN', ROJO),
+    ('IN','Cables Instrumentación','15/05','AT cerrado','91 d*','AT CERRADO', AMBAR),
+    ('EL','Cables Eléctricos','11/06','negoc. final','64 d*','AT CERRADO', AMBAR),
 ]
 cols_x = [0.0, 0.07, 0.42, 0.55, 0.71, 0.81, 0.99]
 hdrs = ['Esp','Suministro','RI','OC efectiva','RI→OC','Estado']
@@ -138,7 +138,7 @@ for r,(esp,desc,ri,oc,d,est,ecol) in enumerate(items):
                   facecolor=ecol, edgecolor='none'))
     axI.text(cols_x[5]+0.079, yy, est, fontsize=8.5, fontweight='bold', color='white',
              ha='center', transform=axI.transAxes, va='center')
-axI.text(0.0,-0.04,'(*) dias transcurridos desde la RI al corte 07/08/26 (sin OC). PCS: OC de materiales emitida 23/07. Válvulas control: AT cerrado, sin OC (autorreguladoras a recotizar).  '
+axI.text(0.0,-0.04,'(*) dias transcurridos desde la RI al corte 14/08/26 (sin OC). +6 OCs IN esta semana (10→16). Válvulas: AT con comentarios de PP (a discutir con ING), sin OC.  '
                    'OC efectiva = KOM/emisión en adjudicados.',
          fontsize=8.5, style='italic', color=GRIS, transform=axI.transAxes)
 
