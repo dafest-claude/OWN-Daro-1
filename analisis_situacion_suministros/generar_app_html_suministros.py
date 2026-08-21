@@ -24,8 +24,8 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 PLANS_DIR  = os.path.join(SCRIPT_DIR, '..', 'info_suministros')
 
 # ── Revisión de la APP (nombre + fecha) ──────────────────────────────────────
-APP_REV   = 'Rev5'
-GEN_DATE  = date(2026, 8, 14)          # fecha de generación de esta revisión
+APP_REV   = 'Rev6'
+GEN_DATE  = date(2026, 8, 21)          # fecha de generación de esta revisión
 OUT_HTML  = os.path.join(SCRIPT_DIR,
             f'App_Suministros_IN_EL_LaCalera_II_{APP_REV}_{GEN_DATE.strftime("%d%m%y")}.html')
 
