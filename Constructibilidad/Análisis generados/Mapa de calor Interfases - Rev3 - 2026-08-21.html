@@ -1,0 +1,95 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mapa de calor de interfases · CPF-2</title>
+<style>
+:root{--bg:#f4f6f8;--card:#fff;--ink:#1f2933;--muted:#607080;--line:#e2e8f0;--navy:#1F3864;--shadow:0 1px 3px rgba(0,0,0,.08)}
+@media(prefers-color-scheme:dark){:root{--bg:#0f141a;--card:#1a222c;--ink:#e6edf3;--muted:#93a1b0;--line:#2a343f;--shadow:0 1px 3px rgba(0,0,0,.5)}}
+*{box-sizing:border-box}body{margin:0;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:13.5px}
+header{background:var(--navy);color:#fff;padding:15px 22px}h1{margin:0;font-size:19px}.sub{opacity:.85;font-size:12px;margin-top:3px}
+.wrap{max-width:1500px;margin:0 auto;padding:16px 22px 60px}
+.toolbar{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin:12px 0}
+select{padding:7px 11px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);font-size:13px;font-weight:600}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;box-shadow:var(--shadow);margin:14px 0;overflow-x:auto}
+.card h2{margin:0 0 4px;font-size:15px}.card .d{color:var(--muted);font-size:12px;margin-bottom:12px}
+table{border-collapse:collapse;font-size:11.5px}th,td{border:1px solid var(--line);padding:0}
+.hz th{background:rgba(127,127,127,.06);color:var(--muted);font-size:10.5px;font-weight:700;padding:5px 6px;text-align:center;vertical-align:bottom}
+.rowlab{text-align:left!important;padding:5px 8px!important;font-weight:600;white-space:normal;line-height:1.2;max-width:260px}
+.cellcode{width:38px;height:30px;text-align:center;font-weight:800;color:#fff;font-size:11px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;margin:6px 0 2px;font-size:12px}.lg{display:flex;align-items:center;gap:6px}.sw{width:14px;height:14px;border-radius:3px;display:inline-block}
+.tcell{width:34px;height:26px;text-align:center;font-size:9.5px;color:#0b1f3a}
+.bar{display:flex;align-items:center;gap:8px;margin:4px 0;font-size:12.5px}.bar .nm{width:180px;flex-shrink:0}.bar .bw{flex:1;background:var(--line);border-radius:5px;height:16px;overflow:hidden;max-width:520px}.bar .bf{display:block;height:100%;border-radius:5px;background:var(--navy);min-width:2px}.bar .vv{width:44px;text-align:right;font-weight:700}
+.note{font-size:11px;color:var(--muted);margin-top:10px}
+.scalebar{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted)}
+.grad{width:160px;height:12px;border-radius:3px;background:linear-gradient(90deg,#f7fbff,#c6dbef,#6baed6,#2171b5,#08306b)}
+</style></head><body>
+<header><h1>Mapa de calor de interfases — Involucramiento y carga temporal</h1>
+<div class="sub">CPF-2 La Calera II · Provisiones críticas · Rev3 · 2026-08-21 · (fechas del cronograma integrado Rev2; se actualizarán con los cronogramas por contrato)</div></header>
+<div class="wrap">
+ <div class="toolbar"><b>Contrato:</b><select id="csel"></select>
+   <span class="legend" id="raci-legend"></span></div>
+
+ <div class="card"><h2>A · Involucramiento por tarea</h2>
+   <div class="d">Cómo participa cada sector en cada actividad del contrato. Solo E/A/R/P representan involucramiento; I (informado) se muestra tenue.</div>
+   <div id="heatA"></div></div>
+
+ <div class="card"><h2>B · Índice de involucramiento por sector</h2>
+   <div class="d">Carga relativa de cada sector en el contrato (peso: E=4 · P=3 · R=2 · A=2 · I=0).</div>
+   <div id="barsB"></div></div>
+
+ <div class="card"><h2>C · Carga temporal (sector × mes)</h2>
+   <div class="d">Cuándo se afecta cada sector a lo largo del tiempo (intensidad = involucramiento activo ese mes). <span class="scalebar">menos <span class="grad"></span> más</span></div>
+   <div id="heatC"></div></div>
+</div>
+<script>
+const D={"contracts": [{"key": "SALAS", "name": "ABB — Salas Eléctricas SE#3 y SE#4", "ven": "ABB", "estado": "Adjudicado — OC vigente + planificación", "color": "#C62828", "adj": false}, {"key": "PMS", "name": "ABB — PMS (Power Management System)", "ven": "ABB", "estado": "Adjudicado — OC vigente + planificación", "color": "#EF6C00", "adj": false}, {"key": "INAUCO", "name": "Inauco — PCS / SCADA / Comunicaciones", "ven": "Inauco", "estado": "Adjudicado — Obra 129-008", "color": "#1565C0", "adj": false}, {"key": "HIMA_MSH", "name": "HIMA — Tableros de marshalling (ESD / F&G / PSS)", "ven": "HIMA", "estado": "Adjudicado", "color": "#6A1B9A", "adj": false}, {"key": "HIMA_CFG", "name": "HIMA — Adecuación y configuración SIS", "ven": "HIMA", "estado": "EN ADJUDICACIÓN", "color": "#00838F", "adj": true}], "acts": [{"fase": "Contrato", "act": "Gestión de la OC / contrato y coordinación", "codes": ["P", "I", "E", "I", "I", "I", "I", "I"]}, {"fase": "Ingeniería", "act": "Emisión de documentación (IB / ID / IC)", "codes": ["E", "I", "I", "R", "I", "I", "I", "I"]}, {"fase": "Ingeniería", "act": "Revisión y aprobación de documentación", "codes": ["P", "I", "I", "A", "R", "I", "R", "I"]}, {"fase": "Ingeniería", "act": "Freezing / hold points · cierre de ingeniería", "codes": ["E", "I", "P", "A", "R", "I", "R", "I"]}, {"fase": "Procura / Fabricación", "act": "Procura y fabricación (seguimiento)", "codes": ["E", "E", "R", "I", "I", "I", "R", "I"]}, {"fase": "Procura / Fabricación", "act": "Certificación de hitos de pago / avance", "codes": ["P", "P", "E", "I", "I", "I", "I", "I"]}, {"fase": "Pruebas de fábrica (FAT)", "act": "Procedimientos de FAT/pruebas (emisión y aprobación)", "codes": ["E", "I", "I", "R", "I", "P", "A", "I"]}, {"fase": "Pruebas de fábrica (FAT)", "act": "Ejecución de FAT / pruebas en fábrica (asistencia)", "codes": ["E", "P", "P", "P", "I", "P", "A", "P"]}, {"fase": "Pruebas de fábrica (FAT)", "act": "iFAT / pruebas de integración (donde aplica)", "codes": ["E", "I", "P", "P", "P", "P", "R", "P"]}, {"fase": "Despacho / Sitio", "act": "Despacho y entrega en sitio", "codes": ["E", "E", "R", "I", "P", "I", "A", "I"]}, {"fase": "Despacho / Sitio", "act": "Montaje / integración en sitio", "codes": ["P", "I", "R", "R", "E", "I", "R", "I"]}, {"fase": "Precom. / Puesta en marcha", "act": "SAT / pruebas en sitio", "codes": ["P", "I", "P", "P", "P", "E", "R", "P"]}, {"fase": "Precom. / Puesta en marcha", "act": "Precomisionado", "codes": ["P", "I", "P", "P", "P", "E", "R", "P"]}, {"fase": "Precom. / Puesta en marcha", "act": "Comisionado / Puesta en marcha (PEM)", "codes": ["P", "I", "P", "P", "I", "E", "R", "P"]}, {"fase": "Precom. / Puesta en marcha", "act": "Capacitación (operación / mantenimiento)", "codes": ["E", "I", "P", "I", "I", "P", "I", "P"]}, {"fase": "Cierre", "act": "Documentación final / DataBook / As-built", "codes": ["E", "I", "I", "A", "P", "P", "A", "I"]}], "adj": {"fase": "Adjudicación", "act": "Proceso de adjudicación / cierre de contrato", "codes": ["P", "I", "E", "R", "I", "I", "I", "I"]}, "sectors": ["Proveedor", "Activación suministros", "AESA Proy/Contrato", "AESA Ingeniería", "AESA Construcciones", "AESA Precom/Com", "AESA Calidad (QA/QC)", "Cliente PPSA"], "raci": {"E": {"c": "#1F3864", "d": "Ejecuta / responsable primario"}, "A": {"c": "#C62828", "d": "Aprueba / libera"}, "R": {"c": "#EF6C00", "d": "Revisa / comenta"}, "P": {"c": "#2E7D32", "d": "Participa / Asiste"}, "I": {"c": "#90A4AE", "d": "Informado"}}, "weight": {"E": 4, "A": 2, "R": 2, "P": 3, "I": 0}, "phase": {"SALAS": {"Contrato": ["2026-05", "2027-05"], "Ingeniería": ["2026-05", "2026-08"], "Procura / Fabricación": ["2026-09", "2026-11"], "Pruebas de fábrica (FAT)": ["2026-11", "2027-04"], "Despacho / Sitio": ["2027-01", "2027-05"], "Precom. / Puesta en marcha": ["2027-05", "2028-01"], "Cierre": ["2027-05", "2027-07"]}, "PMS": {"Contrato": ["2026-05", "2027-04"], "Ingeniería": ["2026-06", "2026-10"], "Procura / Fabricación": ["2026-05", "2026-12"], "Pruebas de fábrica (FAT)": ["2026-09", "2027-07"], "Despacho / Sitio": ["2027-02", "2027-03"], "Precom. / Puesta en marcha": ["2027-05", "2028-02"], "Cierre": ["2027-03", "2027-04"]}, "INAUCO": {"Contrato": ["2026-07", "2027-10"], "Ingeniería": ["2026-08", "2026-11"], "Procura / Fabricación": ["2026-08", "2027-03"], "Pruebas de fábrica (FAT)": ["2027-03", "2027-05"], "Despacho / Sitio": ["2027-04", "2027-05"], "Precom. / Puesta en marcha": ["2027-05", "2027-10"], "Cierre": ["2027-10", "2027-12"]}, "HIMA_MSH": {"Contrato": ["2026-07", "2027-05"], "Ingeniería": ["2026-07", "2026-09"], "Procura / Fabricación": ["2026-07", "2026-12"], "Despacho / Sitio": ["2026-12", "2027-02"], "Pruebas de fábrica (FAT)": ["2027-03", "2027-04"], "Precom. / Puesta en marcha": ["2027-05", "2027-10"], "Cierre": ["2027-05", "2027-06"]}, "HIMA_CFG": {"Adjudicación": ["2026-09", "2026-12"], "Contrato": ["2027-01", "2027-05"], "Ingeniería": ["2027-01", "2027-03"], "Procura / Fabricación": ["2027-01", "2027-03"], "Pruebas de fábrica (FAT)": ["2027-03", "2027-04"], "Despacho / Sitio": ["2027-03", "2027-04"], "Precom. / Puesta en marcha": ["2027-05", "2027-10"], "Cierre": ["2027-10", "2027-11"]}}};
+const RA=D.raci, W=D.weight, SEC=D.sectors;
+const csel=document.getElementById('csel');
+csel.innerHTML=D.contracts.map(c=>`<option value="${c.key}">${c.name} — ${c.estado}</option>`).join('')+'<option value="__ALL__">TODOS los contratos (agregado)</option>';
+document.getElementById('raci-legend').innerHTML=Object.entries(RA).map(([k,v])=>`<span class="lg"><span class="sw" style="background:${v.c}"></span>${k} · ${v.d}</span>`).join('');
+// months 2026-05 .. 2028-02
+const MON=[];{let y=2026,m=5;for(let i=0;i<22;i++){MON.push(y+'-'+String(m).padStart(2,'0'));m++;if(m>12){m=1;y++;}}}
+const MLAB=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+const mlabel=iso=>{const[y,m]=iso.split('-');return MLAB[+m-1]+"'"+y.slice(2);};
+function actsOf(ck){const c=D.contracts.find(x=>x.key===ck);const base=(c&&c.adj)?[D.adj].concat(D.acts):D.acts;return base;}
+function mrange(ck,fase){const p=D.phase[ck]||{};const r=p[fase];if(!r)return[];const s=MON.indexOf(r[0]),e=MON.indexOf(r[1]);if(s<0||e<0)return[];const o=[];for(let i=s;i<=e;i++)o.push(i);return o;}
+
+function renderA(ck){
+ const acts=actsOf(ck);
+ let h='<table class="hz"><thead><tr><th class="rowlab">Actividad</th>'+SEC.map(s=>`<th>${s.replace(/ /g,'<br>')}</th>`).join('')+'</tr></thead><tbody>';
+ acts.forEach(a=>{
+   h+=`<tr><td class="rowlab" title="${a.fase}">${a.act}</td>`+a.codes.map(code=>{
+     const v=RA[code];const faint=code==='I';
+     return `<td class="cellcode" style="background:${faint?'#eceff1':v.c};color:${faint?'#90a4ae':'#fff'}">${code}</td>`;}).join('')+'</tr>';
+ });
+ h+='</tbody></table>';document.getElementById('heatA').innerHTML=h;
+}
+function sectorIndex(ck){
+ const acts=(ck==='__ALL__')? D.contracts.flatMap(c=>actsOf(c.key)) : actsOf(ck);
+ const tot=SEC.map((_,j)=>acts.reduce((s,a)=>s+(W[a.codes[j]]||0),0));
+ return tot;
+}
+function renderB(ck){
+ const tot=sectorIndex(ck);const mx=Math.max(...tot,1);
+ document.getElementById('barsB').innerHTML=SEC.map((s,j)=>`<div class="bar"><span class="nm">${s}</span><span class="bw"><span class="bf" style="width:${100*tot[j]/mx}%"></span></span><span class="vv">${tot[j]}</span></div>`).join('');
+}
+function tempLoad(ck){
+ // load[sector][month]
+ const keys= ck==='__ALL__'? D.contracts.map(c=>c.key):[ck];
+ const load=SEC.map(()=>MON.map(()=>0));
+ keys.forEach(k=>{actsOf(k).forEach(a=>{const months=mrange(k,a.fase);a.codes.forEach((code,j)=>{const w=W[code]||0;if(w)months.forEach(mi=>load[j][mi]+=w);});});});
+ return load;
+}
+function col(t){ // 0..1 -> blue scale
+ const stops=[[247,251,255],[198,219,239],[107,174,214],[33,113,181],[8,48,107]];
+ const x=Math.max(0,Math.min(1,t))*(stops.length-1);const i=Math.floor(x),f=x-i;const a=stops[i],b=stops[Math.min(i+1,stops.length-1)];
+ return `rgb(${a.map((v,k)=>Math.round(v+(b[k]-v)*f)).join(',')})`;
+}
+function renderC(ck){
+ const load=tempLoad(ck);const mx=Math.max(1,...load.flat());
+ let h='<table class="hz"><thead><tr><th class="rowlab">Sector \\ Mes</th>'+MON.map(m=>`<th>${mlabel(m)}</th>`).join('')+'</tr></thead><tbody>';
+ SEC.forEach((s,j)=>{h+=`<tr><td class="rowlab">${s}</td>`+load[j].map(v=>{const t=v/mx;return `<td class="tcell" title="${s} · carga ${v}" style="background:${v?col(t):'transparent'};color:${t>0.5?'#fff':'#0b1f3a'}">${v||''}</td>`;}).join('')+'</tr>';});
+ h+='</tbody></table>';document.getElementById('heatC').innerHTML=h;
+}
+function render(){const ck=csel.value;renderA(ck==='__ALL__'?D.contracts[0].key:ck);renderB(ck);renderC(ck);
+ if(ck==='__ALL__'){document.getElementById('heatA').insertAdjacentHTML('afterbegin','<div class="note">La vista A muestra el 1er contrato como referencia (el involucramiento por tarea es común); B y C están agregados.</div>');}}
+csel.onchange=render;render();
+</script></body></html>
