@@ -27,20 +27,20 @@ def find_plan(tag):
         raise FileNotFoundError(f'No se encontró plan con tag ({tag}) en {PLANS_DIR}')
     return hits[0]
 
-PLAN_FILE     = find_plan('210826')          # corte actual
-PLAN_FILE_OLD = find_plan('140826')          # corte anterior (para diff de críticos)
+PLAN_FILE     = find_plan('280826')          # corte actual
+PLAN_FILE_OLD = find_plan('210826')          # corte anterior (para diff de críticos)
 # Cortes para la evolución (rolling window de 5) — se muestran como tendencia
 PLAN_TREND    = [
-    ('24/07', find_plan('240726')),
     ('30/07', find_plan('300726')),
     ('07/08', find_plan('070826')),
     ('14/08', find_plan('140826')),
     ('21/08', find_plan('210826')),
+    ('28/08', find_plan('280826')),
 ]
-OUT_XLSX      = os.path.join(SCRIPT_DIR, 'Tracker_Suministros_IN_EL_LaCalera_II_Rev11_210826.xlsx')
-TODAY         = date(2026, 8, 21)
+OUT_XLSX      = os.path.join(SCRIPT_DIR, 'Tracker_Suministros_IN_EL_LaCalera_II_Rev12_280826.xlsx')
+TODAY         = date(2026, 8, 28)
 RFSU          = date(2027, 2, 3)
-VERSION       = 'Rev11_210826'
+VERSION       = 'Rev12_280826'
 
 # ── Paleta ──────────────────────────────────────────────────────────────────
 C = {
@@ -1081,14 +1081,14 @@ def build_cambios_semana(wb, sc_old, sc_new, trend=None):
 
     ws.merge_cells('A1:G1')
     t = ws['A1']
-    t.value = 'EVOLUCIÓN: Plan 24/07 → 30/07 → 07/08 → 14/08 → 21/08/2026 | CAMBIOS Y AVANCES'
+    t.value = 'EVOLUCIÓN: Plan 30/07 → 07/08 → 14/08 → 21/08 → 28/08/2026 | CAMBIOS Y AVANCES'
     t.fill = F(C['titulo']); t.font = ft(True, 'FFFFFF', 13)
     t.alignment = al('center', 'center'); ws.row_dimensions[1].height = 26
 
     ws.merge_cells('A2:G2')
     s2 = ws['A2']
     s2.value = ('Especialidades: IN (Instrumentación & Control)  |  EL (Electricidad)  |  '
-                'Proyecto: La Calera II CPF2  |  Corte actual: 21/08/2026 (Rev11)')
+                'Proyecto: La Calera II CPF2  |  Corte actual: 28/08/2026 (Rev12)')
     s2.fill = F(C['subtitulo']); s2.font = ft(False, 'FFFFFF', 10)
     s2.alignment = al('center', 'center'); ws.row_dimensions[2].height = 18
 
@@ -1099,7 +1099,7 @@ def build_cambios_semana(wb, sc_old, sc_new, trend=None):
 
     # ── Bloque 2: Cambios por ítem de Suministros Críticos ────────────────────
     ws.merge_cells(start_row=base, start_column=1, end_row=base, end_column=7)
-    sub = ws.cell(base, 1, 'DETALLE DE CAMBIOS POR ÍTEM – SUMINISTROS CRÍTICOS IN / EL (14/08 → 21/08)')
+    sub = ws.cell(base, 1, 'DETALLE DE CAMBIOS POR ÍTEM – SUMINISTROS CRÍTICOS IN / EL (21/08 → 28/08)')
     sub.fill = F(C['subtitulo']); sub.font = ft(True, 'FFFFFF', 11)
     sub.alignment = al('center', 'center'); ws.row_dimensions[base].height = 20
     base += 1
@@ -1124,7 +1124,7 @@ def build_cambios_semana(wb, sc_old, sc_new, trend=None):
     base += 1
 
     r = base
-    hdrs = ['N°', 'Esp', 'Suministro / Ítem', 'Campo', 'Plan 140826 (anterior)', 'Plan 210826 (actual)', 'Tipo de cambio']
+    hdrs = ['N°', 'Esp', 'Suministro / Ítem', 'Campo', 'Plan 210826 (anterior)', 'Plan 280826 (actual)', 'Tipo de cambio']
     for ci, h in enumerate(hdrs, start=1):
         c = ws.cell(r, ci, h)
         c.fill = F(C['hdr_grp']); c.font = ft(True, 'FFFFFF', 9)
@@ -1378,7 +1378,7 @@ def build_portada(wb):
     data = [
         ('Proyecto',           'La Calera II – CPF2'),
         ('Especialidades',     'Instrumentación & Control (IN) | Electricidad (EL)'),
-        ('Fuente plan',        '29.07.2026 – Plan de Suministros – La Calera II (210826).xlsx · Rev11'),
+        ('Fuente plan',        '29.07.2026 – Plan de Suministros – La Calera II (280826).xlsx · Rev12'),
         ('Versión tracker',    VERSION),
         ('Fecha generación',   TODAY.strftime('%d/%m/%Y')),
         ('RFSU objetivo',      RFSU.strftime('%d/%m/%Y')),
@@ -1506,6 +1506,15 @@ def build_cambios(wb):
          'ofertas en gestión (petición): EL 2 · IN 4. '
          'CRÍTICO: SIS NecOC 21/06 VENCIDA al 26/06 (AT cerrado 05/06, 143 d sin OC). '
          'Nueva sección "Pipeline agregado" en hoja CAMBIOS SEMANA.'),
+        ('25', 'REVISIÓN 12 (280826)',
+         'Rev12: Plan 280826 (28/08/2026). Comparación 210826 → 280826. '
+         'GRAN SEMANA DE OCs EN CABLES: Cables Eléctricos OC COLOCADA a Marlew (4509059424, 23/08); '
+         'Cables Instrumentación OC ENVIADA (4509060019, 27/08). Ambas con FE parcial (material en stock + '
+         'plazos de hasta 14-16 semanas); en 2da instancia se licitan parciales adicionales (20.000m en IN). '
+         '+5 RIs emitidas (EL 15→18, IN 46→48); OCs IN+EL 24→25. Sin emitir 8→3. '
+         'Shelters SE#3/SE#4 y PMS: OCs ADICIONALES enviadas (SE#3 adicional CCM + ductos de barras 2da instancia; PMS maqueta de pruebas). '
+         'SIS: KOM efectuada el 14/8, codificando LD. PCS: FAT 29/3-26/4, reunión con PP el 28/8, servicios en 2da instancia. '
+         'VÁLVULAS (único crítico sin OC, 127 d): se avanzará con FLETE AÉREO (160 d India + 30/40 Comex); autorreguladoras a recotizar.'),
         ('24', 'REVISIÓN 11 (210826)',
          'Rev11: Plan 210826 (21/08/2026). Comparación 140826 → 210826. '
          'IN: +1 RI emitida (49→50 RIs; emitidas 45→46). OCs IN+EL estables (24). '
@@ -1576,13 +1585,13 @@ def build_cambios(wb):
 
 # ── MAIN ────────────────────────────────────────────────────────────────────
 def main():
-    print(f'[1/7] Leyendo Plan 210826 (actual, Rev11): {os.path.basename(PLAN_FILE)}')
+    print(f'[1/7] Leyendo Plan 280826 (actual, Rev12): {os.path.basename(PLAN_FILE)}')
     sc_in, sc_el, in_items, el_items, crono_items = load_plan()
     print(f'      IN Preliminar: {len(in_items)} items | EL Preliminar: {len(el_items)} items')
     print(f'      IN Suministros Críticos: {len(sc_in)} | EL: {len(sc_el)}')
     print(f'      Crono 4.11 paquetes: {len(crono_items)} (IN+EL)')
 
-    print(f'[2/7] Leyendo Plan 140826 (corte anterior, para comparación): {os.path.basename(PLAN_FILE_OLD)}')
+    print(f'[2/7] Leyendo Plan 210826 (corte anterior, para comparación): {os.path.basename(PLAN_FILE_OLD)}')
     sc_old = load_sc_from_file(PLAN_FILE_OLD)
     print(f'      SC plan anterior: {len(sc_old)} ítems')
     print(f'[2b/7] Leyendo evolución 3 semanas (Cuadro resumen)...')
@@ -1600,7 +1609,7 @@ def main():
     wb = openpyxl.Workbook()
     wb.remove(wb.active)
 
-    print('[4/7] Generando hoja CAMBIOS SEMANA (evolución 140826 → 210826)...')
+    print('[4/7] Generando hoja CAMBIOS SEMANA (evolución 210826 → 280826)...')
     sc_new_all = sc_in + sc_el
     build_cambios_semana(wb, sc_old, sc_new_all, trend)
 
