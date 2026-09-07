@@ -12,7 +12,7 @@ from matplotlib.patches import FancyBboxPatch, Rectangle
 import matplotlib.font_manager as fm
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-OUT_PNG = os.path.join(SCRIPT_DIR, 'Infografico_RI_OC_IN_EL_LaCalera_II_Rev12_280826.png')
+OUT_PNG = os.path.join(SCRIPT_DIR, 'Infografico_RI_OC_IN_EL_LaCalera_II_Rev13_040926.png')
 
 # Paleta
 AZUL='#1F3864'; AZUL_M='#2F5496'; VERDE='#2E6B2E'; NARANJA='#9C4500'
@@ -31,14 +31,14 @@ axT.add_patch(Rectangle((0,0),1,1, transform=axT.transAxes, color=AZUL))
 axT.text(0.015, 0.62, 'ANÁLISIS DE TIEMPOS  RI → ORDEN DE COMPRA',
          color='white', fontsize=23, fontweight='bold', va='center')
 axT.text(0.015, 0.22, 'La Calera II CPF2  ·  Instrumentación (IN) y Electricidad (EL)  ·  '
-                      'Plan 280826 (Rev12)  ·  corte 28/08/2026  ·  evolución 30/07→28/08',
+                      'Plan 040926 (Rev13)  ·  corte 04/09/2026  ·  evolución 07/08→04/09',
          color='#D6E4F0', fontsize=11, va='center')
 
 # ── KPIs ─────────────────────────────────────────────────────────────────────
 kpis = [('69','RIs TOTALES\nIN + EL', AZUL, '='),
-        ('25','OCs\nCOLOCADAS', VERDE, '+1'),
-        ('66','EN GESTIÓN\nDE COMPRA', NARANJA, '+5'),
-        ('3','RIs SIN\nEMITIR', '#7030A0', '-5')]
+        ('25','OCs\nCOLOCADAS', VERDE, '='),
+        ('66','EN GESTIÓN\nDE COMPRA', NARANJA, '='),
+        ('3','RIs SIN\nEMITIR', '#7030A0', '=')]
 for i,(num,lbl,col,delta) in enumerate(kpis):
     ax = fig.add_subplot(gs[11:24, i*25+1:i*25+23]); ax.axis('off')
     box = FancyBboxPatch((0.02,0.05),0.96,0.9, boxstyle='round,pad=0.02,rounding_size=0.06',
@@ -54,10 +54,10 @@ for i,(num,lbl,col,delta) in enumerate(kpis):
 
 # ── Novedades: semana 17/07 → 24/07 ──────────────────────────────────────────
 axN = fig.add_subplot(gs[24:28, 1:99]); axN.axis('off')
-axN.text(0.0,0.5,'SEMANA 21/08→28/08:', fontsize=10.5, fontweight='bold', color=AZUL,
+axN.text(0.0,0.5,'SEMANA 28/08→04/09:', fontsize=10.5, fontweight='bold', color=AZUL,
          transform=axN.transAxes, va='center')
-axN.text(0.155,0.5,'Cables EL (Marlew) e IN: OC COLOCADA   ·   +5 RIs emitidas (sin emitir 8→3)   ·   '
-                   'OCs IN+EL 24→25   ·   Válvulas (único sin OC): se define FLETE AÉREO',
+axN.text(0.155,0.5,'Pipeline sin cambios (69/25/66/3)   ·   Cables: 2da instancia (IN 29.000 m · EL parcial, SOLPEDs liberadas)   ·   '
+                   'Válvulas: pendiente validación final para adjudicar (134 d)',
          fontsize=10, color=GRIS, transform=axN.transAxes, va='center')
 
 # ── Embudo pipeline por especialidad ─────────────────────────────────────────
@@ -112,8 +112,8 @@ items = [
     ('IN','Sistema Seguridad SIS','03/02','03/07 (OC)','150 d','OC · KOM 14/8', VERDE_OK),
     ('IN','Sistema Control PCS','03/02','23/07 (OC mat.)','170 d','OC EMITIDA', VERDE_OK),
     ('EL','Cables Eléctricos','11/06','23/08 (OC Marlew)','73 d','OC COLOCADA', VERDE_OK),
-    ('IN','Cables Instrumentación','15/05','27/08 (OC)','104 d','OC ENVIADA', VERDE_OK),
-    ('IN','Válvulas Control','23/04','flete aéreo','127 d*','ÚNICO SIN OC', ROJO),
+    ('IN','Cables Instrumentación','15/05','27/08 (OC)','104 d','OC · 2da inst.', VERDE_OK),
+    ('IN','Válvulas Control','23/04','flete aéreo','134 d*','ÚNICO SIN OC', ROJO),
 ]
 cols_x = [0.0, 0.07, 0.42, 0.55, 0.71, 0.81, 0.99]
 hdrs = ['Esp','Suministro','RI','OC efectiva','RI→OC','Estado']
@@ -138,7 +138,7 @@ for r,(esp,desc,ri,oc,d,est,ecol) in enumerate(items):
                   facecolor=ecol, edgecolor='none'))
     axI.text(cols_x[5]+0.079, yy, est, fontsize=8.5, fontweight='bold', color='white',
              ha='center', transform=axI.transAxes, va='center')
-axI.text(0.0,-0.04,'(*) al corte 28/08/26. Cables EL (Marlew) e IN con OC colocada (FE parcial: stock + hasta 14-16 sem). Válvulas: único crítico sin OC (127 d) – se define flete aéreo.  '
+axI.text(0.0,-0.04,'(*) al corte 04/09/26. 6 de 7 críticos con OC; cables gestionan 2da instancia (SOLPEDs liberadas). Válvulas: único sin OC (134 d) – pendiente validación final para adjudicar.  '
                    'OC efectiva = KOM/emisión en adjudicados.',
          fontsize=8.5, style='italic', color=GRIS, transform=axI.transAxes)
 
