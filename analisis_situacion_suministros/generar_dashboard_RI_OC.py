@@ -2,7 +2,7 @@
 """
 Dashboard Gerencial – Análisis de Tiempos RI → OC
 La Calera II CPF2 | Especialidades: Instrumentación (IN) y Electricidad (EL)
-Fuente: Plan de Suministros (040926, Rev13) – hojas Cuadro resumen, Suministros críticos,
+Fuente: Plan de Suministros (110926, Rev14) – hojas Cuadro resumen, Suministros críticos,
         RI y OC x mes.
 Objetivo: Cuantificar el tiempo entre emisión de RI y colocación efectiva de OC,
           identificar dónde se concentran las demoras del circuito de suministros.
@@ -21,12 +21,12 @@ def _find_plan(tag):
     hits = [f for f in _glob.glob(os.path.join(SCRIPT_DIR, '..', 'info_suministros', '*.xlsx'))
             if f'({tag})' in os.path.basename(f)]
     return hits[0] if hits else None
-PLAN_FILE     = _find_plan('040926')
-PLAN_FILE_OLD = _find_plan('280826')
-OUT_XLSX   = os.path.join(SCRIPT_DIR, 'Dashboard_RI_OC_IN_EL_LaCalera_II_Rev13_040926.xlsx')
-TODAY      = date(2026, 9, 4)
+PLAN_FILE     = _find_plan('110926')
+PLAN_FILE_OLD = _find_plan('040926')
+OUT_XLSX   = os.path.join(SCRIPT_DIR, 'Dashboard_RI_OC_IN_EL_LaCalera_II_Rev14_110926.xlsx')
+TODAY      = date(2026, 9, 11)
 RFSU       = date(2027, 2, 3)
-VERSION    = 'Rev13 · 040926'
+VERSION    = 'Rev14 · 110926'
 
 # ── Paleta gerencial ─────────────────────────────────────────────────────────
 C = {
@@ -55,41 +55,41 @@ def dias(d1, d2):
 
 
 # ═══════════════════════════════════════════════════════════════════════════
-# DATOS (extraídos y verificados del Plan de Suministros 040926 · Rev13)
+# DATOS (extraídos y verificados del Plan de Suministros 110926 · Rev14)
 # ═══════════════════════════════════════════════════════════════════════════
 
-# Pipeline actual por especialidad (hoja "Cuadro resumen" – plan 040926)
+# Pipeline actual por especialidad (hoja "Cuadro resumen" – plan 110926)
 #   cant_ri, emitidas(en gestión), solped, ofertas, at, oc
 PIPELINE = {
     'EL': {'nombre': 'ELECTRICIDAD',     'cant_ri': 19, 'emitidas': 18,
-           'solped': 0, 'ofertas': 3, 'at': 6, 'oc': 9},
+           'solped': 0, 'ofertas': 3, 'at': 5, 'oc': 10},
     'IN': {'nombre': 'INSTRUMENTACIÓN',  'cant_ri': 50, 'emitidas': 48,
-           'solped': 0, 'ofertas': 3, 'at': 29, 'oc': 16},
+           'solped': 0, 'ofertas': 3, 'at': 23, 'oc': 22},
 }
 
-# Pipeline del corte anterior (plan 280826) – comparativa
+# Pipeline del corte anterior (plan 040926) – comparativa
 PIPELINE_OLD = {
     'EL': {'emitidas': 18, 'solped': 0, 'ofertas': 3, 'at': 6, 'oc': 9},
     'IN': {'emitidas': 48, 'solped': 0, 'ofertas': 3, 'at': 29, 'oc': 16},
 }
 
 # Evolución (Cuadro resumen) – IN+EL por etapa
-#   cortes: 070826 → 140826 → 210826 → 280826 → 040926
-TREND_CORTES = ['07/08', '14/08', '21/08', '28/08', '04/09']
+#   cortes: 140826 → 210826 → 280826 → 040926 → 110926
+TREND_CORTES = ['14/08', '21/08', '28/08', '04/09', '11/09']
 TREND = {
     'EL': {'solped':   [0, 0, 0, 0, 0],
-           'ofertas':  [0, 0, 0, 3, 3],
-           'at':       [7, 7, 7, 6, 6],
-           'oc':       [8, 8, 8, 9, 9],
-           'emitidas': [15, 15, 15, 18, 18]},
+           'ofertas':  [0, 0, 3, 3, 3],
+           'at':       [7, 7, 6, 6, 5],
+           'oc':       [8, 8, 9, 9, 10],
+           'emitidas': [15, 15, 18, 18, 18]},
     'IN': {'solped':   [0, 0, 0, 0, 0],
-           'ofertas':  [2, 1, 2, 3, 3],
-           'at':       [33, 28, 28, 29, 29],
-           'oc':       [10, 16, 16, 16, 16],
-           'emitidas': [45, 45, 46, 48, 48]},
+           'ofertas':  [1, 2, 3, 3, 3],
+           'at':       [28, 28, 29, 29, 23],
+           'oc':       [16, 16, 16, 16, 22],
+           'emitidas': [45, 46, 48, 48, 48]},
 }
 
-# Ítems críticos con cadena RI→OC (hoja "Suministros críticos" – plan 040926)
+# Ítems críticos con cadena RI→OC (hoja "Suministros críticos" – plan 110926)
 # fechas: ri, solped, recof, at_cierre, necoc, oc_kom (None=no alcanzado)
 CRITICOS = [
     # esp, criticidad, descripcion, ri, solped, recof, at_cierre, necoc, oc_kom, oc_num, proveedor, estado
@@ -110,13 +110,13 @@ CRITICOS = [
      '4509010341','HIMA','OC EMITIDA 4509010341 (03/07) – 150 d RI→OC. KOM 14/8. Codificando LD. Se analizan dimensiones de gabinetes: habría MÁS SEÑALES – licitación por adicionales (servicio)'),
     ('IN','LLI','Válvulas de Control y Autorreguladoras',
      date(2026,4,23), date(2026,5,5), date(2026,5,21), None, date(2026,7,26), None,
-     '','—','AT cerrado (control). PENDIENTE validación final de ofertas para ADJUDICAR (con comentarios de PP por ING). Se avanza con FLETE AÉREO (160 d India + 30/40 Comex). Autorreguladoras: RECOTIZAR. 134 d sin OC'),
+     '','—','AT cerrado (control). PENDIENTE validación final de ofertas para ADJUDICAR (con comentarios de PP por ING). Se avanza con FLETE AÉREO (160 d India + 30/40 Comex). Autorreguladoras: RECOTIZAR. 141 d sin OC'),
     ('IN','MONTO','Cables de Instrumentación',
      date(2026,5,15), date(2026,5,30), date(2026,6,23), date(2026,8,12), date(2026,10,21), date(2026,8,27),
-     '4509060019','—','OC ENVIADA 4509060019 (27/08) – 104 d RI→OC. FE parcial (stock + hasta 14 sem). 2da instancia: licitan 29.000 m (SOLPED 23493830 liberada)'),
+     '4509060019','—','OC ENVIADA 4509060019 (27/08) – 104 d RI→OC. FE parcial (stock + hasta 14 sem). 2da instancia: 29.000 m + FO por comprar (3,5 km Rev.0 / 31 km Rev.1)'),
     ('EL','MONTO','Cables Eléctricos',
      date(2026,6,11), date(2026,7,1), date(2026,7,22), date(2026,8,4), date(2026,11,18), date(2026,8,23),
-     '4509059424','Marlew','OC COLOCADA 4509059424 (23/08) a Marlew – 73 d RI→OC. FE parcial (stock + hasta 16 sem). 2da instancia: parcial menor (SOLPED 23501690 liberada)'),
+     '4509059424','Marlew','OC COLOCADA 4509059424 (23/08) a Marlew – 73 d RI→OC. FE parcial (stock + hasta 16 sem). 2da instancia: parcial menor + 5 km Rev.1 por comprar'),
 ]
 
 # Demora promedio por segmento (cadena completa de los 3 adjudicados ABB)
@@ -148,7 +148,7 @@ def build_resumen(wb):
     ws.merge_cells('B3:M3')
     s = ws['B3']
     s.value = (f'Especialidades: Instrumentación (IN) y Electricidad (EL)   ·   '
-               f'Fuente: Plan 040926 (Rev13)   ·   Corte: 04/09/2026   ·   Evolución (07/08→04/09)   ·   RFSU: 03/02/2027')
+               f'Fuente: Plan 110926 (Rev14)   ·   Corte: 11/09/2026   ·   Evolución (14/08→11/09)   ·   RFSU: 03/02/2027')
     s.fill = F(C['azul_m']); s.font = ft(False, C['blanco'], 10)
     s.alignment = al('center'); ws.row_dimensions[3].height = 20
 
@@ -241,22 +241,21 @@ def build_resumen(wb):
     r += 1
 
     hallazgos = [
-        ('[i]', 'SEMANA DE CONSOLIDACIÓN – pipeline sin cambios (69 RIs · 25 OCs · 66 en gestión · 3 sin emitir)',
-         'El Cuadro resumen no registra movimientos respecto del corte anterior (28/08): las 25 OCs IN+EL se mantienen. '
-         'La actividad de la semana fue de gestion de detalle sobre items ya adjudicados (2da instancia de cables, '
-         'validaciones de valvulas y definicion de alcances). 6 de los 7 criticos ya tienen OC.'),
-        ('[+]', 'CABLES – 2da instancia en marcha (SOLPEDs liberadas)',
-         'Cables Instrumentacion: se licita la 2da instancia de 29.000 m de cable (SOLPED 23493830 liberada) – subio desde 20.000 m. '
-         'Cables Electricos: se licita un parcial menor (SOLPED 23501690 liberada). Las OCs de 1ra instancia (Marlew y 4509060019) '
-         'ya estan colocadas con FE parcial (stock + 14-16 sem). Obra requiere cables para diciembre-26.'),
-        ('[!]', 'ÚNICO CRÍTICO SIN OC – Válvulas: pendiente validación final para adjudicar',
-         'Valvulas de control: AT cerrado; PENDIENTE la validacion final de ofertas para ADJUDICAR (con los comentarios de PP por ING). '
+        ('[+]', 'NUEVO SALTO DE OCs – IN 16 → 22 (+6) · total IN+EL 25 → 32',
+         'Segunda semana fuerte de colocacion de OCs: Instrumentacion paso de 16 a 22 OCs (+6, items bulk que estaban en AT) '
+         'y Electricidad de 9 a 10 (+1). Total OCs IN+EL: 25 → 32. AT IN 29 → 23 (los items avanzaron a OC). '
+         'KPIs de gestion sin cambios (69 RIs, 66 en gestion, 3 sin emitir).'),
+        ('[+]', 'Acumulado de OCs muy sólido – 32 de 69 RIs IN+EL con OC',
+         'Con este corte, 32 de las 69 RIs IN+EL ya tienen OC (46%). 6 de los 7 items criticos tienen OC colocada. '
+         'El circuito de compras muestra un ritmo sostenido de adjudicacion en las ultimas semanas (25 → 32 en dos cortes).'),
+        ('[!]', 'ÚNICO CRÍTICO SIN OC – Válvulas: pendiente validación final para adjudicar (141 d)',
+         'Valvulas de control: AT cerrado; sigue PENDIENTE la validacion final de ofertas para ADJUDICAR (con los comentarios de PP por ING). '
          'Se avanza con FLETE AEREO para acortar plazo (160 dias de fabricacion en India + 30/40 de Comex). '
-         'Autorreguladoras: siguen pendientes de RECOTIZACION. 134 d sin OC, NecOC 26/07 vencida – es el foco a cerrar.'),
-        ('[!]', 'ALERTA DE ALCANCE – SIS: habría más señales que las previstas',
-         'SIS (HIMA): al codificar la LD se estan analizando las dimensiones de los gabinetes y surgirian MAS SEÑALES que las previstas inicialmente; '
-         'se lanza una licitacion por adicionales (servicio). Puede impactar costo/plazo – seguir de cerca. KOM ya efectuada (14/8), entrega dic-26. '
-         'PCS (Inauco): OC de materiales colocada; los servicios en sitio se negocian en 2da instancia. SE#3: ductos de barras en 2da instancia (pendiente info de transformadores).'),
+         'Autorreguladoras: pendientes de RECOTIZACION. 141 d sin OC, NecOC 26/07 vencida – es el unico foco pendiente entre los criticos.'),
+        ('[i]', 'CABLES – 2da instancia y fibra óptica por comprar',
+         'Cables Instrumentacion: ademas de la 2da instancia (29.000 m), quedan por comprar 3,5 km de FO Rev.0 y 31 km de FO Rev.1 (revision en cierre). '
+         'Cables Electricos: por comprar 5 km Rev.1. Las OCs de 1ra instancia ya estan colocadas (Marlew / 4509060019) con FE parcial. '
+         'SIS (HIMA): posible aumento de señales (adicionales, servicio) – seguir de cerca por impacto de costo/plazo.'),
     ]
     for icon, titulo, texto in hallazgos:
         ws.merge_cells(start_row=r, start_column=2, end_row=r, end_column=2)
@@ -273,7 +272,7 @@ def build_resumen(wb):
     # ── EVOLUCIÓN (Cuadro resumen) ───────────────────────────────────────────
     r += 1
     ws.merge_cells(start_row=r, start_column=2, end_row=r, end_column=8)
-    th = ws.cell(r, 2, 'EVOLUCIÓN 07/08 → 04/09 – PIPELINE POR ESPECIALIDAD (Cuadro resumen)')
+    th = ws.cell(r, 2, 'EVOLUCIÓN 14/08 → 11/09 – PIPELINE POR ESPECIALIDAD (Cuadro resumen)')
     th.fill = F(C['azul_m']); th.font = ft(True, C['blanco'], 12)
     th.alignment = al('center'); ws.row_dimensions[r].height = 22
     r += 1
@@ -317,17 +316,17 @@ def build_resumen(wb):
     def t_ini(k): return TREND['EL'][k][0] + TREND['IN'][k][0]
     def t_fin(k): return TREND['EL'][k][-1] + TREND['IN'][k][-1]
     preguntas = [
-        ('Última semana (28/08 → 04/09)',
-         'Semana de consolidación: el Cuadro resumen no cambia (69/25/66/3). Cables: 2da instancia en marcha '
-         '(IN 29.000 m SOLPED 23493830; EL parcial SOLPED 23501690). Válvulas: pendiente validación final para adjudicar.'),
+        ('Última semana (04/09 → 11/09)',
+         '+7 OCs IN+EL (25→32): Instrumentación 16→22, Electricidad 9→10. AT IN 29→23 (avanzaron a OC). '
+         'KPIs de gestión sin cambios (69/32/66/3). Válvulas sigue como único crítico sin OC.'),
         ('OCs colocadas en el período (IN+EL)',
-         f'{t_ini("oc")} → {t_fin("oc")}: +{t_fin("oc")-t_ini("oc")} OCs entre 07/08 y 04/09 '
-         f'(IN 10→16, EL 8→9). Total OCs colocadas IN+EL: {t_fin("oc")}. '
-         f'6 de 7 críticos con OC; los cables gestionan sus parciales de 2da instancia.'),
+         f'{t_ini("oc")} → {t_fin("oc")}: +{t_fin("oc")-t_ini("oc")} OCs entre 14/08 y 11/09 '
+         f'(IN 16→22, EL 8→10). Total OCs colocadas IN+EL: {t_fin("oc")} (46% de las 69 RIs). '
+         f'6 de 7 críticos con OC.'),
         ('Puntos críticos / pendientes',
          f'En petición de ofertas: EL {PIPELINE["EL"]["ofertas"]} · IN {PIPELINE["IN"]["ofertas"]} '
-         f'= {t_fin("ofertas")} ítems. VÁLVULAS (único crítico sin OC, 134 d): pendiente validación final para adjudicar (flete aéreo). '
-         f'SIS: posible aumento de señales (adicionales). Cables: seguir parciales 2da instancia (obra dic-26).'),
+         f'= {t_fin("ofertas")} ítems. VÁLVULAS (único crítico sin OC, 141 d): pendiente validación final para adjudicar (flete aéreo). '
+         f'Cables: FO y parciales Rev.1 por comprar. SIS: posible aumento de señales (adicionales).'),
     ]
     for titulo, texto in preguntas:
         ws.merge_cells(start_row=r, start_column=2, end_row=r, end_column=3)
@@ -445,7 +444,7 @@ def build_analisis(wb):
     # nota
     r += 1
     ws.merge_cells(start_row=r, start_column=2, end_row=r, end_column=13)
-    n = ws.cell(r, 2, '(*) Para ítems sin OC, el valor es la cantidad de días transcurridos desde la RI hasta el corte (04/09/26), sin orden de compra colocada todavía.')
+    n = ws.cell(r, 2, '(*) Para ítems sin OC, el valor es la cantidad de días transcurridos desde la RI hasta el corte (11/09/26), sin orden de compra colocada todavía.')
     n.font = ft(False, C['gris'], 8); n.alignment = al('left'); ws.row_dimensions[r].height = 16
 
     # ── Tabla auxiliar para gráfico días RI→OC ───────────────────────────────
@@ -565,9 +564,9 @@ def build_segmentos(wb):
     ws.row_dimensions[r].height = 20
     r += 1
     notas = [
-        ('Fuente', 'Plan de Suministros – La Calera II (040926).xlsx · Rev13'),
+        ('Fuente', 'Plan de Suministros – La Calera II (110926).xlsx · Rev14'),
         ('Hojas usadas', 'Cuadro resumen (pipeline) · Suministros críticos (cadena por ítem) · RI y OC x mes.'),
-        ('Fecha de corte', '04/09/2026 (evolución: 07/08 · 14/08 · 21/08 · 28/08 · 04/09)'),
+        ('Fecha de corte', '11/09/2026 (evolución: 14/08 · 21/08 · 28/08 · 04/09 · 11/09)'),
         ('Universo', 'IN: 48 RIs · EL: 20 RIs (total 68). Cadena RI→OC detallada disponible para los 8 ítems críticos.'),
         ('Definición OC efectiva', 'Para paquetes adjudicados sin fecha formal de OC, se usa la fecha KOM como hito de OC efectiva.'),
         ('Días en gestión', 'Para ítems sin OC: días entre RI y fecha de corte (proceso aún abierto).'),
