@@ -5,18 +5,19 @@ futuras hasta el checkpoint del 31/12/2026.**
 
 ## Aportes totales acumulados: ARS 1.150.000
 
-| Fecha aprox. | Aporte | Acumulado |
-|--------------|--------|-----------|
-| Abril 2026 (inicio) | 200.000 | 200.000 |
-| Fines de abril/mayo 2026 | 350.000 | 550.000 |
+| Fecha confirmada | Aporte | Acumulado |
+|-------------------|--------|-----------|
+| **07/05/2026** (inicio confirmado por el usuario) | 200.000 | 200.000 |
+| Fines de mayo 2026 | 350.000 | 550.000 |
 | 30/06/2026 | 150.000 | 700.000 |
 | 31/07/2026 | 150.000 | 850.000 |
 | 29-30/08/2026 | 150.000 | 1.000.000 |
 | 30/09/2026 | 150.000 | **1.150.000** |
 
-**Corrección de fecha**: el inicio fue en **abril 2026**, no mayo como se
-había usado en análisis previos (afecta el cálculo de horizonte temporal,
-no el total de aportes).
+**Fecha de inicio confirmada por el usuario (15/10/2026): 07/05/2026.**
+Se habían usado "abril" y luego "principios de mayo" en análisis
+anteriores — este es el dato definitivo. Horizonte desde el 07/05 al
+15/10 = **~161 días ≈ 5,3 meses**.
 
 ## Estado al 15/10/2026 (estado de cuenta 14/10)
 
@@ -28,8 +29,8 @@ no el total de aportes).
 | **Aportes** | **1.150.000** |
 | **Ganancia neta** | **+44.250** |
 | **% sobre aportes** | **+3,85%** |
-| Horizonte | ~6 meses |
-| Equivalente mensual compuesto | ~+0,63%/mes |
+| Horizonte | ~5,3 meses (07/05 → 15/10) |
+| Equivalente mensual compuesto | **~+0,71%/mes** |
 
 ## Resolución del "cash mystery" (02/10 → 14/10)
 
