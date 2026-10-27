@@ -1,0 +1,457 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cronograma Integrado CPF-2 · La Calera II</title>
+<style>
+:root{
+  --bg:#f4f6f8; --card:#ffffff; --ink:#1f2933; --muted:#607080; --line:#e2e8f0;
+  --abbs:#C62828; --abbd:#795548; --abbp:#EF6C00; --miron:#33691E; --inauco:#1565C0;
+  --hph:#6A1B9A; --harg:#00838F; --epc:#2E7D32; --hima:#6A1B9A;
+  --shadow:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.04);
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#0f141a;--card:#1a222c;--ink:#e6edf3;--muted:#93a1b0;--line:#2a343f;
+        --shadow:0 1px 3px rgba(0,0,0,.5);}
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+  background:var(--bg);color:var(--ink);font-size:14px;line-height:1.4}
+header{padding:18px 22px;background:var(--card);border-bottom:1px solid var(--line)}
+h1{margin:0;font-size:20px}
+.sub{color:var(--muted);font-size:12.5px;margin-top:4px}
+.wrap{max-width:1400px;margin:0 auto;padding:16px 22px 60px}
+.kpis{display:flex;gap:12px;flex-wrap:wrap;margin:16px 0}
+.kpi{flex:1;min-width:150px;background:var(--card);border:1px solid var(--line);border-radius:10px;
+  padding:12px 14px;box-shadow:var(--shadow)}
+.kpi .l{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.kpi .v{font-size:18px;font-weight:700;margin-top:3px}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0 4px}
+.chip{border:1.5px solid var(--line);background:var(--card);color:var(--ink);border-radius:20px;
+  padding:6px 13px;font-size:12.5px;cursor:pointer;font-weight:600;display:inline-flex;align-items:center;gap:7px;user-select:none}
+.chip .dot{width:10px;height:10px;border-radius:50%}
+.chip.off{opacity:.35}
+.tabs{display:flex;gap:4px;margin:16px 0 10px;border-bottom:2px solid var(--line)}
+.tab{padding:9px 16px;cursor:pointer;font-weight:600;color:var(--muted);border-bottom:3px solid transparent;margin-bottom:-2px}
+.tab.active{color:var(--ink);border-bottom-color:var(--inauco)}
+.panel{display:none} .panel.active{display:block}
+/* GANTT */
+.gwrap{overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow)}
+.gantt{min-width:1050px;position:relative}
+.grow{display:flex;align-items:center;border-top:1px solid var(--line);height:30px;position:relative}
+.glabel{width:300px;min-width:300px;padding:0 10px;font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gtrack{width:6px;min-width:6px;align-self:stretch}
+.gtl{position:relative;flex:1;height:100%}
+.bar{position:absolute;top:7px;height:16px;border-radius:4px;opacity:.92}
+.ms{position:absolute;top:5px;width:0;height:0}
+.ms b{position:absolute;transform:translate(-50%,-2px);font-size:13px;line-height:1}
+.months{display:flex;position:sticky;top:0;background:var(--card);z-index:2;border-bottom:1px solid var(--line)}
+.months .glabel{font-weight:700;font-size:11px;color:var(--muted)}
+.mo{flex:1;text-align:center;font-size:9.5px;color:var(--muted);border-left:1px solid var(--line);padding:4px 0}
+.mo.yr{font-weight:700;color:var(--ink)}
+.ghead{display:flex}
+.grouphdr{font-weight:800;font-size:12px;padding:7px 10px;border-top:2px solid var(--line);display:flex;align-items:center;gap:8px}
+/* TABLE */
+table{width:100%;border-collapse:collapse;background:var(--card);border-radius:10px;overflow:hidden;box-shadow:var(--shadow)}
+th,td{padding:8px 10px;text-align:left;border-bottom:1px solid var(--line);font-size:12.5px;vertical-align:middle}
+th{background:rgba(127,127,127,.06);font-size:11px;text-transform:uppercase;letter-spacing:.03em;color:var(--muted)}
+td.prov{font-weight:700;color:#fff;font-size:10.5px;white-space:nowrap}
+select,input,textarea{font-family:inherit;font-size:12px;color:var(--ink);background:var(--bg);
+  border:1px solid var(--line);border-radius:6px;padding:5px 7px}
+textarea{width:100%;resize:vertical;min-height:38px}
+.st-plan{color:#2E7D32} .st-riesgo{color:#EF6C00} .st-atraso{color:#C62828} .st-ok{color:#1565C0}
+/* EVAL */
+.evgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px;margin-top:4px}
+.evcard{background:var(--card);border:1px solid var(--line);border-left-width:5px;border-radius:10px;padding:14px;box-shadow:var(--shadow)}
+.evcard h3{margin:0 0 4px;font-size:14px}
+.evcard .meta{font-size:11px;color:var(--muted);margin-bottom:10px}
+.evrow{display:flex;gap:8px;align-items:center;margin:7px 0;flex-wrap:wrap}
+.evrow label{font-size:11px;color:var(--muted);min-width:74px}
+.stars{display:flex;gap:2px}.star{cursor:pointer;font-size:17px;color:#cbd5e1}.star.on{color:#f5b301}
+.conj{background:var(--card);border:2px solid var(--inauco);border-radius:12px;padding:16px;margin-top:18px;box-shadow:var(--shadow)}
+.rollup{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0}
+.pill{padding:5px 11px;border-radius:16px;font-size:12px;font-weight:700;color:#fff}
+.btn{background:var(--inauco);color:#fff;border:none;border-radius:8px;padding:9px 16px;font-weight:700;cursor:pointer;font-size:13px}
+.btn.ghost{background:transparent;color:var(--ink);border:1.5px solid var(--line)}
+.actions{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
+.legend{font-size:11px;color:var(--muted);margin-top:8px}
+@media print{.toolbar,.tabs,.actions,.btn{display:none!important}.panel{display:block!important}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Cronograma Integrado — CPF-2 La Calera II · Rev3 (27-10-2026) <span style="color:var(--muted);font-weight:400;font-size:15px">(Vaca Muerta)</span></h1>
+  <div class="sub">8 provisiones · Salas SE#3/SE#4, Ductos de barras y PMS (ABB) · Transformadores (CAT Miron) · PCS/SCADA (Inauco) · marshalling (HPH, Alemania) · SIS (HARG, Argentina) &nbsp;|&nbsp; Camino crítico de sistemas: <b>HARG 10-MAY-2027</b> · Última entrega del paquete: <b>ductos de barras 08-JUL-2027</b> · RFSU 31-ENE-2028</div>
+</header>
+<div class="wrap">
+
+  <div class="kpis" id="kpis"></div>
+
+  <div class="toolbar" id="chips"><span style="font-size:12px;color:var(--muted);margin-right:4px">Filtrar provisión:</span></div>
+
+  <div class="tabs">
+    <div class="tab active" data-p="gantt">📊 Gantt</div>
+    <div class="tab" data-p="flujo">🌊 Flujo temporal</div>
+    <div class="tab" data-p="tabla">📋 Tabla &amp; estado</div>
+    <div class="tab" data-p="eval">✅ Evaluación</div>
+  </div>
+
+  <div class="panel active" id="p-gantt">
+    <div class="gwrap"><div class="gantt" id="gantt"></div></div>
+    <div class="legend">◆/★ = hito. Usá los chips para aislar una provisión. Fechas según los cronogramas vigentes de cada proveedor al 27-10-2026 (ABB Salas y Ductos REV 0 «Para construcción» 14-10 · ABB PMS SEP-2026 REV 0 · Inauco REV 0 «Para construcción» 23-10 · HPH informe Nº1 15-10 · CAT Miron 29-09 · HARG con OC pendiente).</div>
+  </div>
+
+  <div class="panel" id="p-flujo">
+    <div class="gwrap" style="padding:6px 0"><div id="flow"></div></div>
+    <div class="legend">Vista de <b>fases por provisión</b> a escala temporal: cuándo ocurre cada bloque y dónde confluyen. Rojo = ruta crítica.
+      Banda gris = <b>período FAT</b> (FAT PCS 29-MAR → cierre HARG 10-MAY-2027). Banda verde = <b>iFAT en sitio</b>. Rojo = ruta crítica: OC de HARG → HPH → adecuación → FAT SIS → cierre HARG. El <b>ducto de barras</b> corre por fuera y es la última entrega del paquete (08-JUL-2027).</div>
+  </div>
+
+  <div class="panel" id="p-tabla">
+    <table id="tabla"><thead><tr>
+      <th>Provisión</th><th>Actividad / Hito</th><th>Inicio</th><th>Fin</th><th>Tipo</th><th>Estado</th><th>Nota</th>
+    </tr></thead><tbody></tbody></table>
+  </div>
+
+  <div class="panel" id="p-eval">
+    <p style="color:var(--muted);font-size:12.5px;margin-top:0">Evaluá cada provisión (individual) y el conjunto. Todo se guarda automáticamente en este navegador.</p>
+    <div class="evgrid" id="evgrid"></div>
+    <div class="conj">
+      <h3 style="margin:0 0 2px">🧭 Evaluación de conjunto (integración → RFSU)</h3>
+      <div class="meta" style="font-size:11px;color:var(--muted)">Resumen automático de los estados por provisión + tu lectura global.</div>
+      <div class="rollup" id="rollup"></div>
+      <div class="evrow"><label>Confianza global al RFSU</label><div class="stars" data-k="__conj__"></div></div>
+      <textarea id="conjNote" placeholder="Lectura de conjunto: riesgos de integración, holguras, decisiones para el freezing, etc."></textarea>
+      <div class="actions">
+        <button class="btn" onclick="exportJSON()">⬇ Exportar evaluación (JSON)</button>
+        <button class="btn ghost" onclick="window.print()">🖨 Imprimir / PDF</button>
+        <button class="btn ghost" onclick="resetAll()">↺ Limpiar evaluación</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const PROV={
+ ABBS  :{n:"ABB · Salas SE#3/SE#4",c:"var(--abbs)",hex:"#C62828"},
+ ABBD  :{n:"ABB · Ductos de barras",c:"var(--abbd)",hex:"#795548"},
+ ABBP  :{n:"ABB · PMS",c:"var(--abbp)",hex:"#EF6C00"},
+ MIRON :{n:"CAT Miron · Transf.",c:"var(--miron)",hex:"#33691E"},
+ INA   :{n:"Inauco · PCS/SCADA",c:"var(--inauco)",hex:"#1565C0"},
+ HPH   :{n:"HPH · Marshalling (DE)",c:"var(--hph)",hex:"#6A1B9A"},
+ HARG  :{n:"HARG · SIS (AR)",c:"var(--harg)",hex:"#00838F"},
+ EPC   :{n:"Integración EPC",c:"var(--epc)",hex:"#2E7D32"},
+};
+// p=provisión, t=texto, s=inicio, e=fin(null=hito), m=marca hito
+const T=[
+ ["ABBS","Ingeniería básica y de detalle (equipos APROBADOS · sala pendiente)","2026-05-20","2026-10-13"],
+ ["ABBS","◆ Freezing point ing. básica de salas — VENCIDO 25-09-26","2026-09-25",null,"◆"],
+ ["ABBS","Acopio de materiales (CCM 93% · UPS 93% · auxiliares 72%)","2026-05-19","2026-12-10"],
+ ["ABBS","Fabricación de tableros en origen (Sorocaba · Santa Fe · AMBA)","2026-10-06","2026-12-11"],
+ ["ABBS","FAT en fábrica de origen (UPS · TGMT · CCM · auxiliares)","2026-11-12","2026-12-16"],
+ ["ABBS","Entrega en Shelterista (Mendoza)","2026-11-26","2027-01-10"],
+ ["ABBS","Fabricación de los shelters (Bottino)","2026-10-06","2027-03-05"],
+ ["ABBS","Montaje e integración de equipos en salas","2027-01-29","2027-03-17"],
+ ["ABBS","FAT Salas en Mendoza (SE#4 22-26/02 · SE#3 29/03-02/04)","2027-02-22","2027-04-02"],
+ ["ABBS","Ensayos PMS en sala (interfase contrato PMS)","2027-03-03","2027-04-06"],
+ ["ABBS","★ Entrega EXW SE#4 (25-03-27) · contractual 08-04-27","2027-03-25",null,"★"],
+ ["ABBS","★ Entrega EXW SE#3 (20-04-27) · contractual 14-05-27","2027-04-20",null,"★"],
+ ["ABBD","Insumo AESA: layout + detalle de conexionado a trafo","2026-07-20","2026-09-18"],
+ ["ABBD","Diseño de ductos (arrancó efectivamente el 21-09-26) — 15%","2026-09-18","2026-12-14"],
+ ["ABBD","Aprobación de diseño + freezing point (30-12-26)","2026-12-14","2026-12-30"],
+ ["ABBD","Acopio y fabricación (EAE Turquía — entrega en origen «tbd»)","2026-12-30","2027-04-09"],
+ ["ABBD","FCA + traslado internacional + aduana (80 d)","2027-04-09","2027-07-05"],
+ ["ABBD","★ Entrega en sitio (08-07-27) — PLAZO SIN CONFIRMAR","2027-07-08",null,"★"],
+ ["ABBP","Ingeniería básica y Rev.0 + aprobación (freezing 11-09-26)","2026-06-08","2026-09-11"],
+ ["ABBP","Procura y acopio — gestión de compra al 100%","2026-05-22","2026-11-05"],
+ ["ABBP","Configuración / programación del sistema (32%)","2026-08-17","2026-12-11"],
+ ["ABBP","Armado de tableros (inicio corrido al 09-10-26)","2026-10-09","2026-12-17"],
+ ["ABBP","Maqueta integrada CPF1","2026-10-19","2026-10-23"],
+ ["ABBP","Maqueta CPF2 — integración PCS↔PMS con Inauco (Bs.As.)","2026-11-30","2026-12-03"],
+ ["ABBP","Pruebas internas + FAT tableros y sistema (witness AESA)","2026-12-18","2027-01-29"],
+ ["ABBP","Despachos","2027-02-04","2027-02-17"],
+ ["ABBP","★ Entrega de equipamiento en Shelter (17-02-27)","2027-02-17",null,"★"],
+ ["ABBP","FAT integral del shelter (PMS) + DataBook","2027-03-25","2027-03-31"],
+ ["MIRON","Ingeniería: cálculo, diseño y proyecto de detalle (5 OT)","2026-07-13","2026-09-04"],
+ ["MIRON","Acopio: conductores BT/MT y materiales gruesos (gabinetes)","2026-07-27","2026-10-16"],
+ ["MIRON","Fabricación: núcleo magnético, bobinado y montaje","2026-09-07","2026-12-04"],
+ ["MIRON","Ensayos internos · FAT NO incluidas en el cronograma","2026-11-02","2026-12-11"],
+ ["MIRON","★ Entregas escalonadas de los 13 transformadores (13-11 → 11-12-26)","2026-12-11",null,"★"],
+ ["MIRON","Almacenamiento y conservación en obra (7 meses hasta los ductos)","2026-12-11","2027-07-08"],
+ ["INA","◆ Recepción de OC — inicio del proyecto (28-07-26)","2026-07-28",null,"◆"],
+ ["INA","Recepción de ingeniería de AESA — 5 entregas (2 vencidas)","2026-08-14","2026-12-11"],
+ ["INA","Emisión de ingeniería Rev.A y Rev.0 de tableros","2026-08-24","2026-11-13"],
+ ["INA","Configuración base — PLC/comunicaciones y SCADA (12%)","2026-08-26","2027-03-23"],
+ ["INA","◆ Freezing point: aprobación de ing. para construcción (19-11)","2026-11-19",null,"◆"],
+ ["INA","Pruebas de integración con ABB PMS (Bs.As.) — ADELANTADA","2026-12-01","2026-12-02"],
+ ["INA","Construcción de tableros 07a / 07b / COM-07","2026-11-27","2027-02-16"],
+ ["INA","Pre-iFAT interna (previa a la FAT con el cliente)","2027-02-16","2027-03-23"],
+ ["INA","FAT PCS + Comunicaciones (Inauco Neuquén)","2027-03-29","2027-04-22"],
+ ["INA","FAT SIS — conjunto con HIMA (Inauco Neuquén)","2027-03-29","2027-04-26"],
+ ["INA","★ Fin de FAT integral (26-04-27)","2027-04-26",null,"★"],
+ ["INA","Configuraciones post-FAT","2027-04-27","2027-05-17"],
+ ["INA","★ Liberación y entrega de tableros (04-05-27)","2027-05-04",null,"★"],
+ ["INA","SAT y comisionado PCS — campo","2027-05-18","2027-08-03"],
+ ["INA","SAT y comisionado SCADA/SIS — campo","2027-05-18","2027-10-05"],
+ ["INA","Prueba MCE + cierre de documentación","2027-10-06","2027-12-07"],
+ ["HPH","Ingeniería de detalle (80%) + acopio — material ENTREGADO","2026-08-17","2026-10-16"],
+ ["HPH","Fabricación de los 3 tableros de marshalling — COMPLETADA","2026-09-21","2026-10-15"],
+ ["HPH","Inspección / HW check de los 3 tableros (semana 44-45)","2026-10-26","2026-11-08"],
+ ["HPH","◆ Letter of Credit de la orden ampliada (AESA) — 30-10-26","2026-10-30",null,"◆"],
+ ["HPH","Packing y despacho desde Alemania","2026-11-09","2026-12-14"],
+ ["HPH","★ Entrega DAP Ezeiza aeropuerto (15-12-26) — CONFIRMADA","2026-12-15",null,"★"],
+ ["HPH","Nacionalización + transporte a base Inauco","2026-12-15","2027-01-25"],
+ ["HPH","★ Recepción de tableros en base Inauco (25-01-27)","2027-01-25",null,"★"],
+ ["HARG","◆ COLOCACIÓN DE LA OC (AESA) — PENDIENTE, asumida 01-11-26","2026-11-01",null,"◆"],
+ ["HARG","Documentación y programación HARG (recursos 1 y 2)","2026-11-02","2027-03-19"],
+ ["HARG","Ingeniería de aplicación SIS (insumo de HPH)","2026-11-09","2026-12-18"],
+ ["HARG","Adecuación de tableros de marshalling en base Inauco","2027-02-08","2027-03-19"],
+ ["HARG","FAT HARG","2027-04-14","2027-04-16"],
+ ["HARG","IFAT — integración (recursos 1 y 2)","2027-04-19","2027-04-30"],
+ ["HARG","★ Entrega del alcance HARG (10-05-27) — fin del camino crítico","2027-05-10",null,"★"],
+ ["EPC","Montaje en planta de salas y equipos","2027-04-20","2027-09-30"],
+ ["EPC","Montaje de los ductos de barras (no puede iniciar antes del 08-07)","2027-07-08","2027-10-15"],
+ ["EPC","Precomisionado","2027-06-01","2027-12-15"],
+ ["EPC","iFAT — integración en sitio (shelters + PMS + PCS + SIS)","2027-08-02","2027-08-31"],
+ ["EPC","Comisionado / Puesta en marcha (PEM)","2027-10-01","2028-01-31"],
+ ["EPC","★ RFSU — Ready For Start Up (31-01-2028)","2028-01-31",null,"★"],
+];
+const D0=new Date("2026-05-01"), D1=new Date("2028-03-31");
+const SPAN=(D1-D0);
+const pct=d=>100*((new Date(d))-D0)/SPAN;
+const MES=["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const KEY="cpf2_eval_v3";
+let store=JSON.parse(localStorage.getItem(KEY)||"{}");
+const save=()=>localStorage.setItem(KEY,JSON.stringify(store));
+let hidden=new Set();
+
+// KPIs
+document.getElementById("kpis").innerHTML=[
+ ["Transformadores (último lote)","11-DIC-2026","var(--miron)"],
+ ["HPH marshalling · DAP Ezeiza","15-DIC-2026","var(--hph)"],
+ ["Entrega PMS en shelter","17-FEB-2027","var(--abbp)"],
+ ["Entregas EXW SE#4 / SE#3","25-MAR / 20-ABR-2027","var(--abbs)"],
+ ["Entrega Inauco (tableros)","04-MAY-2027","var(--inauco)"],
+ ["Cierre HARG — camino crítico","10-MAY-2027","var(--harg)"],
+ ["Ductos de barras — última entrega","08-JUL-2027","var(--abbd)"],
+ ["RFSU","31-ENE-2028","var(--epc)"],
+].map(k=>`<div class="kpi" style="border-left:4px solid ${k[2]}"><div class="l">${k[0]}</div><div class="v">${k[1]}</div></div>`).join("");
+
+// chips
+const chips=document.getElementById("chips");
+Object.entries(PROV).forEach(([k,p])=>{
+  const el=document.createElement("span");el.className="chip";el.dataset.k=k;
+  el.innerHTML=`<span class="dot" style="background:${p.c}"></span>${p.n}`;
+  el.onclick=()=>{el.classList.toggle("off");if(hidden.has(k))hidden.delete(k);else hidden.add(k);render();};
+  chips.appendChild(el);
+});
+
+// tabs
+document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{
+  document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
+  document.querySelectorAll(".panel").forEach(x=>x.classList.remove("active"));
+  t.classList.add("active");document.getElementById("p-"+t.dataset.p).classList.add("active");
+});
+
+// months header
+function monthsHeader(){
+  let cur=new Date(D0), cells="", first={};
+  while(cur<=D1){
+    const y=cur.getFullYear(),m=cur.getMonth();
+    const isYr=!first[y]; first[y]=1;
+    cells+=`<div class="mo ${isYr?'yr':''}">${isYr?y+' · ':''}${MES[m]}</div>`;
+    cur=new Date(y,m+1,1);
+  }
+  return `<div class="months"><div class="glabel">Actividad / Hito</div><div style="flex:1;display:flex">${cells}</div></div>`;
+}
+
+function render(){
+  // GANTT
+  let g=monthsHeader();
+  Object.entries(PROV).forEach(([k,p])=>{
+    if(hidden.has(k))return;
+    g+=`<div class="grouphdr" style="color:${p.c}"><span class="dot" style="width:11px;height:11px;border-radius:50%;background:${p.c};display:inline-block"></span>${p.n}</div>`;
+    T.filter(r=>r[0]===k).forEach(r=>{
+      const[,txt,s,e,mk]=r;
+      let bar;
+      if(e===null){const x=pct(s);bar=`<div class="ms" style="left:${x}%"><b style="color:${p.c}">${mk||'★'}</b></div>`;}
+      else{const x=pct(s),w=Math.max(pct(e)-x,.5);bar=`<div class="bar" style="left:${x}%;width:${w}%;background:${p.c}"></div>`;}
+      g+=`<div class="grow"><div class="glabel" title="${txt}">${txt}</div><div class="gtl">${bar}</div></div>`;
+    });
+  });
+  document.getElementById("gantt").innerHTML=g;
+
+  // TABLE
+  const est=(id)=>{const v=(store.tasks?.[id]?.st)||"";return v;}
+  let rows="";
+  T.forEach((r,i)=>{
+    const[k,txt,s,e,mk]=r; if(hidden.has(k))return;
+    const p=PROV[k]; const id="t"+i;
+    const stv=est(id); const nv=(store.tasks?.[id]?.nt)||"";
+    rows+=`<tr>
+      <td class="prov" style="background:${p.hex}">${k}</td>
+      <td>${txt}</td><td>${fmt(s)}</td><td>${e?fmt(e):'—'}</td><td>${e?'Tarea':'Hito'}</td>
+      <td><select onchange="setTask('${id}','st',this.value)">
+        ${opt(stv,["","En plan","En riesgo","Atrasado","Completado"])}</select></td>
+      <td><input value="${nv.replace(/"/g,'&quot;')}" oninput="setTask('${id}','nt',this.value)" placeholder="nota…" style="width:150px"></td>
+    </tr>`;
+  });
+  document.querySelector("#tabla tbody").innerHTML=rows;
+
+  buildFlow();
+  renderEval();
+}
+
+// ================= FLUJO TEMPORAL (SVG) =================
+const PH=[
+ ["ABBS","Ingeniería + acopio","2026-05-20","2026-12-10",0],
+ ["ABBS","Fabricación y FAT en origen","2026-10-06","2026-12-16",0],
+ ["ABBS","Shelters + montaje + FAT de sala (Mendoza)","2026-10-06","2027-04-02",1],
+ ["ABBS","★ Entregas EXW SE#4 / SE#3","2027-04-20",null,1,"se3"],
+ ["ABBD","Insumo AESA + diseño","2026-07-20","2026-12-30",1],
+ ["ABBD","Fabricación (EAE) + traslado y aduana","2026-12-30","2027-07-05",1],
+ ["ABBD","★ Entrega en sitio (s/confirmar)","2027-07-08",null,1,"duc"],
+ ["ABBP","Ingeniería + procura + configuración","2026-05-22","2026-12-11",0],
+ ["ABBP","Armado + maquetas + FAT PMS","2026-10-09","2027-01-29",0],
+ ["ABBP","★ Entrega en Shelter","2027-02-17",null,0,"pms"],
+ ["MIRON","Ingeniería + acopio + fabricación","2026-07-13","2026-12-04",0],
+ ["MIRON","★ Entregas 13-11 → 11-12-26","2026-12-11",null,0,"trf"],
+ ["MIRON","Almacenamiento en obra (espera a los ductos)","2026-12-11","2027-07-08",0],
+ ["INA","Ingeniería + configuración base","2026-07-28","2027-03-23",0],
+ ["INA","Construcción tableros + Pre-iFAT","2026-11-27","2027-03-23",1],
+ ["INA","FAT PCS + FAT SIS (Neuquén)","2027-03-29","2027-04-26",1],
+ ["INA","★ Liberación de tableros","2027-05-04",null,1,"ina"],
+ ["INA","Campo: SAT / comisionado + MCE","2027-05-18","2027-12-07",0],
+ ["HPH","Ing. + fabricación (COMPLETADA)","2026-08-17","2026-10-15",1],
+ ["HPH","Inspección + despacho","2026-10-26","2026-12-14",1],
+ ["HPH","★ DAP Ezeiza","2026-12-15",null,1,"hph"],
+ ["HPH","Nacionalización","2026-12-15","2027-01-25",1],
+ ["HARG","◆ OC pendiente (01-11-26)","2026-11-01",null,1,"oc"],
+ ["HARG","Documentación + progr.","2026-11-02","2027-03-19",1],
+ ["HARG","Adecuación marshalling","2027-02-08","2027-03-19",1],
+ ["HARG","FAT + IFAT","2027-04-14","2027-04-30",1],
+ ["HARG","★ Cierre HARG","2027-05-10",null,1,"harg"],
+ ["EPC","Montaje en planta","2027-04-20","2027-10-15",0],
+ ["EPC","Precomisionado","2027-06-01","2027-12-15",0],
+ ["EPC","iFAT en sitio","2027-08-02","2027-08-31",1,"ifat"],
+ ["EPC","Comisionado / PEM","2027-10-01","2028-01-31",0],
+ ["EPC","★ RFSU","2028-01-31",null,1,"rfsu"],
+];
+const ORDER=["ABBS","ABBD","ABBP","MIRON","INA","HPH","HARG","EPC"];
+function buildFlow(){
+  const VW=1560,LW=205,PX=VW-LW-16,AX=56,ROW=24,LPAD=10;
+  const x=d=>LW+PX*((new Date(d))-D0)/SPAN;
+  let lanes=[],y=AX+8,anchors={};
+  ORDER.forEach(k=>{
+    if(hidden.has(k))return;
+    const items=PH.filter(r=>r[0]===k);
+    let sub=[];
+    const placed=items.map(r=>{
+      const s=new Date(r[2]);
+      let e=r[3]?new Date(r[3]):new Date(new Date(r[2]).getTime()+2*864e5);
+      const _bw=r[3]?PX*((new Date(r[3]))-s)/SPAN:0, _lab=String(r[1]).length*4.9+22;
+      if(_bw<_lab) e=new Date(e.getTime()+(_lab+10)*SPAN/PX);
+      let row=sub.findIndex(en=>s>=en);
+      if(row<0){row=sub.length;sub.push(e);}else sub[row]=e;
+      return{r,row};
+    });
+    const h=Math.max(1,sub.length)*ROW+LPAD;
+    lanes.push({k,y,h,placed}); y+=h+6;
+  });
+  const VH=y+30;
+  let s=`<svg viewBox="0 0 ${VW} ${VH}" width="100%" style="min-width:1320px;font-family:inherit">`;
+  s+=`<defs><marker id="ah" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#C62828"/></marker></defs>`;
+  const band=(a,b,col,op,lab)=>{const xa=x(a);let t=`<rect x="${xa}" y="${AX}" width="${x(b)-xa}" height="${VH-AX-6}" fill="${col}" opacity="${op}"/>`;
+    if(lab)t+=`<text x="${xa+3}" y="${AX+10}" font-size="8.5" font-weight="700" fill="${col}">${lab}</text>`;return t;};
+  s+=band("2027-03-29","2027-05-10","#607080",.15,"período FAT");
+  s+=band("2027-08-02","2027-08-31","#2E7D32",.14,"iFAT en sitio");
+  let cur=new Date(D0),first={};
+  while(cur<=D1){const yy=cur.getFullYear(),m=cur.getMonth(),xx=x(new Date(yy,m,1));
+    s+=`<line x1="${xx}" y1="${AX}" x2="${xx}" y2="${VH-6}" stroke="var(--line)" stroke-width="1"/>`;
+    s+=`<text x="${xx+2}" y="${AX-3}" font-size="8.5" fill="var(--muted)">${MES[m]}</text>`;
+    if(!first[yy]){first[yy]=1;s+=`<text x="${xx+2}" y="${AX-16}" font-size="10.5" font-weight="700" fill="var(--ink)">${yy}</text>`;}
+    cur=new Date(yy,m+1,1);}
+  lanes.forEach(L=>{
+    const p=PROV[L.k];
+    s+=`<rect x="6" y="${L.y}" width="${LW-14}" height="${L.h}" rx="6" fill="${p.hex}" opacity=".93"/>`;
+    s+=`<text x="${6+(LW-14)/2}" y="${L.y+L.h/2+3}" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">${esc(p.n)}</text>`;
+    L.placed.forEach(({r,row})=>{
+      const yy=L.y+LPAD/2+row*ROW+2, ch=ROW-6, isHito=r[3]==null, tag=r[5];
+      if(isHito){
+        const cx=x(r[2]),cy=yy+ch/2;
+        s+=`<path d="M ${cx} ${cy-7} L ${cx+7} ${cy} L ${cx} ${cy+7} L ${cx-7} ${cy} Z" fill="${p.hex}" stroke="${r[4]?'#C62828':'#fff'}" stroke-width="1.5"/>`;
+        s+=`<text x="${cx+11}" y="${cy+3}" font-size="8.8" fill="var(--ink)">${esc(r[1])}</text>`;
+        if(tag)anchors[tag]={x:cx,y:cy};
+      }else{
+        const bx=x(r[2]),bw=Math.max(x(r[3])-bx,4);
+        s+=`<rect x="${bx}" y="${yy}" width="${bw}" height="${ch}" rx="4" fill="${p.hex}" opacity=".9" stroke="${r[4]?'#C62828':'none'}" stroke-width="${r[4]?2:0}"/>`;
+        if(bw>esc(r[1]).length*4.7+12)s+=`<text x="${bx+bw/2}" y="${yy+ch/2+3}" text-anchor="middle" font-size="8.3" fill="#fff">${esc(r[1])}</text>`;
+        else s+=`<text x="${bx+bw+4}" y="${yy+ch/2+3}" font-size="8.3" fill="var(--ink)">${esc(r[1])}</text>`;
+        if(tag)anchors[tag]={x:bx,y:yy+ch/2,x2:bx+bw};
+      }
+    });
+  });
+  const arr=(a,b)=>(!a||!b)?"":`<line x1="${a.x2||a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="#C62828" stroke-width="1.3" stroke-dasharray="4 3" marker-end="url(#ah)"/>`;
+  ["s3","pms","fat"].forEach(t=>s+=arr(anchors[t],anchors.ifat));
+  s+=arr(anchors.ifat,anchors.rfsu);
+  s+=`</svg>`;
+  document.getElementById("flow").innerHTML=s;
+}
+function fmt(d){const x=new Date(d);return String(x.getDate()).padStart(2,"0")+"-"+MES[x.getMonth()]+"-"+String(x.getFullYear()).slice(2);}
+function opt(v,arr){return arr.map(o=>`<option ${o===v?'selected':''} value="${o}">${o||'—'}</option>`).join("");}
+function setTask(id,f,v){store.tasks=store.tasks||{};store.tasks[id]=store.tasks[id]||{};store.tasks[id][f]=v;save();}
+
+// EVAL cards
+function renderEval(){
+  store.prov=store.prov||{};
+  let h="";
+  Object.entries(PROV).forEach(([k,p])=>{
+    const d=store.prov[k]||{}; const conf=d.conf||0;
+    const cnt=T.filter(r=>r[0]===k).length;
+    h+=`<div class="evcard" style="border-left-color:${p.c}">
+      <h3 style="color:${p.c}">${p.n}</h3>
+      <div class="meta">${cnt} actividades/hitos</div>
+      <div class="evrow"><label>Estado</label>
+        <select onchange="setProv('${k}','st',this.value)">${opt(d.st||"",["","En plan","En riesgo","Atrasado","Completado"])}</select></div>
+      <div class="evrow"><label>Confianza</label><div class="stars" data-k="${k}"></div></div>
+      <div class="evrow" style="display:block"><label>Comentario</label>
+        <textarea oninput="setProv('${k}','cm',this.value)" placeholder="riesgos, dependencias, holguras…">${(d.cm||"").replace(/</g,'&lt;')}</textarea></div>
+    </div>`;
+  });
+  document.getElementById("evgrid").innerHTML=h;
+  document.querySelectorAll(".stars").forEach(s=>buildStars(s));
+  // rollup
+  const map={"En plan":"#2E7D32","En riesgo":"#EF6C00","Atrasado":"#C62828","Completado":"#1565C0","":"#90a4ae"};
+  let rl="";
+  Object.entries(PROV).forEach(([k,p])=>{const st=(store.prov[k]||{}).st||"—";rl+=`<span class="pill" style="background:${map[st==='—'?'':st]}">${k}: ${st}</span>`;});
+  const nR=Object.values(store.prov).filter(x=>x.st==="En riesgo"||x.st==="Atrasado").length;
+  rl+=`<span class="pill" style="background:${nR?'#C62828':'#2E7D32'}">Provisiones con riesgo/atraso: ${nR}</span>`;
+  document.getElementById("rollup").innerHTML=rl;
+  document.getElementById("conjNote").value=(store.conj||{}).nt||"";
+}
+function setProv(k,f,v){store.prov=store.prov||{};store.prov[k]=store.prov[k]||{};store.prov[k][f]=v;save();renderEval();}
+function buildStars(el){
+  const k=el.dataset.k; let val;
+  if(k==="__conj__"){store.conj=store.conj||{};val=store.conj.conf||0;}
+  else val=(store.prov?.[k]||{}).conf||0;
+  el.innerHTML="";
+  for(let i=1;i<=5;i++){const s=document.createElement("span");s.className="star"+(i<=val?" on":"");s.textContent="★";
+    s.onclick=()=>{if(k==="__conj__"){store.conj=store.conj||{};store.conj.conf=i;}else{store.prov[k]=store.prov[k]||{};store.prov[k].conf=i;}save();renderEval();buildStars(document.querySelector('.stars[data-k="__conj__"]'));};
+    el.appendChild(s);}
+}
+document.getElementById("conjNote").addEventListener("input",e=>{store.conj=store.conj||{};store.conj.nt=e.target.value;save();});
+
+function exportJSON(){
+  const blob=new Blob([JSON.stringify(store,null,2)],{type:"application/json"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);
+  a.download="Evaluacion_Cronograma_CPF2.json";a.click();
+}
+function resetAll(){if(confirm("¿Borrar todas las evaluaciones guardadas?")){store={};save();render();}}
+
+render();
+buildStars(document.querySelector('.stars[data-k="__conj__"]'));
+</script>
+</body>
+</html>
